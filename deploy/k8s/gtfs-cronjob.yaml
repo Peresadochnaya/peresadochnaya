@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gtfs-refresh
+  namespace: peresadochnaya
+spec:
+  schedule: '*/5 * * * *'
+  timeZone: Europe/Moscow
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 120
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 240
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels: {app: peresadochnaya-gtfs-refresh}
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          # local-path RWO may be shared by pods on one node. Keep the updater
+          # beside the API that owns the bound volume (also in multi-node k3s).
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels: {app: peresadochnaya-api}
+                  topologyKey: kubernetes.io/hostname
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            fsGroup: 10001
+            fsGroupChangePolicy: OnRootMismatch
+          containers:
+            - name: refresh
+              image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+              command: [python, -m, data.gtfs.versioned_static]
+              args: [--store-dir, /data/gtfs]
+              envFrom:
+                - configMapRef: {name: backend-config}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              resources:
+                requests: {cpu: 100m, memory: 256Mi}
+                limits: {cpu: '1', memory: 1Gi}
+              volumeMounts:
+                - {name: data, mountPath: /data}
+                - {name: tmp, mountPath: /tmp}
+          volumes:
+            - name: data
+              persistentVolumeClaim: {claimName: transit-data}
+            - name: tmp
+              emptyDir: {}

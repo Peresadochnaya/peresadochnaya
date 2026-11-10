@@ -1,0 +1,41 @@
+# Apply once with an administrator. The deployment user's kubeconfig should
+# use this service account token and only this namespace (never admin kubeconfig).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-deployer
+  namespace: peresadochnaya
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: github-deployer
+  namespace: peresadochnaya
+rules:
+  - apiGroups: ['']
+    resources: [configmaps, services, persistentvolumeclaims]
+    verbs: [get, list, create, update, patch]
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [get, list, watch, create, update, patch]
+  - apiGroups: [batch]
+    resources: [cronjobs]
+    verbs: [get, list, create, update, patch]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, create, update, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: github-deployer
+  namespace: peresadochnaya
+subjects:
+  - kind: ServiceAccount
+    name: github-deployer
+    namespace: peresadochnaya
+roleRef:
+  kind: Role
+  name: github-deployer
+  apiGroup: rbac.authorization.k8s.io
