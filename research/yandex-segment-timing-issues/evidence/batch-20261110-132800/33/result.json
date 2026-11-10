@@ -1,0 +1,15 @@
+{
+  "id": "33",
+  "label": "Komendantsky Prospekt to Yuntolovo",
+  "origin_query": "Komendantsky Prospekt",
+  "destination_query": "Yuntolovo",
+  "origin_selected": "Komendantskiy Prospekt",
+  "destination_selected": "ZhK Yuntolovo",
+  "route_start": "13:29",
+  "first_transport_leg": {"mode": "Metro", "line": "5", "board_time": "13:34"},
+  "comparison": "The selected itinerary begins with metro, so it is excluded from the surface-first dataset and mismatch count.",
+  "classification": "insufficient_evidence",
+  "eligible_surface_first": false,
+  "timestamp": "2026-11-10T13:28:00+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml"]
+}

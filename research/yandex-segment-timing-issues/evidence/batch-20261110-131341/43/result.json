@@ -1,0 +1,15 @@
+{
+  "id": "43",
+  "label": "Kupchino to Shushary",
+  "origin_query": "Kupchino",
+  "destination_query": "Shushary",
+  "origin_selected": "Kupchino",
+  "destination_selected": "Shushary",
+  "first_surface_segment": {"mode": "Tram", "route": "62", "board_stop": "Станция метро Купчино", "board_time": "13:26", "walking_approach_min": 2, "route_arrives_at_stop": "Interval 8 min"},
+  "schedule_observation": {"stop": "Станция метро Купчино", "route": "62", "displayed_arrival": "Every 8 min", "meaning": "frequency interval, not a specific arrival time"},
+  "interval_arithmetic": {"route_start": "13:14", "pedestrian_duration_min": 2, "displayed_interval_min": 8, "derived_time": "13:24", "route_boarding_time": "13:26", "difference_min": 2},
+  "comparison": "Frequency-based arithmetic differs from route boarding by 2 min. This is an interval_arithmetic_mismatch candidate; the interval is not an exact realtime arrival.",
+  "classification": "interval_arithmetic_mismatch",
+  "timestamp": "2026-11-10T13:13:41+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

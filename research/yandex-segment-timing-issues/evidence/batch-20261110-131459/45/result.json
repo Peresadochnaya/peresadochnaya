@@ -1,0 +1,16 @@
+{
+  "id": "45",
+  "label": "Rybatskoye to Metallostroy",
+  "origin_query": "Rybatskoe",
+  "destination_query": "Metallostroy",
+  "origin_selected": "Rybatskoye Metro Station",
+  "destination_selected": "posyolok Metallostroy, Kolpinskiy rayon, Sankt-Peterburg",
+  "observation_time": "2026-11-10T13:17:54+03:00",
+  "first_surface_segment": {"mode": "Bus", "route": "115А", "board_stop": "Rybatskoye Metro Station", "walking_approach_min": 1, "route_board_time": "13:23", "route_interval": "5 min"},
+  "nearest_schedule_arrival": {"route": "115А", "time": "13:21", "relative": "In 4 min", "realtime_indicator": "green dot shown beside 13:21 in schedule.png"},
+  "comparison": "Same bus arrives at 13:21, 2 minutes before route boarding time. The one-minute walking approach finishes before the observed arrival; the bus is reachable. This is a distinct stop/line candidate from the 337/Городской сад group.",
+  "classification": "mismatch",
+  "independence_group": "115А / Rybatskoye Metro Station",
+  "timestamp": "2026-11-10T13:17:54+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

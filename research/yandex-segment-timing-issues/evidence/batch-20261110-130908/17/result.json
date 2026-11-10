@@ -1,0 +1,15 @@
+{
+  "id": "17",
+  "label": "Strelna to Peterhof",
+  "origin_query": "Strelna",
+  "destination_query": "Peterhof",
+  "origin_selected": "Strelna Settlement",
+  "destination_selected": "Grand Peterhof Palace",
+  "first_surface_segment": {"mode": "Bus", "route": "343Э", "board_stop": "Фронтовая улица", "board_time": "13:25", "route_arrives_at_stop": "Interval 11 min"},
+  "schedule_observation": {"stop": "Фронтовая улица", "route": "343Э", "displayed_arrival": "Every 11 min", "meaning": "frequency interval, not a specific arrival time"},
+  "interval_arithmetic": {"route_start": "13:09", "pedestrian_duration_min": 2, "displayed_interval_min": 11, "derived_time": "13:22", "route_boarding_time": "13:25", "difference_min": 3},
+  "comparison": "Frequency-based arithmetic differs from route boarding by 3 min. This is an interval_arithmetic_mismatch candidate; the interval is not an exact realtime arrival.",
+  "classification": "interval_arithmetic_mismatch",
+  "timestamp": "2026-11-10T13:09:08+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

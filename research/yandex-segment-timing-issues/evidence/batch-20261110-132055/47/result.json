@@ -1,0 +1,9 @@
+{
+  "id": "47",
+  "label": "Pionerskaya to Udelnaya",
+  "origin_query": "Pionerskaya",
+  "destination_query": "Udelnaya",
+  "state": "place_resolution_failed",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T13:21:21+03:00"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "15",
+  "label": "Krasnoe Selo to Dudergof",
+  "origin_query": "Krasnoe%sSelo",
+  "destination_query": "Dudergof",
+  "state": "place_resolution_failed",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T13:31:45+03:00"
+}

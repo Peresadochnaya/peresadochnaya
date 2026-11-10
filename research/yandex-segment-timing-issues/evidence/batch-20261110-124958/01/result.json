@@ -1,0 +1,9 @@
+{
+  "id": "01",
+  "label": "Ruchei to Pionerskaya",
+  "origin_query": "Ruchei",
+  "destination_query": "Pionerskaya",
+  "state": "place_resolution_failed",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T12:50:09+03:00"
+}

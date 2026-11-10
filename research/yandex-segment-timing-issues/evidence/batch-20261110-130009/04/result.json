@@ -1,0 +1,16 @@
+{
+  "id": "04",
+  "label": "Ozerki to Pargolovo",
+  "origin_query": "Ozerki",
+  "destination_query": "Pargolovo",
+  "state": "route_built",
+  "origin_selected": "Ozerki",
+  "destination_selected": "Pargolovo",
+  "route_start": "13:00",
+  "first_surface_segment": {"mode": "Bus", "route": "557", "board_stop": "Станция метро Озерки", "board_time": "13:06"},
+  "nearest_schedule_arrival": {"route": "557", "time": "13:06", "relative": "In 5 min"},
+  "comparison": "route details marks arrival as Scheduled at 13:06; no distinct real-time indicator is present in the captured evidence",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T13:01:02+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

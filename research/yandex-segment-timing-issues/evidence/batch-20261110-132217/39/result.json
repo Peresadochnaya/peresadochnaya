@@ -1,0 +1,16 @@
+{
+  "id": "39",
+  "label": "Avtovo to Grand Peterhof Palace",
+  "origin_query": "Avtovo",
+  "destination_query": "Peterhof",
+  "origin_selected": "Avtovo",
+  "destination_selected": "Grand Peterhof Palace",
+  "first_surface_segment": {"mode": "Bus", "route": "204Э", "board_stop": "Станция метро Автово", "board_time": "13:43", "walking_approach_min": 2, "route_interval": "14 min"},
+  "schedule_observation": {"stop": "Станция метро Автово", "route": "204Э", "displayed_arrival": "Every 14 min", "meaning": "frequency interval, not a specific arrival time"},
+  "interval_arithmetic": {"route_start": "13:22", "pedestrian_duration_min": 2, "displayed_interval_min": 14, "derived_time": "13:38", "route_boarding_time": "13:43", "difference_min": 5},
+  "comparison": "Frequency-based arithmetic differs from route boarding by 5 min; interval is not a specific vehicle arrival. Same stop and route group as case 37.",
+  "classification": "interval_arithmetic_mismatch",
+  "independence_group": "bus 204Э / Станция метро Автово (same as 37)",
+  "timestamp": "2026-11-10T13:22:17+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "23",
+  "label": "Yuntolovo to Staraya Derevnya",
+  "origin_query": "Yuntolovo",
+  "destination_query": "Staraya Derevnya",
+  "origin_selected": "Yuntolovo",
+  "destination_selected": "Staraya Derevnya",
+  "first_surface_segment": {"mode": "Bus", "route": "120", "board_stop": "ЖК Юнтолово", "board_time": "13:35", "walking_approach_min": 4, "route_interval": "5 min"},
+  "schedule_observation": {"stop": "ЖК Юнтолово", "route": "120", "displayed_arrival": "Every 5 min", "meaning": "frequency interval, not an exact vehicle arrival"},
+  "interval_arithmetic": {"route_start": "13:27", "pedestrian_duration_min": 4, "displayed_interval_min": 5, "derived_time": "13:36", "route_boarding_time": "13:35", "difference_min": 1},
+  "comparison": "Arithmetic difference is only 1 minute (below the 2-minute threshold), and no exact realtime arrival is shown.",
+  "classification": "insufficient_evidence",
+  "independence_group": "bus 120 / ЖК Юнтолово",
+  "timestamp": "2026-11-10T13:26:24+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "07",
+  "label": "Kolpino to Ust-Izhora",
+  "origin_query": "Kolpino",
+  "destination_query": "Ust-Izhora",
+  "origin_selected": "Kolpino",
+  "destination_selected": "ulitsa Nekrasova, posyolok Ust-Izhora, Kolpinskiy rayon, Sankt-Peterburg",
+  "observation_time": "13:08:28+03:00",
+  "first_surface_segment": {"mode": "Bus", "route": "337", "board_stop": "Городской сад", "walking_approach_min": 2, "route_board_time": "13:14", "route_arrives_at": "13:12"},
+  "nearest_schedule_arrival": {"route": "337", "time": "13:12", "relative": "In 4 min", "realtime_indicator": "green dot shown beside 13:12 in schedule.png"},
+  "comparison": "route details and schedule agree that bus 337 arrives at 13:12; route expects boarding at 13:14, a 2-minute difference. The 2-minute walk from origin ends before the bus arrives, so this trip is feasible and the difference is observable.",
+  "classification": "mismatch",
+  "timestamp": "2026-11-10T13:08:28+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

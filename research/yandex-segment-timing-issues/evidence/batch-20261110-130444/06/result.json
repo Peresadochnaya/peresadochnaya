@@ -1,0 +1,15 @@
+{
+  "id": "06",
+  "label": "Metallostroy to Kolpino",
+  "origin_query": "Metallostroy",
+  "destination_query": "Kolpino",
+  "origin_selected": "posyolok Metallostroy",
+  "destination_selected": "Kolpino",
+  "observation_time": "13:05",
+  "first_surface_segment": {"mode": "Bus", "route": "327", "board_stop": "Центральная улица", "walking_approach_min": 10, "route_board_time": "13:25"},
+  "nearest_schedule_arrival": {"route": "327", "time": "13:11", "relative": "In 6 min"},
+  "comparison": "the nearest listed 327 arrival is 14 min before route boarding time; with 10 min walking approach, it arrives 4 min before walking is complete. Route displays an interval of 9 min at the stop, without an exact later time.",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T13:05:39+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

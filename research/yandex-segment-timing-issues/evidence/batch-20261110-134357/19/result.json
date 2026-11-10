@@ -1,0 +1,18 @@
+{
+  "id": "19",
+  "label": "Grand Peterhof Palace to Lomonosov Bar",
+  "origin_query": "Peterhof",
+  "destination_query": "Lomonosov",
+  "origin_selected": "Grand Peterhof Palace",
+  "destination_selected": "Lomonosov Bar",
+  "observation_time": "2026-11-10T13:44:00+03:00",
+  "first_surface_segment": {"mode": "Bus", "route": "204Э", "board_stop": "Razvodnaya Street", "walking_approach_min": 8, "route_board_time": "14:09", "route_interval": "16 min"},
+  "nearest_schedule_arrival": {"route": "204Э", "time": "14:02", "relative": "In 18 min", "realtime_indicator": "green dot shown beside 14:02 in schedule.png"},
+  "comparison": "The green-dot bus arrival is 7 min before route boarding. The 8-minute walk ends by 13:52, so the 14:02 bus is reachable.",
+  "classification": "mismatch",
+  "eligible_surface_first": true,
+  "destination_address": "Tsentralniy District, Lomonosova Street 1 (Lomonosov Bar; not the town of Lomonosov)",
+  "independence_group": "bus 204Э / Razvodnaya Street",
+  "timestamp": "2026-11-10T13:43:57+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

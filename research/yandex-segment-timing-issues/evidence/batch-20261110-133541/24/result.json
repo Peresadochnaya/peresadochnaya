@@ -1,0 +1,16 @@
+{
+  "id": "24",
+  "label": "Staraya Derevnya to Yuntolovo",
+  "origin_query": "Staraya Derevnya",
+  "destination_query": "Yuntolovo",
+  "origin_selected": "Staraya Derevnya",
+  "destination_selected": "Yuntolovo",
+  "first_surface_segment": {"mode": "Bus", "route": "101Э", "board_stop": "Staraya Derevnya Metro Station", "board_time": "13:50", "walking_approach_min": 1, "route_interval": "10 min"},
+  "schedule_observation": {"stop": "Staraya Derevnya Metro Station", "route": "101Э", "displayed_arrival": "Every 10 min", "meaning": "frequency interval, not an exact realtime arrival"},
+  "interval_arithmetic": {"route_start": "13:36", "pedestrian_duration_min": 1, "displayed_interval_min": 10, "derived_time": "13:47", "route_boarding_time": "13:50", "difference_min": 3},
+  "comparison": "Frequency-based arithmetic differs by 3 min. There is no exact realtime arrival; interval is not an exact vehicle time.",
+  "classification": "interval_arithmetic_mismatch",
+  "independence_group": "bus 101Э / Staraya Derevnya Metro Station",
+  "timestamp": "2026-11-10T13:35:41+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}
