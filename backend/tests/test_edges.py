@@ -90,9 +90,9 @@ def test_current_calendar_overrides_ingestion_manifest_and_moscow_date(tmp_path)
     assert status["manifest"]["active_service_ids"] == 0
     assert any("refresh failed" in warning for warning in status["warnings"])
     # UTC evening is already the next service day in Moscow.
-    response = client.post("/api/v1/routes", json={**REQUEST, "departure_at": "2026-11-09T22:00:00Z"})
+    response = client.post("/api/v1/routes?dummy=false", json={**REQUEST, "departure_at": "2026-11-09T22:00:00Z"})
     assert response.status_code == 422 and response.json()["error"]["code"] == "invalid_service_date"
-    response = client.post("/api/v1/routes", json={**REQUEST, "departure_at": "2026-11-08T22:00:00Z"})
+    response = client.post("/api/v1/routes?dummy=false", json={**REQUEST, "departure_at": "2026-11-08T22:00:00Z"})
     assert response.status_code == 503 and response.json()["error"]["code"] == "planner_unavailable"
 
 

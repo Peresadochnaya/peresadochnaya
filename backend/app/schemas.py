@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
@@ -10,6 +10,29 @@ class Model(BaseModel):
 class Point(Model):
     lat: float = Field(ge=-90, le=90, allow_inf_nan=False)
     lon: float = Field(ge=-180, le=180, allow_inf_nan=False)
+
+
+class Suggestion(Model):
+    title: str = Field(description="Main display text")
+    subtitle: str | None = Field(default=None, description="Address or area clarification")
+    uri: str = Field(description="Opaque Yandex object URI to resolve with the geocoder; not a URL to fetch")
+
+
+class SuggestResponse(Model):
+    mode: Literal["dummy", "yandex"]
+    items: list[Suggestion]
+    warnings: list[str] = Field(default_factory=list)
+
+
+class GeocodedPlace(Point):
+    label: str
+    precision: str | None = None
+
+
+class GeocodeResponse(Model):
+    mode: Literal["dummy", "yandex"]
+    items: list[GeocodedPlace]
+    warnings: list[str] = Field(default_factory=list)
 
 
 TicketProfile = Literal["full_fare", "podorozhnik_wallet", "monthly_unified", "monthly_surface", "monthly_bus", "monthly_metro", "student_unified", "student_surface", "student_metro", "school_unified", "school_bus", "concession_unified"]
@@ -45,6 +68,38 @@ class TransitLine(Model):
     trip_id: str | None = None
 
 
+class LineString(Model):
+    """WGS84 GeoJSON line; positions are [longitude, latitude]."""
+    type: Literal["LineString"] = "LineString"
+    coordinates: list[tuple[
+        Annotated[float, Field(ge=-180, le=180, allow_inf_nan=False)],
+        Annotated[float, Field(ge=-90, le=90, allow_inf_nan=False)],
+    ]] = Field(min_length=2)
+
+
+class RoadRouteRequest(Model):
+    points: list[Point] = Field(min_length=2, max_length=2)
+    departure_at: AwareDatetime | None = Field(default=None, description="Optional future departure for traffic forecast; ignored with traffic_mode=off")
+    traffic_mode: Literal["off", "on"] = "on"
+
+
+class RoadRoute(Model):
+    distance_meters: float = Field(ge=0, allow_inf_nan=False)
+    duration_seconds: float = Field(ge=0, allow_inf_nan=False,
+                                    description="Driving duration, not a public transport travel time")
+    geometry: LineString
+
+
+class RoadRouteResponse(Model):
+    mode: Literal["dummy", "yandex"]
+    traffic_mode: Literal["off", "on"]
+    traffic_type: Literal["realtime", "forecast", "disabled"] | None
+    departure_at: AwareDatetime | None
+    calculated_at: AwareDatetime
+    route: RoadRoute | None = Field(description="Null when Yandex reports a failed route; no partial routes are returned")
+    warnings: list[str] = Field(default_factory=list)
+
+
 class Leg(Model):
     mode: Literal["walk", "bus", "tram", "trolleybus", "metro", "rail", "wait"]
     origin: Place = Field(alias="from")
@@ -56,11 +111,14 @@ class Leg(Model):
     duration_source: Literal["dummy", "schedule", "yandex"]
     line: TransitLine | None = None
     # GeoJSON LineString coordinate order: longitude, latitude.
-    geometry: dict
+    geometry: LineString
 
 
 class Route(Model):
     id: str
+    name: str = Field(min_length=1, description="Free-form display label, not a fixed route category")
+    distance_meters: float = Field(ge=0, allow_inf_nan=False, description="Total length of all moving legs in meters")
+    geometry: LineString = Field(description="Full route line in travel order; detailed sections remain in legs")
     start_at: AwareDatetime
     end_at: AwareDatetime
     duration_seconds: int = Field(ge=0)
