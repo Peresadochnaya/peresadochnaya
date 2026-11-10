@@ -1,0 +1,136 @@
+name: Backend CI and deployment
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements*.txt
+            data/requirements.txt
+      - name: Install dependencies
+        run: pip install -r backend/requirements-dev.txt -r data/requirements.txt
+      - name: Test backend and data
+        run: |
+          (cd backend && python -m pytest tests)
+          python -m pytest data/gtfs/tests
+      - name: Render deployment
+        run: kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
+
+  image:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.name.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Container name
+        id: name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.name.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: image
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install official NetBird CLI
+        run: |
+          curl --fail --show-error --silent --location https://pkgs.netbird.io/install.sh -o "$RUNNER_TEMP/netbird-install.sh"
+          sudo bash "$RUNNER_TEMP/netbird-install.sh"
+      - name: Connect deployment network
+        env:
+          NB_SETUP_KEY: ${{ secrets.NB_SETUP_KEY }}
+          NB_MANAGEMENT_URL: ${{ secrets.NB_MANAGEMENT_URL }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          umask 077
+          key_file="$RUNNER_TEMP/netbird-setup-key"
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s' "$NB_SETUP_KEY" > "$key_file"
+          sudo timeout 90 netbird up --setup-key-file "$key_file" --management-url "$NB_MANAGEMENT_URL"
+          # Wait for the ordinary TCP/22 policy, not NetBird SSH interception.
+          for attempt in $(seq 1 12); do
+            if timeout 5 bash -c 'exec 3<>/dev/tcp/$1/22' _ "$DEPLOY_HOST"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Deployment SSH endpoint did not become reachable over NetBird' >&2
+          exit 1
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Render immutable image deployment
+        env:
+          IMAGE: ${{ needs.image.outputs.image }}
+        run: |
+          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/gtfs-cronjob.yaml
+          kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
+      - name: Apply and verify rollout
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          test "$DEPLOY_USER" = peresadochnaya
+          ssh -p "${DEPLOY_PORT:-22}" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" 'export KUBECONFIG=/home/peresadochnaya/.kube/config; kubectl --namespace peresadochnaya apply -f - && kubectl --namespace peresadochnaya rollout status deployment/api --timeout=180s' < /tmp/peresadochnaya.yaml
+      - name: Public smoke tests
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://peresadochnaya.rjnk.cc' }}
+        run: |
+          curl --fail --show-error --silent --retry 6 --retry-all-errors --retry-delay 5 "$API_BASE_URL/health/ready"
+          curl --fail --show-error --silent "$API_BASE_URL/api/v1/data/status" | python -m json.tool
+      - name: Disconnect and remove ephemeral credentials
+        if: always()
+        run: |
+          if command -v netbird >/dev/null 2>&1; then
+            sudo timeout 20 netbird down || true
+            sudo timeout 20 netbird service stop || true
+          fi
+          rm -f "$RUNNER_TEMP/netbird-setup-key" "$RUNNER_TEMP/netbird-install.sh" ~/.ssh/id_ed25519

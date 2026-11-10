@@ -1,0 +1,456 @@
+---
+openapi: 3.1.0
+info:
+  title: Пересадочная API
+  version: 0.1.0
+paths:
+  "/health/live":
+    get:
+      summary: Live
+      operationId: live_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/health/ready":
+    get:
+      summary: Ready
+      operationId: ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/api/v1/data/status":
+    get:
+      summary: Data Status
+      operationId: data_status_api_v1_data_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DataStatus"
+  "/api/v1/ticket-profiles":
+    get:
+      summary: Ticket Profiles
+      operationId: ticket_profiles_api_v1_ticket_profiles_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  "$ref": "#/components/schemas/TicketProfileInfo"
+                type: array
+                title: Response Ticket Profiles Api V1 Ticket Profiles Get
+  "/api/v1/routes":
+    post:
+      summary: Routes
+      operationId: routes_api_v1_routes_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RouteRequest"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RoutesResponse"
+        '422':
+          description: Unprocessable Content
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - "$ref": "#/components/schemas/ErrorResponse"
+                - "$ref": "#/components/schemas/ValidationErrorResponse"
+                title: Response 422 Routes Api V1 Routes Post
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    DataStatus:
+      properties:
+        state:
+          type: string
+          enum:
+          - missing
+          - ready
+          - degraded
+          title: State
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        graph_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Graph Version
+        last_check:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Last Check
+        manifest:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Manifest
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - state
+      title: DataStatus
+    ErrorDetail:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        error:
+          "$ref": "#/components/schemas/ErrorDetail"
+      additionalProperties: false
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    Leg:
+      properties:
+        mode:
+          type: string
+          enum:
+          - walk
+          - bus
+          - tram
+          - trolleybus
+          - metro
+          - rail
+          - wait
+          title: Mode
+        from:
+          "$ref": "#/components/schemas/Place"
+        to:
+          "$ref": "#/components/schemas/Place"
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+        end_at:
+          type: string
+          format: date-time
+          title: End At
+        duration_seconds:
+          type: integer
+          minimum: 0.0
+          title: Duration Seconds
+        original_duration_seconds:
+          type: integer
+          minimum: 0.0
+          title: Original Duration Seconds
+        duration_source:
+          type: string
+          enum:
+          - dummy
+          - schedule
+          - yandex
+          title: Duration Source
+        line:
+          anyOf:
+          - "$ref": "#/components/schemas/TransitLine"
+          - type: 'null'
+        geometry:
+          additionalProperties: true
+          type: object
+          title: Geometry
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - from
+      - to
+      - start_at
+      - end_at
+      - duration_seconds
+      - original_duration_seconds
+      - duration_source
+      - geometry
+      title: Leg
+    Passenger:
+      properties:
+        ticket_profile:
+          type: string
+          enum:
+          - full_fare
+          - podorozhnik_wallet
+          - monthly_unified
+          - monthly_surface
+          - monthly_bus
+          - monthly_metro
+          - student_unified
+          - student_surface
+          - student_metro
+          - school_unified
+          - school_bus
+          - concession_unified
+          title: Ticket Profile
+          default: full_fare
+      additionalProperties: false
+      type: object
+      title: Passenger
+    Place:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        name:
+          type: string
+          title: Name
+        stop_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stop Id
+      additionalProperties: false
+      type: object
+      required:
+      - lat
+      - lon
+      - name
+      title: Place
+    Point:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+      additionalProperties: false
+      type: object
+      required:
+      - lat
+      - lon
+      title: Point
+    Route:
+      properties:
+        id:
+          type: string
+          title: Id
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+        end_at:
+          type: string
+          format: date-time
+          title: End At
+        duration_seconds:
+          type: integer
+          minimum: 0.0
+          title: Duration Seconds
+        transfers:
+          type: integer
+          minimum: 0.0
+          title: Transfers
+        legs:
+          items:
+            "$ref": "#/components/schemas/Leg"
+          type: array
+          title: Legs
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - start_at
+      - end_at
+      - duration_seconds
+      - transfers
+      - legs
+      title: Route
+    RouteRequest:
+      properties:
+        points:
+          items:
+            "$ref": "#/components/schemas/Point"
+          type: array
+          maxItems: 2
+          minItems: 2
+          title: Points
+          description: Ordered route points; currently exactly origin and destination
+        passenger:
+          "$ref": "#/components/schemas/Passenger"
+        departure_at:
+          type: string
+          format: date-time
+          title: Departure At
+        traffic_mode:
+          type: string
+          enum:
+          - 'off'
+          - 'on'
+          title: Traffic Mode
+          default: 'off'
+        max_results:
+          type: integer
+          maximum: 10.0
+          minimum: 1.0
+          title: Max Results
+          default: 5
+      additionalProperties: false
+      type: object
+      required:
+      - points
+      - departure_at
+      title: RouteRequest
+    RoutesResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - planner
+          title: Mode
+        passenger:
+          "$ref": "#/components/schemas/Passenger"
+        routes:
+          items:
+            "$ref": "#/components/schemas/Route"
+          type: array
+          title: Routes
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        graph_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Graph Version
+        calculated_at:
+          type: string
+          format: date-time
+          title: Calculated At
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - passenger
+      - routes
+      - gtfs_version
+      - graph_version
+      - calculated_at
+      - warnings
+      title: RoutesResponse
+    TicketProfileInfo:
+      properties:
+        id:
+          type: string
+          enum:
+          - full_fare
+          - podorozhnik_wallet
+          - monthly_unified
+          - monthly_surface
+          - monthly_bus
+          - monthly_metro
+          - student_unified
+          - student_surface
+          - student_metro
+          - school_unified
+          - school_bus
+          - concession_unified
+          title: Id
+        label_ru:
+          type: string
+          title: Label Ru
+        coverage_status:
+          type: string
+          const: not_implemented
+          title: Coverage Status
+          default: not_implemented
+      additionalProperties: false
+      type: object
+      required:
+      - id
+      - label_ru
+      title: TicketProfileInfo
+    TransitLine:
+      properties:
+        short_name:
+          type: string
+          title: Short Name
+        route_id:
+          type: string
+          title: Route Id
+        trip_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Trip Id
+      additionalProperties: false
+      type: object
+      required:
+      - short_name
+      - route_id
+      title: TransitLine
+    ValidationErrorResponse:
+      properties:
+        detail:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Detail
+      type: object
+      required:
+      - detail
+      title: ValidationErrorResponse
