@@ -4,7 +4,7 @@ metadata:
   name: gtfs-refresh
   namespace: peresadochnaya
 spec:
-  schedule: '*/5 * * * *'
+  schedule: '*/20 * * * *'
   timeZone: Europe/Moscow
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 120
@@ -42,6 +42,13 @@ spec:
               args: [--store-dir, /data/gtfs]
               envFrom:
                 - configMapRef: {name: backend-config}
+              env:
+                - name: HTTPS_PROXY
+                  valueFrom:
+                    secretKeyRef:
+                      name: gtfs-proxy
+                      key: url
+                      optional: true
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true

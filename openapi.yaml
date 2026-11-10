@@ -1,10 +1,9 @@
----
 openapi: 3.1.0
 info:
   title: Пересадочная API
   version: 0.1.0
 paths:
-  "/health/live":
+  /health/live:
     get:
       summary: Live
       operationId: live_health_live_get
@@ -14,7 +13,7 @@ paths:
           content:
             application/json:
               schema: {}
-  "/health/ready":
+  /health/ready:
     get:
       summary: Ready
       operationId: ready_health_ready_get
@@ -24,7 +23,7 @@ paths:
           content:
             application/json:
               schema: {}
-  "/api/v1/data/status":
+  /api/v1/data/status:
     get:
       summary: Data Status
       operationId: data_status_api_v1_data_status_get
@@ -34,8 +33,8 @@ paths:
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/DataStatus"
-  "/api/v1/ticket-profiles":
+                $ref: '#/components/schemas/DataStatus'
+  /api/v1/ticket-profiles:
     get:
       summary: Ticket Profiles
       operationId: ticket_profiles_api_v1_ticket_profiles_get
@@ -46,41 +45,317 @@ paths:
             application/json:
               schema:
                 items:
-                  "$ref": "#/components/schemas/TicketProfileInfo"
+                  $ref: '#/components/schemas/TicketProfileInfo'
                 type: array
                 title: Response Ticket Profiles Api V1 Ticket Profiles Get
-  "/api/v1/routes":
-    post:
-      summary: Routes
-      operationId: routes_api_v1_routes_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/RouteRequest"
+  /api/v1/suggest:
+    get:
+      summary: Suggest
+      description: Address suggestions biased towards Saint Petersburg and Leningrad
+        Oblast. Resolve the selected URI through the geocoder to obtain coordinates.
+        Yandex is contacted only with dummy=false.
+      operationId: suggest_api_v1_suggest_get
+      parameters:
+      - name: q
+        in: query
         required: true
+        schema:
+          type: string
+          minLength: 2
+          maxLength: 256
+          pattern: \S
+          title: Q
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          title: Limit
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Synthetic response without Yandex calls; explicitly pass false
+            to enable provider access
+          default: true
+          title: Dummy
+        description: Synthetic response without Yandex calls; explicitly pass false
+          to enable provider access
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/RoutesResponse"
+                $ref: '#/components/schemas/SuggestResponse'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Gateway Timeout
         '422':
-          description: Unprocessable Content
           content:
             application/json:
               schema:
                 anyOf:
-                - "$ref": "#/components/schemas/ErrorResponse"
-                - "$ref": "#/components/schemas/ValidationErrorResponse"
-                title: Response 422 Routes Api V1 Routes Post
-        '503':
-          description: Service Unavailable
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Suggest Api V1 Suggest Get
+          description: Unprocessable Content
+  /api/v1/geocode:
+    get:
+      summary: Geocode
+      description: Resolve exactly one of q (address) or uri (selected suggestion).
+        At most one result; no match yields items=[].
+      operationId: geocode_api_v1_geocode_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            minLength: 2
+            maxLength: 256
+            pattern: \S
+          - type: 'null'
+          title: Q
+      - name: uri
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 4096
+            pattern: \S
+          - type: 'null'
+          title: Uri
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/GeocodeResponse'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Gateway Timeout
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Geocode Api V1 Geocode Get
+          description: Unprocessable Content
+  /api/v1/reverse:
+    get:
+      summary: Reverse
+      description: Resolve coordinates to an address. Result coordinates belong to
+        the found object; keep the original clicked point for routing.
+      operationId: reverse_api_v1_reverse_get
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          maximum: 90
+          minimum: -90
+          title: Lat
+      - name: lon
+        in: query
+        required: true
+        schema:
+          type: number
+          maximum: 180
+          minimum: -180
+          title: Lon
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Gateway Timeout
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Reverse Api V1 Reverse Get
+          description: Unprocessable Content
+  /api/v1/road-route:
+    post:
+      summary: Road Route
+      description: Driving estimate for exactly two ordered points, independently
+        of OTP. One traffic mode per call, at most one Yandex request with dummy=false.
+        Not a public transport route. No automatic traffic comparison.
+      operationId: road_route_api_v1_road_route_post
+      parameters:
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Synthetic driving estimate; explicitly pass false to spend
+            one Router API request
+          default: true
+          title: Dummy
+        description: Synthetic driving estimate; explicitly pass false to spend one
+          Router API request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoadRouteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoadRouteResponse'
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Gateway Timeout
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Road Route Api V1 Road Route Post
+          description: Unprocessable Content
+  /api/v1/routes:
+    post:
+      summary: Routes
+      operationId: routes_api_v1_routes_post
+      parameters:
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Synthetic response without Yandex calls; explicitly pass false
+            to enable real planning and provider access
+          default: true
+          title: Dummy
+        description: Synthetic response without Yandex calls; explicitly pass false
+          to enable real planning and provider access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutesResponse'
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Routes Api V1 Routes Post
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
 components:
   schemas:
     DataStatus:
@@ -141,12 +416,63 @@ components:
     ErrorResponse:
       properties:
         error:
-          "$ref": "#/components/schemas/ErrorDetail"
+          $ref: '#/components/schemas/ErrorDetail'
       additionalProperties: false
       type: object
       required:
       - error
       title: ErrorResponse
+    GeocodeResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - yandex
+          title: Mode
+        items:
+          items:
+            $ref: '#/components/schemas/GeocodedPlace'
+          type: array
+          title: Items
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - items
+      title: GeocodeResponse
+    GeocodedPlace:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        label:
+          type: string
+          title: Label
+        precision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Precision
+      additionalProperties: false
+      type: object
+      required:
+      - lat
+      - lon
+      - label
+      title: GeocodedPlace
     Leg:
       properties:
         mode:
@@ -161,9 +487,9 @@ components:
           - wait
           title: Mode
         from:
-          "$ref": "#/components/schemas/Place"
+          $ref: '#/components/schemas/Place'
         to:
-          "$ref": "#/components/schemas/Place"
+          $ref: '#/components/schemas/Place'
         start_at:
           type: string
           format: date-time
@@ -189,12 +515,10 @@ components:
           title: Duration Source
         line:
           anyOf:
-          - "$ref": "#/components/schemas/TransitLine"
+          - $ref: '#/components/schemas/TransitLine'
           - type: 'null'
         geometry:
-          additionalProperties: true
-          type: object
-          title: Geometry
+          $ref: '#/components/schemas/LineString'
       additionalProperties: false
       type: object
       required:
@@ -208,6 +532,34 @@ components:
       - duration_source
       - geometry
       title: Leg
+    LineString:
+      properties:
+        type:
+          type: string
+          const: LineString
+          title: Type
+          default: LineString
+        coordinates:
+          items:
+            prefixItems:
+            - type: number
+              maximum: 180.0
+              minimum: -180.0
+            - type: number
+              maximum: 90.0
+              minimum: -90.0
+            type: array
+            maxItems: 2
+            minItems: 2
+          type: array
+          minItems: 2
+          title: Coordinates
+      additionalProperties: false
+      type: object
+      required:
+      - coordinates
+      title: LineString
+      description: WGS84 GeoJSON line; positions are [longitude, latitude].
     Passenger:
       properties:
         ticket_profile:
@@ -275,11 +627,128 @@ components:
       - lat
       - lon
       title: Point
+    RoadRoute:
+      properties:
+        distance_meters:
+          type: number
+          minimum: 0.0
+          title: Distance Meters
+        duration_seconds:
+          type: number
+          minimum: 0.0
+          title: Duration Seconds
+          description: Driving duration, not a public transport travel time
+        geometry:
+          $ref: '#/components/schemas/LineString'
+      additionalProperties: false
+      type: object
+      required:
+      - distance_meters
+      - duration_seconds
+      - geometry
+      title: RoadRoute
+    RoadRouteRequest:
+      properties:
+        points:
+          items:
+            $ref: '#/components/schemas/Point'
+          type: array
+          maxItems: 2
+          minItems: 2
+          title: Points
+        departure_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Departure At
+          description: Optional future departure for traffic forecast; ignored with
+            traffic_mode=off
+        traffic_mode:
+          type: string
+          enum:
+          - 'off'
+          - 'on'
+          title: Traffic Mode
+          default: 'on'
+      additionalProperties: false
+      type: object
+      required:
+      - points
+      title: RoadRouteRequest
+    RoadRouteResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - yandex
+          title: Mode
+        traffic_mode:
+          type: string
+          enum:
+          - 'off'
+          - 'on'
+          title: Traffic Mode
+        traffic_type:
+          anyOf:
+          - type: string
+            enum:
+            - realtime
+            - forecast
+            - disabled
+          - type: 'null'
+          title: Traffic Type
+        departure_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Departure At
+        calculated_at:
+          type: string
+          format: date-time
+          title: Calculated At
+        route:
+          anyOf:
+          - $ref: '#/components/schemas/RoadRoute'
+          - type: 'null'
+          description: Null when Yandex reports a failed route; no partial routes
+            are returned
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - traffic_mode
+      - traffic_type
+      - departure_at
+      - calculated_at
+      - route
+      title: RoadRouteResponse
     Route:
       properties:
         id:
           type: string
           title: Id
+        name:
+          type: string
+          minLength: 1
+          title: Name
+          description: Free-form display label, not a fixed route category
+        distance_meters:
+          type: number
+          minimum: 0.0
+          title: Distance Meters
+          description: Total length of all moving legs in meters
+        geometry:
+          $ref: '#/components/schemas/LineString'
+          description: Full route line in travel order; detailed sections remain in
+            legs
         start_at:
           type: string
           format: date-time
@@ -298,13 +767,16 @@ components:
           title: Transfers
         legs:
           items:
-            "$ref": "#/components/schemas/Leg"
+            $ref: '#/components/schemas/Leg'
           type: array
           title: Legs
       additionalProperties: false
       type: object
       required:
       - id
+      - name
+      - distance_meters
+      - geometry
       - start_at
       - end_at
       - duration_seconds
@@ -315,14 +787,14 @@ components:
       properties:
         points:
           items:
-            "$ref": "#/components/schemas/Point"
+            $ref: '#/components/schemas/Point'
           type: array
           maxItems: 2
           minItems: 2
           title: Points
           description: Ordered route points; currently exactly origin and destination
         passenger:
-          "$ref": "#/components/schemas/Passenger"
+          $ref: '#/components/schemas/Passenger'
         departure_at:
           type: string
           format: date-time
@@ -355,10 +827,10 @@ components:
           - planner
           title: Mode
         passenger:
-          "$ref": "#/components/schemas/Passenger"
+          $ref: '#/components/schemas/Passenger'
         routes:
           items:
-            "$ref": "#/components/schemas/Route"
+            $ref: '#/components/schemas/Route'
           type: array
           title: Routes
         gtfs_version:
@@ -391,6 +863,53 @@ components:
       - calculated_at
       - warnings
       title: RoutesResponse
+    SuggestResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - yandex
+          title: Mode
+        items:
+          items:
+            $ref: '#/components/schemas/Suggestion'
+          type: array
+          title: Items
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - items
+      title: SuggestResponse
+    Suggestion:
+      properties:
+        title:
+          type: string
+          title: Title
+          description: Main display text
+        subtitle:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtitle
+          description: Address or area clarification
+        uri:
+          type: string
+          title: Uri
+          description: Opaque Yandex object URI to resolve with the geocoder; not
+            a URL to fetch
+      additionalProperties: false
+      type: object
+      required:
+      - title
+      - uri
+      title: Suggestion
     TicketProfileInfo:
       properties:
         id:

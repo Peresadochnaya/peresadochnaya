@@ -87,7 +87,7 @@ jobs:
           trap 'rm -f "$key_file"' EXIT
           printf '%s' "$NB_SETUP_KEY" > "$key_file"
           sudo timeout 90 netbird up --setup-key-file "$key_file" --management-url "$NB_MANAGEMENT_URL"
-          # Wait for the ordinary TCP/22 policy, not NetBird SSH interception.
+          # Existing NetBird SSH accepts port 22 through the CI-to-K3S policy.
           for attempt in $(seq 1 12); do
             if timeout 5 bash -c 'exec 3<>/dev/tcp/$1/22' _ "$DEPLOY_HOST"; then
               exit 0

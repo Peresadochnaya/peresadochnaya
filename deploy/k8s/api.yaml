@@ -27,6 +27,16 @@ spec:
             - {name: http, containerPort: 8000}
           envFrom:
             - configMapRef: {name: backend-config}
+          env:
+            - name: YANDEX_GEOCODER_API_KEY
+              valueFrom:
+                secretKeyRef: {name: yandex-api, key: geocoder, optional: true}
+            - name: YANDEX_SUGGEST_API_KEY
+              valueFrom:
+                secretKeyRef: {name: yandex-api, key: suggest, optional: true}
+            - name: YANDEX_ROUTER_API_KEY
+              valueFrom:
+                secretKeyRef: {name: yandex-api, key: router, optional: true}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
