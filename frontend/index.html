@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта на MapLibre с OpenFreeMap (стиль Liberty)</title>
+    <!-- Подключаем стили MapLibre -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.17.0/dist/maplibre-gl.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        #map {
+            /* Карта занимает всю высоту экрана */
+            height: 100vh;
+            width: 100%;
+        }
+        /* Панель для отображения координат */
+        #coordinates-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-size: 14px;
+            z-index: 10; /* Чтобы панель была поверх карты */
+            pointer-events: none; /* Панель не перехватывает клики */
+        }
+        #coordinates-panel strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Контейнер для карты -->
+    <div id="map"></div>
+
+    <!-- Панель для отображения координат -->
+    <div id="coordinates-panel">
+        <strong>Координаты клика:</strong>
+        <span id="coord-text">Кликните по карте</span>
+    </div>
+
+    <!-- Подключаем MapLibre GL JS как модуль -->
+    <script type="module">
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.17.0/dist/maplibre-gl.mjs';
+
+        // Инициализируем карту
+        const map = new maplibregl.Map({
+            container: 'map', // ID контейнера
+            // URL стиля Liberty от OpenFreeMap, как указано в их документации
+            style: 'https://tiles.openfreemap.org/styles/liberty',
+            center: [37.6173, 55.7558], // Координаты центра (Москва)
+            zoom: 10 // Начальный уровень приближения
+        });
+
+        // Добавляем элементы управления навигацией (зум, компас)
+        map.addControl(new maplibregl.NavigationControl());
+
+        // Обработчик события клика по карте
+        map.on('click', (e) => {
+            // Получаем долготу и широту из объекта события
+            const longitude = e.lngLat.lng;
+            const latitude = e.lngLat.lat;
+
+            // Форматируем строку для вывода (округляем до 6 знаков)
+            const coordString = `Долгота: ${longitude.toFixed(6)}, Широта: ${latitude.toFixed(6)}`;
+
+            // Выводим координаты в панель на странице
+            document.getElementById('coord-text').textContent = coordString;
+
+            // Выводим координаты в консоль браузера (для отладки)
+            console.log(`Клик по карте: ${coordString}`);
+
+            // --- Здесь вы можете добавить отправку данных на ваш бэкенд ---
+            // Пример:
+            // fetch('/api/save-click', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ lng: longitude, lat: latitude })
+            // });
+        });
+    </script>
+</body>
+</html>
