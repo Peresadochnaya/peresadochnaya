@@ -1,0 +1,48 @@
+{
+  "id": "01",
+  "label": "Ruchei to Pionerskaya",
+  "origin_query": "Ruchei",
+  "destination_query": "Pionerskaya",
+  "state": "place_resolution_failed",
+  "timestamp": "2026-11-10T11:53:10+03:00",
+  "screenshot": "screenshots/01.png",
+  "xml": "xml/01.xml",
+  "text_file": "text/01.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "02",
+  "label": "Pionerskaya to Ruchei",
+  "origin_query": "Pionerskaya",
+  "destination_query": "Ruchei",
+  "state": "place_resolution_failed",
+  "timestamp": "2026-11-10T11:53:31+03:00",
+  "screenshot": "screenshots/02.png",
+  "xml": "xml/02.xml",
+  "text_file": "text/02.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "03",
+  "label": "Pargolovo to Ozerki",
+  "origin_query": "Pargolovo",
+  "destination_query": "Ozerki",
+  "state": "place_resolution_failed",
+  "timestamp": "2026-11-10T11:53:51+03:00",
+  "screenshot": "screenshots/03.png",
+  "xml": "xml/03.xml",
+  "text_file": "text/03.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "04",
+  "label": "Ozerki to Pargolovo",
+  "origin_query": "Ozerki",
+  "destination_query": "Pargolovo",
+  "state": "place_resolution_failed",
+  "timestamp": "2026-11-10T11:54:15+03:00",
+  "screenshot": "screenshots/04.png",
+  "xml": "xml/04.xml",
+  "text_file": "text/04.txt",
+  "classification": "pending_manual_realtime_comparison"
+}

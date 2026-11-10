@@ -1,0 +1,18 @@
+{
+  "id": "27",
+  "label": "Murino to Bugry",
+  "origin_query": "Murino",
+  "destination_query": "Bugry",
+  "origin_selected": "Murino",
+  "destination_selected": "Bugry, Vsevolozhsky Municipal District, Leningrad Region",
+  "observation_time": "2026-11-10T13:42:00+03:00",
+  "first_surface_segment": {"mode": "Minibus", "route": "885", "board_stop": "Бульвар Менделеева", "walking_approach_min": 1, "route_board_time": "13:58", "route_realtime_arrival": "14:00"},
+  "nearest_schedule_arrival": {"route": "885", "time": "14:00", "relative": "In 18 min", "realtime_indicator": "green dot shown beside 14:00 in schedule.png and route-details.png"},
+  "comparison": "The realtime minibus is 2 min after route boarding time. The one-minute walk ends at 13:42, so the minibus arriving at 14:00 is reachable.",
+  "classification": "mismatch",
+  "eligible_surface_first": true,
+  "geographic_scope": "Bugry and Murino are in Leningrad Region; included per updated scope",
+  "independence_group": "minibus 885 / Бульвар Менделеева",
+  "timestamp": "2026-11-10T13:42:00+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

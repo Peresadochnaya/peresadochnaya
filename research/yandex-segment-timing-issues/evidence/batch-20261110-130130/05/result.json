@@ -1,0 +1,35 @@
+{
+  "id": "05",
+  "label": "Kolpino to Metallostroy",
+  "origin_query": "Kolpino",
+  "destination_query": "Metallostroy",
+  "origin_selected": "Kolpino",
+  "destination_selected": "posyolok Metallostroy, Kolpinskiy rayon, Sankt-Peterburg",
+  "route_start": "13:03",
+  "first_surface_segment": {
+    "mode": "Bus",
+    "route": "337",
+    "board_stop": "Городской сад",
+    "walking_approach_min": 2,
+    "board_time": "13:14",
+    "route_arrives_at": "13:11"
+  },
+  "nearest_schedule_arrival": {
+    "route": "337",
+    "time": "13:11",
+    "relative": "In 8 min",
+    "realtime_indicator": "green dot shown beside 13:11 in schedule.png"
+  },
+  "comparison": "same bus arrival is 3 minutes earlier than the route boarding time; details independently say Arrives at 13:11",
+  "classification": "mismatch",
+  "observation_time": "13:03 (device status bar; 337 arrival shown In 8 min at 13:11)",
+  "timestamp": "2026-11-10T13:02:00+03:00",
+  "evidence": [
+    "route.png",
+    "route.xml",
+    "route-details.png",
+    "route-details.xml",
+    "schedule.png",
+    "schedule.xml"
+  ]
+}

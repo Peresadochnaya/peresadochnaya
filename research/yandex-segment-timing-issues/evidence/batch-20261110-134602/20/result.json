@@ -1,0 +1,14 @@
+{
+  "id": "20",
+  "label": "Lomonosov Bar to Grand Peterhof Palace",
+  "origin_query": "Lomonosov",
+  "destination_query": "Peterhof",
+  "origin_selected": "Lomonosov Bar",
+  "destination_selected": "Grand Peterhof Palace",
+  "first_transport_leg": {"mode": "Metro", "line": "2"},
+  "classification": "insufficient_evidence",
+  "eligible_surface_first": false,
+  "exclusion_reason": "The selected origin is Lomonosov Bar (address context Tsentralniy District / Lomonosova Street 1), not the city of Lomonosov; itinerary also starts by metro.",
+  "timestamp": "2026-11-10T13:46:02+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "origin-history.xml"]
+}

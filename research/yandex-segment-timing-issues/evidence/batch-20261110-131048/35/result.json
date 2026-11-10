@@ -1,0 +1,15 @@
+{
+  "id": "35",
+  "label": "Primorskaya to Lakhta",
+  "origin_query": "Primorskaya",
+  "destination_query": "Lakhta",
+  "origin_selected": "Primorskaya",
+  "destination_selected": "Lakhta Center",
+  "route_start": "13:11",
+  "first_transport_leg": {"mode": "Metro", "line": "3", "board_time": "13:17"},
+  "state": "route_built",
+  "comparison": "The selected itinerary starts with Metro, so it does not qualify for the required surface-first check; no schedule was opened.",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T13:11:35+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml"]
+}

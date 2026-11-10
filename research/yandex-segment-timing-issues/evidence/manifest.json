@@ -1,0 +1,199 @@
+{
+  "date": "2026-11-10",
+  "device": "emulator-5554",
+  "records": [
+    {
+      "case": "01",
+      "route": "Kolomyazhsky Ave 21k2 → Marshaka Ave 3",
+      "eligible_surface_first": true,
+      "classification": "insufficient_evidence",
+      "independence_group": "bus 202 / Проспект Королёва"
+    },
+    {
+      "case": "02",
+      "route": "Pargolovo → Ozerki",
+      "eligible_surface_first": true,
+      "classification": "no_mismatch",
+      "independence_group": "bus 673 / Улица Ломоносова"
+    },
+    {
+      "case": "03",
+      "route": "Pargolovo Settlement → Ozerki",
+      "eligible_surface_first": true,
+      "classification": "no_mismatch",
+      "independence_group": "bus 673 / Улица Ломоносова"
+    },
+    {
+      "case": "04",
+      "route": "Ozerki → Pargolovo",
+      "eligible_surface_first": true,
+      "classification": "insufficient_evidence",
+      "independence_group": "bus 557 / Станция метро Озерки"
+    },
+    {
+      "case": "05",
+      "route": "Kolpino → Metallostroy",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 337 / Городской сад"
+    },
+    {
+      "case": "06",
+      "route": "Metallostroy → Kolpino",
+      "eligible_surface_first": true,
+      "classification": "insufficient_evidence",
+      "independence_group": "bus 327 / Центральная улица"
+    },
+    {
+      "case": "07",
+      "route": "Kolpino → Ust-Izhora",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 337 / Городской сад (same as 05)"
+    },
+    {
+      "case": "17",
+      "route": "Strelna → Grand Peterhof Palace",
+      "eligible_surface_first": true,
+      "classification": "interval_arithmetic_mismatch",
+      "independence_group": "bus 343Э / Фронтовая улица"
+    },
+    {
+      "case": "15",
+      "route": "Krasnoye Selo → Dudergof Station",
+      "eligible_surface_first": true,
+      "classification": "insufficient_evidence",
+      "independence_group": "bus 477 / Улица 1-го Мая / Проспект Ленина"
+    },
+    {
+      "case": "19",
+      "route": "Grand Peterhof Palace → Lomonosov Bar (Central District address; not town of Lomonosov)",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 204Э / Razvodnaya Street"
+    },
+    {
+      "case": "20",
+      "route": "Lomonosov Bar → Grand Peterhof Palace",
+      "eligible_surface_first": false,
+      "classification": "insufficient_evidence",
+      "independence_group": null,
+      "reason": "origin is a city bar, not Lomonosov town; itinerary begins by metro"
+    },
+    {
+      "case": "23",
+      "route": "Yuntolovo → Staraya Derevnya",
+      "eligible_surface_first": true,
+      "classification": "insufficient_evidence",
+      "independence_group": "bus 120 / ЖК Юнтолово"
+    },
+    {
+      "case": "24",
+      "route": "Staraya Derevnya → Yuntolovo",
+      "eligible_surface_first": true,
+      "classification": "interval_arithmetic_mismatch",
+      "independence_group": "bus 101Э / Staraya Derevnya Metro Station"
+    },
+    {
+      "case": "27",
+      "route": "Murino → Bugry",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "minibus 885 / Бульвар Менделеева",
+      "geographic_scope": "Leningrad Region included per updated instruction"
+    },
+    {
+      "case": "33",
+      "route": "Komendantsky Prospekt → Yuntolovo",
+      "eligible_surface_first": false,
+      "classification": "insufficient_evidence",
+      "independence_group": null,
+      "reason": "first transport leg is metro"
+    },
+    {
+      "case": "35",
+      "route": "Primorskaya → Lakhta Center",
+      "eligible_surface_first": false,
+      "classification": "insufficient_evidence",
+      "independence_group": null,
+      "reason": "first transport leg is metro"
+    },
+    {
+      "case": "37",
+      "route": "Avtovo → Strelna",
+      "eligible_surface_first": true,
+      "classification": "interval_arithmetic_mismatch",
+      "independence_group": "bus 204Э / Станция метро Автово"
+    },
+    {
+      "case": "38",
+      "route": "Strelna → Avtovo",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 200 / Фронтовая улица"
+    },
+    {
+      "case": "39",
+      "route": "Avtovo → Grand Peterhof Palace",
+      "eligible_surface_first": true,
+      "classification": "interval_arithmetic_mismatch",
+      "independence_group": "bus 204Э / Станция метро Автово (same as 37)"
+    },
+    {
+      "case": "43",
+      "route": "Kupchino → Shushary",
+      "eligible_surface_first": true,
+      "classification": "interval_arithmetic_mismatch",
+      "independence_group": "tram 62 / Станция метро Купчино"
+    },
+    {
+      "case": "45",
+      "route": "Rybatskoye → Metallostroy",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 115А / Rybatskoye Metro Station"
+    },
+    {
+      "case": "46",
+      "route": "Metallostroy → Rybatskoye",
+      "eligible_surface_first": true,
+      "classification": "mismatch",
+      "independence_group": "bus 115А / Металлострой – ДК имени Маяковского",
+      "shared_line_with": "45"
+    },
+    {
+      "case": "47",
+      "route": "Pionerskaya → Udelnaya",
+      "eligible_surface_first": false,
+      "classification": "failed",
+      "independence_group": null,
+      "reason": "place resolution failed; no route built"
+    }
+  ],
+  "summary": {
+    "attempt_records": 23,
+    "routes_built": 22,
+    "eligible_surface_first_built": 19,
+    "built_but_excluded": 3,
+    "confirmed_realtime_mismatch_records": 7,
+    "confirmed_realtime_mismatch_independent_groups": 6,
+    "eligible_confirmed_realtime_mismatch_records": 7,
+    "eligible_confirmed_realtime_mismatch_independent_groups": 6,
+    "excluded_realtime_mismatch_records": 0,
+    "interval_arithmetic_mismatch_records": 5,
+    "interval_arithmetic_mismatch_independent_groups": 4,
+    "independent_candidate_groups_total": 10,
+    "no_mismatch": 2,
+    "insufficient_evidence": 8,
+    "failed": 1
+  },
+  "notes": [
+    "Cases 05 and 07 are separate directions/queries but one independent bus-stop group.",
+    "Cases 45 and 46 use the same route 115А at different stops; retain them as separate location candidates and tag the shared line.",
+    "Case 27 has a green-dot realtime discrepancy and is included because the user explicitly included Leningrad Region.",
+    "Interval arithmetic uses route start + walking approach + displayed headway; headway is a frequency estimate, not an exact real-time arrival.",
+    "Failed script attempts are kept in their per-attempt folders but are not counted as built route records.",
+    "Cases 27 in Murino/Bugry (Leningrad Region) are included in scope per updated instruction.",
+    "Case 19 destination is Lomonosov Bar in Tsentralniy District, Lomonosova Street 1; it is not the town of Lomonosov. The record uses the exact selected name/address."
+  ]
+}

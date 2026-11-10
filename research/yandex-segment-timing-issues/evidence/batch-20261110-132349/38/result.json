@@ -1,0 +1,16 @@
+{
+  "id": "38",
+  "label": "Strelna to Avtovo",
+  "origin_query": "Strelna",
+  "destination_query": "Avtovo",
+  "origin_selected": "Strelna Settlement",
+  "destination_selected": "Avtovo",
+  "observation_time": "2026-11-10T13:25:00+03:00",
+  "first_surface_segment": {"mode": "Bus", "route": "200", "board_stop": "Фронтовая улица", "walking_approach_min": 3, "route_board_time": "13:39", "route_interval": "11 min"},
+  "nearest_schedule_arrival": {"route": "200", "time": "13:30", "relative": "In 5 min", "realtime_indicator": "green dot shown beside 13:30 in schedule.png"},
+  "comparison": "The green-dot realtime arrival is 13:30, 9 min before route boarding at 13:39. The 3-minute walk ends by 13:27, so that bus is reachable.",
+  "classification": "mismatch",
+  "independence_group": "bus 200 / Фронтовая улица",
+  "timestamp": "2026-11-10T13:25:00+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

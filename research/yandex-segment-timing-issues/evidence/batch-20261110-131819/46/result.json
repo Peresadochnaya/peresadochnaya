@@ -1,0 +1,16 @@
+{
+  "id": "46",
+  "label": "Metallostroy to Rybatskoye",
+  "origin_query": "Metallostroy",
+  "destination_query": "Rybatskoe",
+  "origin_selected": "posyolok Metallostroy",
+  "destination_selected": "Rybatskoye",
+  "observation_time": "2026-11-10T13:20:26+03:00",
+  "first_surface_segment": {"mode": "Bus", "route": "115А", "board_stop": "Металлострой – ДК имени Маяковского", "walking_approach_min": 2, "route_board_time": "13:27", "route_interval": "5 min"},
+  "nearest_schedule_arrival": {"route": "115А", "time": "13:23", "relative": "In 4 min", "realtime_indicator": "green dot shown beside 13:23 in schedule.png"},
+  "comparison": "The same bus arrives at 13:23, 4 min before route boarding time. The 2-minute walking approach ends at 13:21, so the 13:23 bus is reachable. This is a distinct stop from the 115А/Rybatskoye Metro Station group; the route line is shared.",
+  "classification": "mismatch",
+  "independence_group": "115А / Металлострой – ДК имени Маяковского",
+  "timestamp": "2026-11-10T13:20:26+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

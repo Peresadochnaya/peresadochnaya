@@ -1,0 +1,14 @@
+[
+  {
+    "id": "01",
+    "label": "Ruchei to Pionerskaya",
+    "origin_query": "Ruchei",
+    "destination_query": "Pionerskaya",
+    "state": "route_built",
+    "timestamp": "2026-11-10T11:44:59+03:00",
+    "screenshot": "screenshots/01.png",
+    "xml": "xml/01.xml",
+    "text_file": "text/01.txt",
+    "classification": "pending_manual_realtime_comparison"
+  }
+]

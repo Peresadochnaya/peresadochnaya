@@ -1,0 +1,9 @@
+{
+  "id": "03",
+  "label": "Pargolovo to Ozerki",
+  "origin_query": "Pargolovo",
+  "destination_query": "Ozerki",
+  "state": "place_resolution_failed",
+  "classification": "insufficient_evidence",
+  "timestamp": "2026-11-10T12:54:42+03:00"
+}

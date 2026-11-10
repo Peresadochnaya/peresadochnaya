@@ -1,0 +1,15 @@
+{
+  "id": "03",
+  "label": "Pargolovo Settlement to Ozerki",
+  "origin_query": "Pargolovo",
+  "destination_query": "Ozerki",
+  "origin_selected": "Pargolovo Settlement",
+  "destination_selected": "Ozerki",
+  "route_start": "12:56",
+  "first_surface_segment": {"mode": "Bus", "route": "673", "board_stop": "Улица Ломоносова", "board_time": "13:01"},
+  "nearest_schedule_arrival": {"route": "673", "time": "13:02", "relative": "In 5 min", "source": "schedule.xml and route-details.xml"},
+  "comparison": "same bus arrival is 1 minute after route boarding time",
+  "classification": "no_mismatch",
+  "timestamp": "2026-11-10T12:56:19+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

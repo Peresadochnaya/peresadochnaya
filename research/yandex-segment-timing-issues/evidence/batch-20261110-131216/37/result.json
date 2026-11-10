@@ -1,0 +1,15 @@
+{
+  "id": "37",
+  "label": "Avtovo to Strelna",
+  "origin_query": "Avtovo",
+  "destination_query": "Strelna",
+  "origin_selected": "Avtovo",
+  "destination_selected": "Strelna Settlement",
+  "first_surface_segment": {"mode": "Bus", "route": "204Э", "board_stop": "Станция метро Автово", "board_time": "13:33", "walking_approach_min": 2, "route_arrives_at_stop": "Interval 14 min"},
+  "schedule_observation": {"stop": "Станция метро Автово", "route": "204Э", "displayed_arrival": "Every 14 min", "meaning": "frequency interval, not a specific arrival time"},
+  "interval_arithmetic": {"route_start": "13:12", "pedestrian_duration_min": 2, "displayed_interval_min": 14, "derived_time": "13:28", "route_boarding_time": "13:33", "difference_min": 5},
+  "comparison": "Frequency-based arithmetic differs from route boarding by 5 min. This is an interval_arithmetic_mismatch candidate; the interval is not an exact realtime arrival.",
+  "classification": "interval_arithmetic_mismatch",
+  "timestamp": "2026-11-10T13:12:16+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule.png", "schedule.xml"]
+}

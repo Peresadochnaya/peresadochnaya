@@ -1,0 +1,15 @@
+[
+  {
+    "id": "01",
+    "label": "Петергофское шоссе — Стрельна",
+    "origin": "59.8690,30.1840",
+    "destination": "59.8500,30.1110",
+    "url": "yandexmaps://maps.yandex.ru/?rtext=59.8690,30.1840~59.8500,30.1110&rtt=mt",
+    "state": "route_visible",
+    "timestamp": "2026-11-09T22:18:10+03:00",
+    "screenshot": "screenshots/01.png",
+    "xml": "xml/01.xml",
+    "text_file": "text/01.txt",
+    "classification": "pending_manual_realtime_comparison"
+  }
+]

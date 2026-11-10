@@ -1,0 +1,15 @@
+{
+  "id": "15",
+  "label": "Krasnoye Selo to Dudergof",
+  "origin_query": "Krasnoe Selo",
+  "destination_query": "Dudergof",
+  "origin_selected": "Krasnoye Selo, St. Petersburg",
+  "destination_selected": "Dudergof Station, Krasnoye Selo",
+  "first_surface_segment": {"mode": "Bus", "route": "477", "board_stop": "Улица 1-го Мая / Проспект Ленина", "board_time": "13:38", "walking_approach_min": 3, "route_schedule_label": "Scheduled at 13:38"},
+  "comparison": "Route details marks the departure scheduled at 13:38. A same-bus realtime arrival could not be opened; do not infer whether there is a mismatch.",
+  "classification": "insufficient_evidence",
+  "independence_group": "bus 477 / Улица 1-го Мая / Проспект Ленина",
+  "timestamp": "2026-11-10T13:30:20+03:00",
+  "evidence": ["route.png", "route.xml", "route-details.png", "route-details.xml", "schedule-attempt.png", "schedule-attempt.xml"],
+  "note": "Schedule attempt artifacts show route details rather than an opened schedule; renamed to avoid implying realtime evidence."
+}

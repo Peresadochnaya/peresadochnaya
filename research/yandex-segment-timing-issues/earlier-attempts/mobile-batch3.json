@@ -1,0 +1,16 @@
+{
+  "captured_at":"2026-11-09T21:59:00+03:00",
+  "surface":"web-mobile-viewport-emulation","viewport":"390x844; desktop Chrome user agent retained; not native Yandex Maps app",
+  "cases":[
+    {"id":"b3-01","classification":"ineligible-walk-only","screenshot":"screenshots/mobile-b3-01.png"},
+    {"id":"b3-02","classification":"ineligible-walk-only","screenshot":"screenshots/mobile-b3-02.png"},
+    {"id":"b3-03","first_transit":"bus 61","route_start":"21:59","approach_min":2,"wait_min":13,"boarding_time":"22:14","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-03.png"},
+    {"id":"b3-04","first_transit":"trolleybus 31","route_start":"21:59","approach_min":6,"wait_min":4,"boarding_time":"22:08","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-04.png"},
+    {"id":"b3-05","first_transit":"metro","classification":"ineligible-first-transit-metro","screenshot":"screenshots/mobile-b3-05.png"},
+    {"id":"b3-06","first_transit":"bus 223","route_start":"21:59","approach_min":11,"wait_min":12,"boarding_time":"22:22","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-06.png"},
+    {"id":"b3-07","first_transit":"metro","classification":"ineligible-first-transit-metro","screenshot":"screenshots/mobile-b3-07.png"},
+    {"id":"b3-08","first_transit":"bus 337","route_start":"21:59","approach_min":9,"wait_min":7,"boarding_time":"22:15","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-08.png"},
+    {"id":"b3-09","first_transit":"bus 342","route_start":"21:59","approach_min":1,"wait_min":21,"boarding_time":"22:21","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-09.png"},
+    {"id":"b3-10","first_transit":"bus 145E","route_start":"21:59","approach_min":6,"wait_min":14,"boarding_time":"22:19","classification":"no-mismatch","screenshot":"screenshots/mobile-b3-10.png"}
+  ]
+}

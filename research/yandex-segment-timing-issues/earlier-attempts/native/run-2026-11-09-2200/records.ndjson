@@ -1,0 +1,208 @@
+{
+  "id": "01",
+  "label": "Петергофское шоссе — Стрельна",
+  "origin": "59.8690,30.1840",
+  "destination": "59.8500,30.1110",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.8690,30.1840~59.8500,30.1110&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:18:10+03:00",
+  "screenshot": "screenshots/01.png",
+  "xml": "xml/01.xml",
+  "text_file": "text/01.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "02",
+  "label": "Петергофское шоссе — Сергиево",
+  "origin": "59.8690,30.1840",
+  "destination": "59.8330,30.1140",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.8690,30.1840~59.8330,30.1140&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:19:14+03:00",
+  "screenshot": "screenshots/02.png",
+  "xml": "xml/02.xml",
+  "text_file": "text/02.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "03",
+  "label": "Лигово — Новоселье",
+  "origin": "59.8410,30.1640",
+  "destination": "59.8050,30.1220",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.8410,30.1640~59.8050,30.1220&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:19:27+03:00",
+  "screenshot": "screenshots/03.png",
+  "xml": "xml/03.xml",
+  "text_file": "text/03.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "04",
+  "label": "Сосновая Поляна — парк Новознаменка",
+  "origin": "59.8310,30.1570",
+  "destination": "59.8170,30.1680",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.8310,30.1570~59.8170,30.1680&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:19:42+03:00",
+  "screenshot": "screenshots/04.png",
+  "xml": "xml/04.xml",
+  "text_file": "text/04.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "05",
+  "label": "Стрельна — побережье",
+  "origin": "59.8500,30.1110",
+  "destination": "59.8350,30.0910",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.8500,30.1110~59.8350,30.0910&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:19:54+03:00",
+  "screenshot": "screenshots/05.png",
+  "xml": "xml/05.xml",
+  "text_file": "text/05.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "06",
+  "label": "Юнтолово — Лахтинский разлив",
+  "origin": "60.0250,30.1660",
+  "destination": "60.0390,30.1150",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0250,30.1660~60.0390,30.1150&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:20:07+03:00",
+  "screenshot": "screenshots/06.png",
+  "xml": "xml/06.xml",
+  "text_file": "text/06.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "07",
+  "label": "Юнтолово — северная экотропа",
+  "origin": "60.0250,30.1660",
+  "destination": "60.0500,30.1510",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0250,30.1660~60.0500,30.1510&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:20:20+03:00",
+  "screenshot": "screenshots/07.png",
+  "xml": "xml/07.xml",
+  "text_file": "text/07.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "08",
+  "label": "Каменка — Юнтоловский заказник",
+  "origin": "60.0410,30.2050",
+  "destination": "60.0470,30.1490",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0410,30.2050~60.0470,30.1490&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:20:34+03:00",
+  "screenshot": "screenshots/08.png",
+  "xml": "xml/08.xml",
+  "text_file": "text/08.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "09",
+  "label": "Лахта — берег Финского залива",
+  "origin": "60.0060,30.1200",
+  "destination": "59.9960,30.0790",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0060,30.1200~59.9960,30.0790&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:20:48+03:00",
+  "screenshot": "screenshots/09.png",
+  "xml": "xml/09.xml",
+  "text_file": "text/09.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "10",
+  "label": "Планерная — Новоорловский лесопарк",
+  "origin": "60.0500,30.2230",
+  "destination": "60.0750,30.2050",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0500,30.2230~60.0750,30.2050&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:21:01+03:00",
+  "screenshot": "screenshots/10.png",
+  "xml": "xml/10.xml",
+  "text_file": "text/10.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "11",
+  "label": "Ручьи — Ново-Девяткино",
+  "origin": "60.0300,30.4470",
+  "destination": "60.0570,30.4560",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0300,30.4470~60.0570,30.4560&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:21:15+03:00",
+  "screenshot": "screenshots/11.png",
+  "xml": "xml/11.xml",
+  "text_file": "text/11.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "12",
+  "label": "Ручьи — Мурино север",
+  "origin": "60.0300,30.4470",
+  "destination": "60.0660,30.4180",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0300,30.4470~60.0660,30.4180&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:21:29+03:00",
+  "screenshot": "screenshots/12.png",
+  "xml": "xml/12.xml",
+  "text_file": "text/12.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "13",
+  "label": "Парголово — Осиновая Роща",
+  "origin": "60.0820,30.2940",
+  "destination": "60.1070,30.2700",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0820,30.2940~60.1070,30.2700&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:21:43+03:00",
+  "screenshot": "screenshots/13.png",
+  "xml": "xml/13.xml",
+  "text_file": "text/13.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "14",
+  "label": "Пискарёвка — Ручьи",
+  "origin": "60.0180,30.4240",
+  "destination": "60.0350,30.4540",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0180,30.4240~60.0350,30.4540&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:21:56+03:00",
+  "screenshot": "screenshots/14.png",
+  "xml": "xml/14.xml",
+  "text_file": "text/14.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "15",
+  "label": "Мурино — Кузьмолово",
+  "origin": "60.0470,30.4420",
+  "destination": "60.1090,30.4900",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=60.0470,30.4420~60.1090,30.4900&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:22:10+03:00",
+  "screenshot": "screenshots/15.png",
+  "xml": "xml/15.xml",
+  "text_file": "text/15.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
+{
+  "id": "16",
+  "label": "Колпино — Ям-Ижора",
+  "origin": "59.7390,30.5860",
+  "destination": "59.7110,30.6550",
+  "url": "yandexmaps://maps.yandex.ru/?rtext=59.7390,30.5860~59.7110,30.6550&rtt=mt",
+  "state": "route_visible",
+  "timestamp": "2026-11-09T22:22:23+03:00",
+  "screenshot": "screenshots/16.png",
+  "xml": "xml/16.xml",
+  "text_file": "text/16.txt",
+  "classification": "pending_manual_realtime_comparison"
+}
