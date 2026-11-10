@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .data_status import load_status
+from .recorded_dummy import recorded_geocode, recorded_reverse, recorded_road_route, recorded_suggest
 from .schemas import DataStatus, ErrorResponse, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RoutesResponse, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
 from .yandex_router import YandexRouter, dummy_road_route
@@ -109,8 +110,11 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
              responses=address_errors)
     def suggest(q: str = Query(min_length=2, max_length=256, pattern=r"\S"),
                 limit: int = Query(default=5, ge=1, le=10),
-                dummy: bool = Query(default=True, description="Synthetic response without Yandex calls; explicitly pass false to enable provider access")):
+                dummy: bool = Query(default=True, description="Recorded or synthetic demo response without Yandex calls; explicitly pass false to enable provider access")):
         if dummy:
+            recorded = recorded_suggest(q, limit)
+            if recorded is not None:
+                return recorded
             return SuggestResponse(mode="dummy", items=[Suggestion(title=f"Демо: {q.strip()}",
                 subtitle="Синтетическая подсказка, не результат поиска", uri="dummy:suggestion:1")],
                 warnings=["Synthetic suggestion; Yandex was not called. Dummy URIs must not be sent to Yandex"])
@@ -124,6 +128,9 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         if (q is None) == (uri is None):
             return error(422, "invalid_geocode_query", "Provide exactly one of q or uri")
         if dummy:
+            recorded = recorded_geocode(q, uri)
+            if recorded is not None:
+                return recorded
             return GeocodeResponse(mode="dummy", items=[GeocodedPlace(lat=59.956433, lon=30.310138,
                 label="Демонстрационная точка, не результат поиска")],
                 warnings=["Synthetic fixed coordinates; Yandex was not called"])
@@ -137,6 +144,9 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                 lon: float = Query(ge=-180, le=180, allow_inf_nan=False),
                 dummy: bool = Query(default=True)):
         if dummy:
+            recorded = recorded_reverse(lat, lon)
+            if recorded is not None:
+                return recorded
             return GeocodeResponse(mode="dummy", items=[GeocodedPlace(lat=lat, lon=lon,
                 label=f"Демо: точка {lon:.5f}, {lat:.5f}")],
                 warnings=["Synthetic address label; Yandex was not called"])
@@ -145,9 +155,10 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     @app.post("/api/v1/road-route", response_model=RoadRouteResponse, responses=address_errors,
               description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one Yandex request with dummy=false. Not a public transport route. No automatic traffic comparison.")
     def road_route(request: RoadRouteRequest,
-                   dummy: bool = Query(default=True, description="Synthetic driving estimate; explicitly pass false to spend one Router API request")):
+                   dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one Router API request")):
         if dummy:
-            return dummy_road_route(request)
+            recorded = recorded_road_route(request)
+            return recorded if recorded is not None else dummy_road_route(request)
         return roads.estimate(request)
 
     @app.post("/api/v1/routes", response_model=RoutesResponse,

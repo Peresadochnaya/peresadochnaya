@@ -79,12 +79,12 @@ paths:
         required: false
         schema:
           type: boolean
-          description: Synthetic response without Yandex calls; explicitly pass false
-            to enable provider access
+          description: Recorded or synthetic demo response without Yandex calls; explicitly
+            pass false to enable provider access
           default: true
           title: Dummy
-        description: Synthetic response without Yandex calls; explicitly pass false
-          to enable provider access
+        description: Recorded or synthetic demo response without Yandex calls; explicitly
+          pass false to enable provider access
       responses:
         '200':
           description: Successful Response
@@ -266,12 +266,12 @@ paths:
         required: false
         schema:
           type: boolean
-          description: Synthetic driving estimate; explicitly pass false to spend
-            one Router API request
+          description: Recorded or synthetic driving sample; explicitly pass false
+            to spend one Router API request
           default: true
           title: Dummy
-        description: Synthetic driving estimate; explicitly pass false to spend one
-          Router API request
+        description: Recorded or synthetic driving sample; explicitly pass false to
+          spend one Router API request
       requestBody:
         required: true
         content:
