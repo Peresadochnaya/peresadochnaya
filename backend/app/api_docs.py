@@ -14,7 +14,7 @@ OPERATION_DESCRIPTIONS = {
     ),
     '/api/v1/suggest': (
         'Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve '
-        'the selected URI through the geocoder to obtain coordinates. Yandex is contacted '
+        'the selected URI through the geocoder to obtain coordinates. The selected provider is contacted '
         'only with dummy=false.'
     ),
     '/api/v1/geocode': (
@@ -27,7 +27,7 @@ OPERATION_DESCRIPTIONS = {
     ),
     '/api/v1/road-route': (
         'Driving estimate for exactly two ordered points, independently of OTP. One traffic '
-        'mode per call, at most one Yandex request with dummy=false. Not a public transport '
+        'mode per call, at most one selected provider request with dummy=false. Not a public transport '
         'route. No automatic traffic comparison.'
     ),
     '/api/v1/routes': (

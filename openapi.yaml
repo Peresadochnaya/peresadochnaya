@@ -560,7 +560,7 @@ paths:
       summary: Suggest
       description: Address suggestions biased towards Saint Petersburg and Leningrad
         Oblast. Resolve the selected URI through the geocoder to obtain coordinates.
-        Yandex is contacted only with dummy=false.
+        The selected provider is contacted only with dummy=false.
       operationId: suggest_api_v1_suggest_get
       parameters:
       - name: q
@@ -596,12 +596,12 @@ paths:
         required: false
         schema:
           type: boolean
-          description: Recorded or synthetic demo response without Yandex calls; explicitly
-            pass false to enable provider access
+          description: Recorded or synthetic demo response without external API calls;
+            explicitly pass false to enable selected provider access
           default: true
           title: Dummy
-        description: Recorded or synthetic demo response without Yandex calls; explicitly
-          pass false to enable provider access
+        description: Recorded or synthetic demo response without external API calls;
+          explicitly pass false to enable selected provider access
       responses:
         '200':
           description: Successful Response
@@ -794,8 +794,8 @@ paths:
     post:
       summary: Road Route
       description: Driving estimate for exactly two ordered points, independently
-        of OTP. One traffic mode per call, at most one Yandex request with dummy=false.
-        Not a public transport route. No automatic traffic comparison.
+        of OTP. One traffic mode per call, at most one selected provider request with
+        dummy=false. Not a public transport route. No automatic traffic comparison.
       operationId: road_route_api_v1_road_route_post
       parameters:
       - name: provider
@@ -814,11 +814,11 @@ paths:
         schema:
           type: boolean
           description: Recorded or synthetic driving sample; explicitly pass false
-            to spend one Router API request
+            to spend one selected provider request
           default: true
           title: Dummy
         description: Recorded or synthetic driving sample; explicitly pass false to
-          spend one Router API request
+          spend one selected provider request
       requestBody:
         required: true
         content:
@@ -2044,8 +2044,8 @@ components:
           anyOf:
           - $ref: '#/components/schemas/RoadRoute'
           - type: 'null'
-          description: Null when Yandex reports a failed route; no partial routes
-            are returned
+          description: Null when the selected provider reports a failed route; no
+            partial routes are returned
         warnings:
           items:
             type: string

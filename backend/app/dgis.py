@@ -53,7 +53,7 @@ class DgisClient:
                     response = client.request(method, url, **kwargs)
             if response.status_code == 429:
                 self.fail(503, "quota", "2GIS quota or rate limit reached")
-            if response.status_code == 504:
+            if response.status_code in (408, 504):
                 self.fail(504, "timeout", "2GIS provider timed out")
             if response.status_code != 200:
                 self.fail(502, "error", "2GIS provider rejected the request")
