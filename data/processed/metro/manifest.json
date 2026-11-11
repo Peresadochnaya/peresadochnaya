@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-11T17:18:01.488914+03:00",
+  "sources": [
+    "https://metro.spb.ru/intervalpoezd01092026.html",
+    "https://metro.spb.ru/rejimrabotystancii.html",
+    "https://metro.spb.ru/map1/route.html",
+    "https://metro.spb.ru/map1/files/spb00000.js",
+    "https://api.hh.ru/metro/2"
+  ],
+  "files": {
+    "intervals.csv": {
+      "rows": 90,
+      "sha256": "3c05276b04950eeb76907c001056bc486b634e3fd9086839389c840a587e137e"
+    },
+    "station_hours.csv": {
+      "rows": 86,
+      "sha256": "d0aeaee6cbadb33827dc154bc22bb262e680733a79e76806638be1333911973d"
+    },
+    "stations.csv": {
+      "rows": 75,
+      "sha256": "ea7e78b3780882ea5dc7b6b06c182e0cdef918f5cb844ea1257cb5acb2dd7350"
+    },
+    "segments.csv": {
+      "rows": 69,
+      "sha256": "2bb198ae78e8ac613dc3b20297da5615fb37e6f8fb856b12c4fb25052b9f0fad"
+    },
+    "transfers.csv": {
+      "rows": 10,
+      "sha256": "46f38e38f6299bbcc9ca53eba0556535145f2ba8ff197ad5069348f28c49bcc2"
+    }
+  }
+}

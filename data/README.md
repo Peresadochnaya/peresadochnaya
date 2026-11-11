@@ -40,10 +40,17 @@ python -m data.gtfs.versioned_static --store-dir /data/gtfs
 | `raw/portal-gtfs.zip` | Текущий GTFS Schedule для загрузки в OTP |
 | `raw/portal-gtfs.previous.zip` | Предыдущий ZIP для отката в локальном режиме |
 | `processed/gtfs/*.csv` | Таблицы текущего ZIP для backend; имена как в GTFS, расширение `.csv` |
+| `processed/metro/intervals.csv` | Опубликованные минимальные и максимальные интервалы по линиям, периодам и типам дней |
+| `processed/metro/station_hours.csv` | Опубликованные часы вестибюлей, первые и последние поезда по направлениям |
+| `processed/metro/stations.csv` | Станции, линии, порядок на линии, координаты и доступность посадки |
+| `processed/metro/segments.csv` | Соседние станции одной линии без расчётного времени пути |
+| `processed/metro/transfers.csv` | Пары пересадочных станций без расчётного времени перехода |
+| `processed/metro/manifest.json` | Источники, время обновления, SHA-256 и число строк каждого CSV |
 | `processed/gtfs/manifest.json` | SHA-256 исходного ZIP и размеры подготовленных файлов |
 | `gtfs/refresh_static.py` | Скачивает ZIP и обновляет CSV при изменении |
 | `gtfs/live_vehicles.py` | Запрашивает GTFS-RT и выводит положения машин в JSON |
-| `requirements.txt` | Зависимости двух Python-скриптов |
+| `metro/official_reference.py` | Получает подтверждённые таблицы с сайта метро и сохраняет CSV |
+| `requirements.txt` | Зависимости Python-скриптов |
 | `gtfs/certs/spb_gtfs_ca_bundle.pem` | Публичные CA-сертификаты для проверки HTTPS портала |
 | `gtfs/tests/` | Тесты обновления ZIP, CSV и разбора положений машин |
 
@@ -57,6 +64,31 @@ python3 -m venv .venv
 ```
 
 ZIP вручную скачивать не нужно: `.venv/bin/python data/gtfs/refresh_static.py` получит его с портала и построит CSV. Для `live_vehicles.py` нужен доступ к порталу и установленные зависимости; ZIP ему не требуется. Публичный CA-файл уже лежит в `data/gtfs/certs/`. Текущий `raw/portal-gtfs.zip` можно передать команде через Git; резервный ZIP и подготовленные CSV игнорируются.
+
+## Метро: подтверждённые данные с сайта метрополитена СПб
+
+Публичный актуальный GTFS метрополитена не найден.
+
+В `processed/metro/` сохранены опубликованные сведения о метро и координаты станций из API HeadHunter:
+
+| Файл | Что подтверждено | Дата начала по источнику |
+| --- | --- | --- |
+| `intervals.csv` | 90 диапазонов минимального и максимального интервала по 6 линиям, периодам суток, будням, субботам и воскресеньям | [01.09.2026](https://metro.spb.ru/intervalpoezd01092026.html) |
+| `station_hours.csv` | 86 строк о вестибюлях и станциях: открытие/закрытие, первые и последние поезда; закрытые станции отмечены отдельно | [01.10.2026](https://metro.spb.ru/rejimrabotystancii.html) |
+| `stations.csv` | 75 станций и порядок на 6 линиях по [схеме метро](https://metro.spb.ru/map1/route.html), координаты из [API HeadHunter](https://api.hh.ru/metro/2); `boarding_allowed=0` у «Фрунзенской» и «Парка Победы» | Снимок при обновлении |
+| `segments.csv`, `transfers.csv` | 69 соседних участков и 10 пар пересадок из [схемы метро](https://metro.spb.ru/map1/route.html) | Снимок при обновлении |
+
+Обновить их из корня проекта:
+
+```bash
+.venv/bin/python -m data.metro.official_reference
+```
+
+Дата окончания действия опубликованных таблиц не указана. CSV не содержат полного расписания рейсов и времени пути между станциями.
+
+**Контракт для backend:** читать `manifest.json` и сверять SHA-256 файлов перед загрузкой. `stations.csv.station_id` — ключ станции в этом наборе; `station_hours.csv.station_id`, `segments.csv.from_station_id`/`to_station_id` и `transfers.csv.station_a_id`/`station_b_id` ссылаются на него. В `segments.csv` и `transfers.csv` каждая пара записана один раз, связь двусторонняя. `boarding_allowed=0` запрещает посадку/высадку на закрытой станции, но она остаётся на линии между соседями. `intervals.csv` задаёт **диапазон**, а не точное время отправления или постоянный интервал. `station_hours.csv` содержит отдельные строки вестибюлей; первые и последние поезда указаны в сторону `first_terminus` и `second_terminus`, а `odd`/`even` означают чётность поезда в исходной таблице. Оценку времени пути и правила праздников backend определяет отдельно и помечает как оценочные.
+
+Для полноценного GTFS метро нужны фактические рейсы или проверенные времена хода между станциями и календарь исключений. До получения такого источника эти CSV нельзя загрузить в OTP как расписание поездов.
 
 ## Функции
 
@@ -74,6 +106,11 @@ ZIP вручную скачивать не нужно: `.venv/bin/python data/gt
 | `live_vehicles.show_positions` | Печатает человекочитаемый список машин |
 | `live_vehicles.moscow_time` | Форматирует Unix-время для консоли |
 | `live_vehicles.main` | Обрабатывает параметры CLI и выводит снимок или JSON Lines |
+| `metro.official_reference.extract_intervals` | Переносит опубликованные диапазоны интервалов без расчёта рейсов |
+| `metro.official_reference.extract_station_hours` | Переносит часы работы и первые/последние поезда со страницы метро |
+| `metro.official_reference.extract_network` | Выделяет станции, соседние участки и пересадки из схемы, дополняет координатами |
+| `metro.official_reference.attach_station_ids` | Связывает строки вестибюлей со станциями по названию и линии |
+| `metro.official_reference.main` | Скачивает источники и обновляет пять CSV и manifest |
 
 `spb_gtfs_ca_bundle.pem` не является токеном или секретом: он нужен `requests` для проверки сертификата сервера. Системные настройки сертификатов не меняются.
 
@@ -104,7 +141,7 @@ ZIP вручную скачивать не нужно: `.venv/bin/python data/gt
 | `active_service_ids=0` или `warning` | Не считать расписание пригодным для поездок на `service_date`; проверить источник |
 | Код процесса `1` | Оставить прежний ZIP и граф; зарегистрировать ошибку |
 
-OTP использует `routes.txt`, `stops.txt`, `trips.txt`, `stop_times.txt`, календарь и геометрию из ZIP. Для маршрута от координаты A до B дополнительно нужен OSM PBF. На **10 ноября 2026 года** в текущем архиве нет активных `service_id`; транспортных вариантов на эту дату OTP может не вернуть. Метро в архиве нет.
+OTP использует `routes.txt`, `stops.txt`, `trips.txt`, `stop_times.txt`, календарь и геометрию из ZIP. Для маршрута от координаты A до B дополнительно нужен OSM PBF. На **11 ноября 2026 года** в наземном архиве нет активных `service_id`; транспортных вариантов на эту дату OTP может не вернуть. Подтверждённого GTFS метро в проекте пока нет.
 
 Backend может читать `processed/gtfs/routes.csv`, `stops.csv` и другие таблицы через `csv.DictReader(..., encoding="utf-8-sig")`. Перед использованием он сверяет `manifest.json.source_sha256` с `sha256` текущего ZIP. Не сканируйте многомиллионный `stop_times.csv` на каждый HTTP-запрос: построение маршрута остаётся задачей OTP.
 
