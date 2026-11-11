@@ -1,0 +1,76 @@
+station_id,line,sequence,name,lat,lon,boarding_allowed,map_source_url,coordinate_source_url
+metro:kiv-prv,1,1,Проспект Ветеранов,59.84211,30.250588,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-lpr,1,2,Ленинский проспект,59.85117,30.268274,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-avt,1,3,Автово,59.867325,30.261337,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-kiz,1,4,Кировский завод,59.879688,30.261921,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-nar,1,5,Нарвская,59.901218,30.274908,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-bal,1,6,Балтийская,59.907211,30.299578,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-tin,1,7,Технологический институт 1,59.916512,30.318485,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-psh,1,8,Пушкинская,59.92065,30.329599,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-vld,1,9,Владимирская,59.927628,30.347898,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-plv,1,10,Площадь Восстания,59.930279,30.361069,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-chr,1,11,Чернышевская,59.94453,30.359919,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-pll,1,12,Площадь Ленина,59.955611,30.35605,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-vyb,1,13,Выборгская,59.970925,30.347408,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-les,1,14,Лесная,59.984947,30.344259,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-plm,1,15,Площадь Мужества,59.999828,30.366159,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-pol,1,16,Политехническая,60.008942,30.370907,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-akd,1,17,Академическая,60.012806,30.396044,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-grp,1,18,Гражданский проспект,60.034969,30.418224,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kiv-dev,1,19,Девяткино,60.050182,30.443045,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-par,2,1,Парнас,60.06699,30.333839,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-prp,2,2,Проспект Просвещения,60.051456,30.332544,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-ozr,2,3,Озерки,60.037098,30.321495,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-udl,2,4,Удельная,60.016697,30.315607,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-pnr,2,5,Пионерская,60.002487,30.296759,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-chr,2,6,Чёрная речка,59.985455,30.300833,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-pet,2,7,Петроградская,59.966389,30.311293,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-gor,2,8,Горьковская,59.956112,30.31889,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-npr,2,9,Невский проспект,59.935421,30.327052,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-spl,2,10,Сенная площадь,59.927135,30.320316,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-tin,2,11,Технологический институт 2,59.916512,30.318485,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-frn,2,12,Фрунзенская,59.906273,30.31745,0,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-mov,2,13,Московские ворота,59.891788,30.317873,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-els,2,14,Электросила,59.879189,30.318659,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-pap,2,15,Парк Победы,59.866344,30.321802,0,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-mos,2,16,Московская,59.848873,30.321483,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-zvz,2,17,Звёздная,59.833241,30.349428,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:mop-kup,2,18,Купчино,59.829781,30.375702,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-beg,3,1,Беговая,59.98723,30.20247,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-nvk,3,2,Зенит,59.972222,30.211667,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-prm,3,3,Приморская,59.948521,30.23447,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-vas,3,4,Василеостровская,59.942577,30.278254,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-gdv,3,5,Гостиный двор,59.933933,30.33341,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-mkv,3,6,Маяковская,59.931366,30.354645,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-pan,3,7,Площадь Ал. Невского 1,59.924369,30.384989,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-elz,3,8,Елизаровская,59.89669,30.423656,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-lom,3,9,Ломоносовская,59.877342,30.441715,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-prl,3,10,Пролетарская,59.865,30.47,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-obh,3,11,Обухово,59.848709,30.457743,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:nev-ryb,3,12,Рыбацкое,59.830986,30.501259,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-gor,4,1,Горный институт,59.931749,30.262667,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-sps,4,2,Спасская,59.927135,30.320316,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-dst,4,3,Достоевская,59.928234,30.346029,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-lpr,4,4,Лиговский проспект,59.920811,30.355055,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-pan,4,5,Площадь Ал. Невского 2,59.923563,30.383421,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-nch,4,6,Новочеркасская,59.929092,30.411915,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-lad,4,7,Ладожская,59.93243,30.439274,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-prb,4,8,Проспект Большевиков,59.919838,30.466757,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:prb-uld,4,9,Улица Дыбенко,59.907417,30.483311,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-kpr,5,1,Комендантский проспект,60.008591,30.258663,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-std,5,2,Старая деревня,59.989433,30.255163,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-kos,5,3,Крестовский остров,59.971821,30.259436,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-chk,5,4,Чкаловская,59.961033,30.292006,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-spr,5,5,Спортивная,59.952026,30.291338,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-adm,5,6,Адмиралтейская,59.935867,30.31523,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-sad,5,7,Садовая,59.926739,30.317753,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-zvn,5,8,Звенигородская,59.92065,30.329599,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-obk,5,9,Обводный канал,59.914686,30.34815,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-vlk,5,10,Волковская,59.896023,30.35754,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-buh,5,11,Бухарестская,59.883769,30.368932,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-mez,5,12,Международная,59.870203,30.379289,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-prs,5,13,Проспект Славы,59.856704,30.395402,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-dun,5,14,Дунайская,59.839889,30.410667,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:frp-shu,5,15,Шушары,59.819973,30.432718,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kra-yuz,6,1,Юго-Западная,59.859176,30.230304,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
+metro:kra-put,6,2,Путиловская,59.878699,30.264601,1,https://metro.spb.ru/map1/route.html,https://api.hh.ru/metro/2
