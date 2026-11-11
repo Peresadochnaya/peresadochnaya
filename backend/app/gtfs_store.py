@@ -23,7 +23,7 @@ from .gtfs_schemas import (GtfsDeparture, GtfsRoute, GtfsStop, GtfsStopTime,
                            GtfsTrip, GtfsTripSummary)
 
 DEMO_GTFS_PATH = Path(__file__).parent / 'fixtures' / 'gtfs' / 'demo.zip'
-DEMO_WARNING = 'Demonstration subset of real SPb GTFS; synthetic all-week calendar, not live service availability'
+DEMO_WARNING = 'Demonstration subset of real SPb GTFS; synthetic all-week calendar and all-day 10-minute timetable, not live service availability'
 TIME_RE = re.compile(r'^\d{2,}:[0-5]\d:[0-5]\d$')
 
 

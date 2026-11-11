@@ -1,10 +1,12 @@
 """Shared API explanations for generated OpenAPI and the root YAML contract."""
 
 API_DESCRIPTION = (
-    'Контракт front/back. Справочные и геосервисные ручки реализованы. /routes возвращает '
-    'dummy-ответ; реальный поиск ещё не подключён. MVP реального поиска — только OTP. '
-    'mode=real означает расчёт планировщика и не обещает пробки или realtime: их фактические '
-    'источники указаны в sources.'
+    'Контракт front/back. dummy=true (по умолчанию) возвращает согласованное демо без '
+    'внешних запросов; dummy=false включает реальные источники. Смысл флага сохранён. '
+    'Ответ mode=dummy обозначает демонстрационные данные. '
+    'mode=real означает расчёт планировщика; пробки и realtime описаны отдельно в sources. '
+    'Реальные OTP и GTFS-RT пока не подключены. Демо использует общий GTFS сети линии 193 '
+    'с явно синтетическим расписанием раз в 10 минут.'
 )
 
 OPERATION_DESCRIPTIONS = {
@@ -14,7 +16,7 @@ OPERATION_DESCRIPTIONS = {
     ),
     '/api/v1/suggest': (
         'Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve '
-        'the selected URI through the geocoder to obtain coordinates. Yandex is contacted '
+        'the selected URI through the geocoder to obtain coordinates. The selected provider is contacted '
         'only with dummy=false.'
     ),
     '/api/v1/geocode': (
@@ -27,34 +29,32 @@ OPERATION_DESCRIPTIONS = {
     ),
     '/api/v1/road-route': (
         'Driving estimate for exactly two ordered points, independently of OTP. One traffic '
-        'mode per call, at most one Yandex request with dummy=false. Not a public transport '
+        'mode per call, at most one selected provider request with dummy=false. Not a public transport '
         'route. No automatic traffic comparison.'
     ),
     '/api/v1/routes': (
-        'Контракт поиска поездки A → B. В MVP используется только OTP: providers=[otp], без '
-        'Яндекс/2ГИС-поправок и без GTFS-RT. Реальный поиск пока не подключён: dummy=false '
-        'возвращает 503 planner_unavailable. providers — массив источников кандидатов, '
-        'отдельный от режима dummy. Позднее варианты OTP, Яндекса и 2ГИС объединяются и '
-        'переранжируются; provenance в каждом варианте сохраняет происхождение кандидата и '
-        'фактически применённые поправки. modes — массив видов транспорта; '
-        'walk_speed=slow|normal|fast и less_walking — предпочтения для OTP. passenger задаёт '
-        'один из пяти профилей и uncovered_payment для поездок вне покрытия проездного. '
-        'Сейчас backend принимает эти поля только как контракт, возвращает явно синтетический'
-        ' ответ либо 503 planner_unavailable и не применяет предпочтения к реальным '
-        'маршрутам. Для метро доступны справочные интервалы, режимы работы, топология и '
-        'переходы из data/processed/metro. Половина модельного интервала допускается как явно'
-        ' помеченная эвристика ожидания с metro_wait_estimate, но не как точное расписание. '
-        'Начало/конец работы проверяются по направлению и станции. Праздничные дни и '
-        'изменённый режим требуют отдельного календаря. Отдельный оценочный GTFS метро '
-        'собирается data.metro.refresh: времена перегонов и переходов берутся из pMetro и '
-        'имеют duration_source=estimated. Это справочные оценки, а не официальное расписание.'
-        ' Исходные CSV связей остаются без длительностей; обогащённые таблицы и происхождение'
-        ' данных лежат в metro_reference.json внутри GTFS ZIP.'
+        'dummy=true возвращает согласованный демонстрационный маршрут по общей сети GTFS '
+        'линии 193: пеший подход, ожидание по синтетическому расписанию раз в 10 минут, '
+        'автобус и пеший участок до назначения. Если подходящего участка этой небольшой '
+        'сети нет или автобус исключён, возвращается пеший пример. Это не реальный '
+        'планировщик и не обещание оптимальности. В демо учитываются modes, exclude_modes '
+        'и walk_speed; стоимость проездного не рассчитывается. Время начала округляется '
+        'вверх до секунды. Идентификаторы линии, рейса и остановок совпадают со справочными '
+        'ручками; времена автобуса совпадают с демо-отправлениями. '
+        'dummy=false требует реального планировщика: он пока не подключён и возвращает '
+        '503 planner_unavailable. Реальный MVP — только OTP; будущие дорожные поправки '
+        'Яндекса/2ГИС и GTFS-RT отмечаются в provenance и sources. '
+        'Оценочный GTFS метро отдельно собирается data.metro.refresh из официальной сети, '
+        'интервалов и справочных времён pMetro; точное расписание поездов неизвестно. '
+        'Ожидание метро может описываться metro_wait_estimate с duration_source=estimated. '
+        'В метро-демо эти данные пока не используются.'
     ),
     '/api/v1/vehicles': (
-        'Текущие позиции транспорта из GTFS-RT VehiclePosition.\nКэш сервера 15–30 с. Если фид'
-        ' молчит дольше 2× интервала — stale=true.\nЕсли лимит достигнут и есть ещё — warning '
-        'vehicles_truncated.\n'
+        'dummy=true генерирует демонстрационные машины на общей сети GTFS линии 193 '
+        'по тому же синтетическому 10-минутному расписанию, что и карточки отправлений. '
+        'timestamp и updated_at — время генерации демо, не реальные GPS-наблюдения. '
+        'Маркеры находятся на последних пройденных остановках своих рейсов. '
+        'dummy=false пока возвращает 503 realtime_unavailable: GTFS-RT не подключён.'
     ),
     '/api/v1/stops': (
         'Список остановок и станций в bbox. Фильтры q и modes применяются до пагинации; modes'

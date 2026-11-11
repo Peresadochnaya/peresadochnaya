@@ -1,6 +1,5 @@
 import os
-import math
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -11,12 +10,12 @@ from fastapi.responses import JSONResponse
 from .api_docs import API_DESCRIPTION, OPERATION_DESCRIPTIONS
 from .data_status import load_status
 from . import demo_addresses
+from .demo_routes import compose as dummy_route
 from .dgis import DgisAddresses, DgisRouter
 from .gtfs_api import create_gtfs_router
 from .otp import OtpPlanner
 from .vehicles_api import create_vehicles_router
-from .recorded_dummy import recorded_geocode, recorded_reverse, recorded_road_route, recorded_suggest
-from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RouteProvenance, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
+from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, RoadRouteRequest, RoadRouteResponse, RouteRequest, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
 from .yandex_router import YandexRouter, dummy_road_route
 
@@ -40,39 +39,6 @@ TICKET_PROFILES = [
 def error(status: int, code: str, message: str):
     return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
 
-
-def point_distance(left: Place, right: Place) -> float:
-    lat1, lat2 = math.radians(left.lat), math.radians(right.lat)
-    dlat, dlon = lat2 - lat1, math.radians(right.lon - left.lon)
-    h = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-    return 6371000 * 2 * math.asin(math.sqrt(min(1.0, max(0.0, h))))
-
-
-def dummy_route(request: RouteRequest) -> Route:
-    """Synthetic fixture for frontend development, not a geographic itinerary."""
-    start = request.departure_at
-    a, b = request.points
-    points = [Place(lat=a.lat + (b.lat-a.lat)*fraction, lon=a.lon+(b.lon-a.lon)*fraction,
-                    name=name, stop_id=f"dummy:{i}" if i in (1, 2, 3, 4) else None)
-              for i, (fraction, name) in enumerate([(0, "Origin"), (.1, "Dummy boarding stop"),
-                 (.45, "Dummy transfer stop A"), (.5, "Dummy transfer stop B"),
-                 (.9, "Dummy alighting stop"), (1, "Destination")])]
-    legs = []
-    for i, (mode, seconds) in enumerate([("walk", 180), ("bus", 600), ("walk", 120), ("tram", 480), ("walk", 120)]):
-        end = start + timedelta(seconds=seconds)
-        legs.append(Leg(mode=mode, origin=points[i], destination=points[i+1], start_at=start,
-                        end_at=end, duration_seconds=seconds, original_duration_seconds=seconds,
-                        duration_source="dummy", distance_meters=round(point_distance(points[i], points[i+1]), 2),
-                        line=TransitLine(short_name="DEMO", route_id=f"dummy:{mode}") if mode != "walk" else None,
-                        geometry={"type": "LineString", "coordinates": [[points[i].lon, points[i].lat], [points[i+1].lon, points[i+1].lat]]}))
-        start = end
-    coordinates = [[point.lon, point.lat] for point in points]
-    distance = round(sum(leg.distance_meters for leg in legs), 2)
-    return Route(id="dummy:route-1", name="Демонстрационный маршрут", distance_meters=distance,
-                 geometry={"type": "LineString", "coordinates": coordinates},
-                 start_at=request.departure_at, end_at=start,
-                 duration_seconds=1500, transfers=1, legs=legs,
-                 provenance=RouteProvenance(candidate_providers=[], traffic_providers=[]))
 
 
 def create_app(data_root: Path | None = None, planner_mode: str | None = None,
@@ -122,16 +88,13 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         return TICKET_PROFILES
 
     @app.get("/api/v1/suggest", response_model=SuggestResponse,
-             description="Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve the selected URI through the geocoder to obtain coordinates. Yandex is contacted only with dummy=false.",
+             description="Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve the selected URI through the geocoder to obtain coordinates. The selected provider is contacted only with dummy=false.",
              responses=address_errors)
     def suggest(q: str = Query(min_length=2, max_length=256, pattern=r"\S"),
                 limit: int = Query(default=5, ge=1, le=10),
                 provider: GeoProvider = Query(default="yandex"),
-                dummy: bool = Query(default=True, description="Recorded or synthetic demo response without Yandex calls; explicitly pass false to enable provider access")):
+                dummy: bool = Query(default=True, description="Recorded or synthetic demo response without external API calls; explicitly pass false to enable selected provider access")):
         if dummy:
-            recorded = recorded_suggest(q, limit) if provider == "yandex" else None
-            if recorded is not None:
-                return recorded
             return demo_addresses.suggestions(provider, q, limit)
         return (addresses if provider == "yandex" else dgis_addresses).suggest(q.strip(), limit)
 
@@ -140,15 +103,12 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     def geocode(q: str | None = Query(default=None, min_length=2, max_length=256, pattern=r"\S"),
                 uri: str | None = Query(default=None, min_length=1, max_length=4096, pattern=r"\S"),
                 provider: GeoProvider = Query(default="yandex"),
-                dummy: bool = Query(default=True)):
+                dummy: bool = Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         if (q is None) == (uri is None):
             return error(422, "invalid_geocode_query", "Provide exactly one of q or uri")
         if dummy:
             if uri is not None and uri.startswith("dummy:") and uri.startswith(f"dummy:{'2gis' if provider == 'yandex' else 'yandex'}:"):
                 return error(422, "invalid_geocode_uri", "Suggestion provider does not match geocode provider")
-            recorded = recorded_geocode(q, uri) if provider == "yandex" else None
-            if recorded is not None:
-                return recorded
             return demo_addresses.geocode(provider, q, uri)
         prefix = "ymapsbm1://" if provider == "yandex" else "dgis:"
         if uri is not None and not uri.startswith(prefix):
@@ -160,22 +120,18 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     def reverse(lat: float = Query(ge=-90, le=90, allow_inf_nan=False),
                 lon: float = Query(ge=-180, le=180, allow_inf_nan=False),
                 provider: GeoProvider = Query(default="yandex"),
-                dummy: bool = Query(default=True)):
+                dummy: bool = Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         if dummy:
-            recorded = recorded_reverse(lat, lon) if provider == "yandex" else None
-            if recorded is not None:
-                return recorded
             return demo_addresses.reverse(provider, lat, lon)
         return (addresses if provider == "yandex" else dgis_addresses).geocode(lat=lat, lon=lon)
 
     @app.post("/api/v1/road-route", response_model=RoadRouteResponse, responses=address_errors,
-              description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one Yandex request with dummy=false. Not a public transport route. No automatic traffic comparison.")
+              description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one selected provider request with dummy=false. Not a public transport route. No automatic traffic comparison.")
     def road_route(request: RoadRouteRequest,
                    provider: GeoProvider = Query(default="yandex"),
-                   dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one Router API request")):
+                   dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one selected provider request")):
         if dummy:
-            recorded = recorded_road_route(request) if provider == "yandex" else None
-            response = recorded if recorded is not None else dummy_road_route(request)
+            response = dummy_road_route(request)
             response.provider = provider
             return response
         return (roads if provider == "yandex" else dgis_roads).estimate(request)
@@ -186,15 +142,16 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     def routes(request: RouteRequest,
                dummy: bool = Query(default=True, description="Synthetic response without Yandex calls; explicitly pass false to enable real planning and provider access")):
         if dummy:
-            if request.departure_at.replace(tzinfo=None) > datetime.max - timedelta(seconds=1500):
+            try:
+                demo = dummy_route(request)
+            except OverflowError:
                 return error(422, "invalid_departure_time", "Departure time leaves no representable space for route arrival")
-            warnings = ["Synthetic demonstration route; no planner, GTFS, traffic or real transit data was used"]
-            warnings.append("Fare rules are ignored for the synthetic demo route" if request.fare is not None
-                            else "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated")
             return RoutesResponse(mode="dummy", sources=RoutesResponseSources(
-                candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[dummy_route(request)], gtfs_version=None,
+                candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[demo], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
-                                  warnings=warnings)
+                                  warnings=["Shared GTFS demo network with a synthetic all-day 10-minute timetable; no live planner or traffic was used",
+                                            "Fare rules are ignored for the synthetic demo route" if request.fare is not None
+                                            else "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
         data = load_status(root)
         if data.manifest and data.manifest.get("active_service_ids") == 0:
             service_date = str(data.manifest.get("service_date", "")).replace("-", "")

@@ -1,5 +1,8 @@
 """Road estimates from Router API, independently of OTP and transit algorithms."""
+import hashlib
 import math
+import httpx
+
 from datetime import datetime, timezone
 
 from pydantic import ValidationError
@@ -10,6 +13,7 @@ from .yandex import ProviderError, YandexClient
 
 ROUTER_URL = "https://api.routing.yandex.net/v2/route"
 DRIVING_WARNING = "Driving estimate only; not a bus duration or a confirmed public transport itinerary"
+CACHE_ENTRY_LIFETIME = 900  # seconds (15 minutes)
 
 
 def driving_params(request: RoadRouteRequest, now: datetime) -> dict:
@@ -87,12 +91,43 @@ def parse_route(data: dict, request: RoadRouteRequest, now: datetime) -> RoadRou
 
 class YandexRouter(YandexClient):
     error_prefix = "router_provider"
+    
+    def __init__(self, client: httpx.Client | None = None):
+        super().__init__(client)
+        self.cache = {}
+
+    def cache_key(self, request: RoadRouteRequest) -> str:
+        raw = "|".join(f"{p.lat},{p.lon}" for p in request.points)
+        raw += f"|{request.traffic_mode}"
+        if request.departure_at is not None:
+            raw += f"|{request.departure_at.isoformat()}"
+        return hashlib.sha256(raw.encode()).hexdigest()
+
+    def cache_get(self, request: RoadRouteRequest) -> RoadRouteResponse | None:
+        key = self.cache_key(request)
+        entry = self.cache.get(key)
+        if entry is None:
+            return None
+        route, cached_at = entry
+        if datetime.now(timezone.utc).timestamp() - cached_at > CACHE_ENTRY_LIFETIME:
+            del self.cache[key]
+            return None
+        return route
+
+    def cache_put(self, request: RoadRouteRequest, response: RoadRouteResponse) -> None:
+        key = self.cache_key(request)
+        self.cache[key] = (response, datetime.now(timezone.utc).timestamp())
 
     def estimate(self, request: RoadRouteRequest) -> RoadRouteResponse:
+        cached = self.cache_get(request)
+        if cached is not None:
+            return cached
         now = datetime.now(timezone.utc)
         params = driving_params(request, now)
         data = self._get(ROUTER_URL, "YANDEX_ROUTER_API_KEY", params)
-        return parse_route(data, request, datetime.now(timezone.utc))
+        response = parse_route(data, request, datetime.now(timezone.utc))
+        self.cache_put(request, response)
+        return response
 
 
 def dummy_road_route(request: RoadRouteRequest) -> RoadRouteResponse:
@@ -105,4 +140,4 @@ def dummy_road_route(request: RoadRouteRequest) -> RoadRouteResponse:
         calculated_at=datetime.now(timezone.utc),
         route=RoadRoute(distance_meters=round(distance, 2), duration_seconds=round(distance / 10, 2),
                         geometry={"type": "LineString", "coordinates": [(a.lon, a.lat), (b.lon, b.lat)]}),
-        warnings=["Synthetic straight line at a fixed speed; no real road or traffic data; Yandex was not called", DRIVING_WARNING])
+        warnings=["Synthetic straight line at a fixed speed; no real road or traffic data; no external API was called", DRIVING_WARNING])
