@@ -8,7 +8,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from app.otp import OtpPlanner, decode_polyline
+from app.otp import OtpPlanner, decode_polyline, mode_reluctance
+from app.schemas import FarePreferences, Leg, LineString, Place, TransitLine
 
 FIXTURE = Path(__file__).resolve().parent.parent / "app" / "fixtures" / "otp" / "plan-response.json"
 REQUEST = {"points": [{"lat": 59.9343, "lon": 30.3351}, {"lat": 59.9447, "lon": 30.2583}],
@@ -58,7 +59,11 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json=REQUEST)
     assert response.status_code == 200
     data = response.json()
-    assert data["mode"] == "planner"
+    assert data["mode"] == "real"
+    assert data["sources"] == {"candidate_providers": ["otp"], "traffic_providers": [],
+                               "realtime": "unavailable"}
+    assert data["routes"][0]["provenance"] == {"candidate_providers": ["otp"],
+                                               "traffic_providers": []}
     assert data["gtfs_version"] == GTFS_SHA and data["graph_version"] == "d58c053a487d1c7e"
     assert any("Ticket profile is recorded only" in warning for warning in data["warnings"])
     route = data["routes"][0]
@@ -67,6 +72,7 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     assert route["duration_seconds"] == node["duration"]
     assert route["distance_meters"] == pytest.approx(sum(leg["distance"] for leg in node["legs"]), abs=0.01)
     assert route["name"].startswith("Автобус")
+    assert route["fare"] is None
 
     modes = [leg["mode"] for leg in route["legs"]]
     assert "wait" in modes and "bus" in modes and "walk" in modes
@@ -211,3 +217,95 @@ def test_unavailable_mode_still_returns_503(tmp_path):
         .post("/api/v1/routes?dummy=false", json=REQUEST)
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "planner_unavailable"
+
+
+FARE = {"rules": [{"mode": "metro", "cost_rub": 0}, {"mode": "bus", "cost_rub": 65}],
+        "transfer_cost_rub": 20}
+
+
+def test_fare_rules_become_reluctance_and_are_billed(tmp_path):
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=payload())
+
+    response = client(data_root(tmp_path), handler) \
+        .post("/api/v1/routes?dummy=false", json={**REQUEST, "fare": FARE})
+    assert response.status_code == 200
+    data = response.json()
+
+    transit = requests[0]["variables"]["modes"]["transit"]["transit"]
+    by_mode = {item["mode"]: item.get("cost", {}).get("reluctance") for item in transit}
+    assert by_mode["SUBWAY"] == 1.0                      # free metro is neutral
+    assert by_mode["BUS"] == pytest.approx(1.433, abs=1e-3)  # 65 RUB at 600 RUB/h
+    assert by_mode["TRAM"] == 1.0                        # no rule means no penalty
+
+    # The recorded itinerary boards bus 24 and bus 100: two fares plus one transfer.
+    fare = data["routes"][0]["fare"]
+    assert fare["currency"] == "RUB"
+    assert fare["items"] == [{"mode": "bus", "rides": 2, "cost_rub": 130.0}]
+    assert fare["transfers"] == 1
+    assert fare["transfer_cost_rub"] == 20.0
+    assert fare["amount_rub"] == 150.0
+
+    assert any("explicit tariff rules" in warning for warning in data["warnings"])
+    assert any("time multipliers" in warning for warning in data["warnings"])
+
+
+def test_unpriced_mode_is_reported_as_free(tmp_path):
+    fare = {"rules": [{"mode": "metro", "cost_rub": 0}]}
+    response = client(data_root(tmp_path), lambda request: httpx.Response(200, json=payload())) \
+        .post("/api/v1/routes?dummy=false", json={**REQUEST, "fare": fare})
+    assert response.status_code == 200
+    data = response.json()
+    assert any("No fare rule" in warning and "bus" in warning for warning in data["warnings"])
+    assert data["routes"][0]["fare"]["amount_rub"] == 0.0
+
+
+def test_fare_requires_unique_modes(tmp_path):
+    fare = {"rules": [{"mode": "bus", "cost_rub": 65}, {"mode": "bus", "cost_rub": 40}]}
+    response = client(data_root(tmp_path), lambda request: httpx.Response(200, json=payload())) \
+        .post("/api/v1/routes?dummy=false", json={**REQUEST, "fare": fare})
+    assert response.status_code == 422
+
+
+def test_dummy_route_does_not_claim_a_calculated_fare(tmp_path):
+    response = TestClient(create_app(data_root(tmp_path), "dummy")) \
+        .post("/api/v1/routes", json={**REQUEST, "fare": FARE})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["routes"][0]["fare"] is None
+    assert any("Fare rules are ignored" in warning for warning in data["warnings"])
+
+
+def test_reluctance_is_capped_and_neutral_for_free_modes():
+    assert mode_reluctance(0, 600) == 1.0
+    assert mode_reluctance(600, 600) == 5.0
+    assert mode_reluctance(100000, 600) == 20.0
+
+
+def test_route_fare_skips_walking_and_waiting_legs():
+    point = Place(lat=59.93, lon=30.33, name="A")
+    line = LineString(coordinates=[(30.33, 59.93), (30.34, 59.94)])
+    legs = [Leg(mode="walk", origin=point, destination=point,
+                start_at="2026-11-11T12:00:00+03:00", end_at="2026-11-11T12:05:00+03:00",
+                duration_seconds=300, original_duration_seconds=300,
+                duration_source="schedule", distance_meters=400.0, geometry=line),
+            Leg(mode="metro", origin=point, destination=point,
+                start_at="2026-11-11T12:05:00+03:00", end_at="2026-11-11T12:15:00+03:00",
+                duration_seconds=600, original_duration_seconds=600,
+                duration_source="schedule", distance_meters=5000.0,
+                line=TransitLine(short_name="М1", route_id="m1"), geometry=line),
+            Leg(mode="bus", origin=point, destination=point,
+                start_at="2026-11-11T12:15:00+03:00", end_at="2026-11-11T12:35:00+03:00",
+                duration_seconds=1200, original_duration_seconds=1200,
+                duration_source="schedule", distance_meters=8000.0,
+                line=TransitLine(short_name="24", route_id="b24"), geometry=line)]
+    from app.otp import route_fare
+    fare = route_fare(legs, FarePreferences(**FARE))
+    assert [item.model_dump() for item in fare.items] == [
+        {"mode": "bus", "rides": 1, "cost_rub": 65.0},
+        {"mode": "metro", "rides": 1, "cost_rub": 0.0}]
+    assert fare.transfers == 1
+    assert fare.amount_rub == 85.0

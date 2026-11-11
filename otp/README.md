@@ -116,10 +116,20 @@ python -m data.gtfs.versioned_static --store-dir data/gtfs
 ./scripts/build-graph.sh --gtfs-zip data/incoming/portal-gtfs.zip
 ```
 
+> **Если `data/gtfs/current.json` отсутствует** (в репозитории этот каталог
+> содержит только код, версия GTFS туда не коммитится), запуск без флагов
+> завершится ошибкой `некорректный указатель GTFS`. В этом случае используйте
+> `--gtfs-zip data/incoming/portal-gtfs.zip` либо сначала опубликуйте фид:
+> `python -m data.gtfs.versioned_static --store-dir data/gtfs`.
+
 ### 3. Собрать и опубликовать граф
 
 ```bash
+# если в data/gtfs опубликован фид
 ./scripts/build-graph.sh
+
+# локальный режим: готовый ZIP из data/incoming
+./scripts/build-graph.sh --gtfs-zip data/incoming/portal-gtfs.zip
 ```
 
 Три шага внутри одного запуска:
@@ -207,6 +217,12 @@ curl -X POST 'http://localhost:8080/otp/gtfs/v1' \
   `updaters: []`, поэтому используется `scheduledTime`.
 - `legGeometry.points` — encoded polyline с точностью 5, порядок координат
   `(lat, lon)`.
+- Дифференциация тарифов задаётся на каждый вид транспорта в
+  `modes.transit.transit[].cost.reluctance` — это **множитель времени**, а не
+  цена. Аддитивной стоимости поездки в OTP 2.11 нет, поэтому backend
+  пересчитывает рубли в секунды через `value_of_time_rub_per_hour`
+  (подробности — `backend/README.md`, раздел «Тарифы»). Проверено:
+  `BUS reluctance=20` полностью убирает автобус из выдачи.
 - `serviceTimeRange` возвращает диапазон в UNIX-секундах и обрезан настройками
   `transitServiceStart`/`transitServiceEnd` из `build-config.json`.
 
@@ -343,18 +359,39 @@ curl -f http://localhost:8080/otp/actuators/health
 
 ## Отложенные решения
 
-- **Пин версии базового образа.** `graph.obj` привязан к
-  `otpSerializationVersionId`. Сейчас используется тег `latest`; версия
-  записывается в метаданные графа, а `build-graph.sh` берёт её из образа,
-  поэтому builder и сервер всегда согласованы. Но обновление `latest` без
-  пересборки графа даст несовместимость. Перед обновлением образа
-  пересоберите граф; в перспективе — пин по digest.
 - **Автоматический перезапуск после публикации.** Сейчас это явный
   `docker compose up -d --force-recreate otp` или флаг `--restart`.
 - **`OUTSIDE_SERVICE_PERIOD` → HTTP 422 `invalid_service_date`.** Решение
   отложено: сейчас backend возвращает walk-only вариант с предупреждением.
 - **Kubernetes и CI/CD.** Модуль разворачивается локально; манифесты и
   workflow для OTP не добавлены.
+
+## Пин образа и совместимость графа
+
+Базовый образ OTP запинен в `Dockerfile` по digest:
+
+```
+FROM opentripplanner/opentripplanner@sha256:11289dd093bae3845c2d2355a1845069de83e2809c14a0949dceb20a62359763
+```
+
+Это сборка `2.11.0-SNAPSHOT`, `otpSerializationVersionId=289`,
+`commit f64e860dae6a`, `branch dev-2.x`, проверена 2026-11-11.
+`docker compose build --pull` теперь безопасен — он всегда даст ту же сборку.
+
+**Почему это важно.** `graph.obj` — Java-сериализация, совместимая только
+с тем `otpSerializationVersionId`, который его создал. Тег `latest`
+OTP перезаписывается при каждом dev-релизе, поэтому без пина одна и та же
+команда сборки в разные дни даёт разные версии, и граф может перестать
+загружаться.
+
+**Что делать при смене digest.** Обновить строку `FROM`, пересобрать образ
+и граф: `./scripts/build-graph.sh --force`, затем `verify`.
+
+**Проверка при запуске.** `entrypoint.sh` в режиме `serve` читает
+`otp_serialization_version_id` из `manifest.json` графа и сравнивает с
+фактическим `ser.ver.id` образа. При расхождении контейнер падает с
+понятным сообщением вместо ошибки загрузки графа. Флаг
+`OTP_SKIP_VERSION_CHECK=1` отключает проверку.
 
 ## Файлы
 

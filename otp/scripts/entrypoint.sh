@@ -17,6 +17,10 @@
 #
 # --abortOnUnknownConfig обязателен: опечатка в конфиге должна ломать запуск,
 # а не тихо игнорироваться (как было с routingDefaults.maxWalkDistance).
+#
+# В режиме serve сверяется otpSerializationVersionId образа с manifest.json
+# опубликованного графа: несовместимый graph.obj не загружается. Проверку
+# можно отключить переменной OTP_SKIP_VERSION_CHECK=1.
 # ============================================================================
 set -euo pipefail
 
@@ -67,6 +71,43 @@ check_inputs() {
   fi
 }
 
+# ----------------------------------------------------------------------------
+# Совместимость графа с образом.
+# graph.obj — Java-сериализация с внутренним otpSerializationVersionId.
+# Несовпадение версий даёт непонятную ошибку загрузки, поэтому проверяем
+# заранее и подсказываем, что делать.
+# ----------------------------------------------------------------------------
+check_graph_version() {
+  local manifest="${WORKDIR}/manifest.json" expected actual
+  if [ "${OTP_SKIP_VERSION_CHECK:-0}" = "1" ]; then
+    log "проверка совместимости графа отключена (OTP_SKIP_VERSION_CHECK=1)"
+    return 0
+  fi
+  if [ ! -f "${manifest}" ]; then
+    log "WARN: ${manifest} не найден — версия сборки графа неизвестна, проверка пропущена"
+    return 0
+  fi
+  expected="$(sed -n 's/.*"otp_serialization_version_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    "${manifest}" | head -1)"
+  if [ -z "${expected}" ]; then
+    log "WARN: в manifest.json нет otp_serialization_version_id, проверка пропущена"
+    return 0
+  fi
+  actual="$(/docker-entrypoint.sh --version 2>/dev/null \
+    | sed -n 's/.*ser\.ver\.id:[[:space:]]*\([0-9][0-9]*\).*/\1/p' | head -1 || true)"
+  if [ -z "${actual}" ]; then
+    log "WARN: не удалось определить ser.ver.id образа, проверка совместимости пропущена"
+    return 0
+  fi
+  if [ "${actual}" != "${expected}" ]; then
+    log "ERROR: graph.obj собран OTP с ser.ver.id=${expected}, а образ имеет ${actual}."
+    log "OTP не умеет читать граф другой версии. Пересоберите граф: ./scripts/build-graph.sh --force"
+    log "Если расхождение ожидаемо, отключите проверку: OTP_SKIP_VERSION_CHECK=1"
+    exit 1
+  fi
+  log "граф совместим с образом: ser.ver.id=${actual}"
+}
+
 build_graph() {
   log "=== сборка графа (несколько минут) ==="
   /docker-entrypoint.sh --build --save --abortOnUnknownConfig
@@ -85,6 +126,7 @@ serve_graph() {
     log "В режиме serve каталог смонтирован только для чтения, сборка не выполняется."
     exit 1
   fi
+  check_graph_version
   log "=== запуск OTP-сервера на порту ${PORT} ==="
   log "API:      http://localhost:${PORT}/otp/gtfs/v1"
   log "GraphiQL: http://localhost:${PORT}/graphiql"

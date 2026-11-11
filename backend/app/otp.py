@@ -12,7 +12,9 @@ from datetime import datetime, timezone
 import httpx
 from pydantic import ValidationError
 
-from .schemas import Leg, LineString, Place, Route, RouteRequest, RoutesResponse, TransitLine
+from .schemas import (FareItem, FarePreferences, Leg, LineString, Place, Route, RouteFare,
+                      RouteProvenance, RouteRequest, RoutesResponse, RoutesResponseSources,
+                      TransitLine)
 from .yandex import ProviderError
 
 DEFAULT_URL = "http://localhost:8080"
@@ -52,6 +54,22 @@ query Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocation
 
 TRANSIT_MODES = ["BUS", "TRAM", "TROLLEYBUS", "SUBWAY", "RAIL"]
 
+# OTP exposes only a time multiplier per transit mode (cost.reluctance), not an
+# additive fare. A fare is therefore converted into seconds of generalized cost
+# using the passenger's value of time, and those seconds are spread over a
+# reference transit leg. The result ranks expensive modes lower without
+# pretending to reproduce an exact ticket price during the search.
+TYPICAL_LEG_SECONDS = 900.0
+MAX_RELUCTANCE = 20.0
+
+MODE_FARE = {
+    "BUS": "bus",
+    "TRAM": "tram",
+    "TROLLEYBUS": "trolleybus",
+    "SUBWAY": "metro",
+    "RAIL": "rail",
+}
+
 MODE_MAP = {
     "WALK": "walk",
     "BUS": "bus",
@@ -73,6 +91,10 @@ MODE_LABEL = {
 
 TICKET_WARNING = ("Ticket profile is recorded only; fare, eligibility and pass coverage "
                   "are not calculated")
+FARE_WARNING = ("Fare is calculated from the explicit tariff rules in the request; "
+                "the ticket profile is not used")
+FARE_SEARCH_WARNING = ("Mode fares influence the search as time multipliers, so the "
+                       "returned itinerary is not guaranteed to be the cheapest one")
 TRAFFIC_WARNING = ("traffic_mode is not applied to public transport planning; "
                    "OTP scheduled times are used")
 
@@ -184,6 +206,37 @@ def _transit_line(leg: dict) -> TransitLine | None:
                        route_id=route_id, trip_id=trip.get("gtfsId"))
 
 
+def mode_reluctance(cost_rub: float, value_of_time_rub_per_hour: float) -> float:
+    """Turn a per-boarding fare into OTP's time multiplier.
+
+    ``cost_rub`` rubles are worth ``cost_rub * 3600 / value_of_time`` seconds of
+    travel time. Spreading that penalty over a reference leg keeps the multiplier
+    independent of the actual leg duration, which is unknown before the search.
+    """
+    if cost_rub <= 0:
+        return 1.0
+    penalty_seconds = cost_rub * 3600.0 / value_of_time_rub_per_hour
+    return round(min(MAX_RELUCTANCE, 1.0 + penalty_seconds / TYPICAL_LEG_SECONDS), 3)
+
+
+def route_fare(legs: list[Leg], preferences: FarePreferences) -> RouteFare:
+    """Charge one fare per transit boarding plus a fixed transfer fee."""
+    prices = {rule.mode: rule.cost_rub for rule in preferences.rules}
+    rides: dict[str, int] = {}
+    for leg in legs:
+        if leg.line is None:
+            continue
+        rides[leg.mode] = rides.get(leg.mode, 0) + 1
+    items = [FareItem(mode=mode, rides=count,
+                      cost_rub=round(prices.get(mode, 0.0) * count, 2))
+             for mode, count in sorted(rides.items())]
+    transfers = max(0, sum(rides.values()) - 1)
+    amount = round(sum(item.cost_rub for item in items)
+                   + transfers * preferences.transfer_cost_rub, 2)
+    return RouteFare(amount_rub=amount, items=items, transfers=transfers,
+                     transfer_cost_rub=preferences.transfer_cost_rub)
+
+
 def _wait_leg(start: datetime, end: datetime, place: Place) -> Leg | None:
     seconds = int((end - start).total_seconds())
     if seconds <= 0:
@@ -191,7 +244,7 @@ def _wait_leg(start: datetime, end: datetime, place: Place) -> Leg | None:
     point = (place.lon, place.lat)
     return Leg(mode="wait", origin=place, destination=place, start_at=start, end_at=end,
                duration_seconds=seconds, original_duration_seconds=seconds,
-               duration_source="schedule",
+               duration_source="schedule", distance_meters=0.0,
                geometry=LineString(coordinates=[point, point]))
 
 
@@ -213,7 +266,7 @@ def _route_id(legs: list[Leg], start: datetime) -> str:
     return "otp:" + hashlib.sha1(payload.encode()).hexdigest()[:16]
 
 
-def _itinerary(node: dict) -> tuple[Route, bool]:
+def _itinerary(node: dict, fare: FarePreferences | None = None) -> tuple[Route, bool]:
     raw_legs = node.get("legs")
     if not isinstance(raw_legs, list) or not raw_legs:
         raise ValueError("Itinerary without legs")
@@ -247,6 +300,7 @@ def _itinerary(node: dict) -> tuple[Route, bool]:
         legs.append(Leg(mode=mode, origin=origin, destination=destination,
                         start_at=start, end_at=end, duration_seconds=duration,
                         original_duration_seconds=duration, duration_source="schedule",
+                        distance_meters=float(leg_distance),
                         line=line, geometry=_leg_geometry(raw, origin, destination)))
         distance += float(leg_distance)
         previous_end, previous_place = end, destination
@@ -271,7 +325,9 @@ def _itinerary(node: dict) -> tuple[Route, bool]:
     route = Route(id=_route_id(legs, start_at), name=_route_name(legs),
                   distance_meters=round(distance, 2),
                   geometry=_line(coordinates), start_at=start_at, end_at=end_at,
-                  duration_seconds=duration_seconds, transfers=transfers, legs=legs)
+                  duration_seconds=duration_seconds, transfers=transfers, legs=legs,
+                  provenance=RouteProvenance(candidate_providers=["otp"], traffic_providers=[]),
+                  fare=route_fare(legs, fare) if fare is not None else None)
     return route, has_transit
 
 
@@ -317,6 +373,16 @@ class OtpPlanner:
 
     def plan(self, request: RouteRequest, *, gtfs_version: str | None = None,
              graph_version: str | None = None) -> RoutesResponse:
+        prices = {rule.mode: rule.cost_rub for rule in request.fare.rules} \
+            if request.fare is not None else {}
+        transit_modes = []
+        for mode in TRANSIT_MODES:
+            preference = {"mode": mode}
+            if request.fare is not None:
+                preference["cost"] = {"reluctance": mode_reluctance(
+                    prices.get(MODE_FARE[mode], 0.0), request.fare.value_of_time_rub_per_hour)}
+            transit_modes.append(preference)
+
         payload = {
             "query": PLAN_QUERY,
             "variables": {
@@ -328,7 +394,7 @@ class OtpPlanner:
                 "first": request.max_results,
                 "modes": {"transit": {"access": ["WALK"], "egress": ["WALK"],
                                       "transfer": ["WALK"],
-                                      "transit": [{"mode": mode} for mode in TRANSIT_MODES]}},
+                                      "transit": transit_modes}},
             },
         }
         body = self._post(payload)
@@ -346,14 +412,21 @@ class OtpPlanner:
                 node = (edge or {}).get("node")
                 if not isinstance(node, dict):
                     raise ValueError("Invalid itinerary node")
-                route, transit = _itinerary(node)
+                route, transit = _itinerary(node, request.fare)
                 routes.append(route)
                 has_transit = has_transit or transit
         except (KeyError, TypeError, AttributeError, ValueError, ValidationError):
             raise ProviderError(502, f"{self.error_prefix}_error",
                                 "Invalid response from route planner") from None
 
-        warnings = [TICKET_WARNING]
+        warnings = [FARE_WARNING if request.fare is not None else TICKET_WARNING]
+        if request.fare is not None:
+            warnings.append(FARE_SEARCH_WARNING)
+            unpriced = sorted({leg.mode for route in routes for leg in route.legs
+                               if leg.line is not None and leg.mode not in prices})
+            if unpriced:
+                warnings.append(f"No fare rule for mode(s) {', '.join(unpriced)}; "
+                                "counted as 0 RUB")
         if request.traffic_mode == "on":
             warnings.append(TRAFFIC_WARNING)
         for item in errors:
@@ -364,6 +437,10 @@ class OtpPlanner:
         if routes and not has_transit:
             warnings.append("Route planner returned only walking options; no transit legs")
 
-        return RoutesResponse(mode="planner", passenger=request.passenger, routes=routes,
+        return RoutesResponse(mode="real",
+                              sources=RoutesResponseSources(candidate_providers=["otp"],
+                                                            traffic_providers=[],
+                                                            realtime="unavailable"),
+                              passenger=request.passenger, routes=routes,
                               gtfs_version=gtfs_version, graph_version=graph_version,
                               calculated_at=datetime.now(timezone.utc), warnings=warnings)

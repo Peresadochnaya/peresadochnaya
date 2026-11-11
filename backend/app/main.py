@@ -188,11 +188,13 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         if dummy:
             if request.departure_at.replace(tzinfo=None) > datetime.max - timedelta(seconds=1500):
                 return error(422, "invalid_departure_time", "Departure time leaves no representable space for route arrival")
+            warnings = ["Synthetic demonstration route; no planner, GTFS, traffic or real transit data was used"]
+            warnings.append("Fare rules are ignored for the synthetic demo route" if request.fare is not None
+                            else "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated")
             return RoutesResponse(mode="dummy", sources=RoutesResponseSources(
                 candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[dummy_route(request)], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
-                                  warnings=["Synthetic demonstration route; no planner, GTFS, traffic or real transit data was used",
-                                            "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
+                                  warnings=warnings)
         data = load_status(root)
         if data.manifest and data.manifest.get("active_service_ids") == 0:
             service_date = str(data.manifest.get("service_date", "")).replace("-", "")
