@@ -1,13 +1,14 @@
 # FastAPI и обновление GTFS в k3s
 
 Один образ запускается как API и как GTFS updater. API обслуживает HTTP, updater
-запускается CronJob каждые пять минут. `PLANNER_MODE=dummy` явно возвращает
+запускается CronJob каждые 20 минут. Отдельный `metro-refresh` с той же частотой
+строит оценочный GTFS метро из официальных интервалов и времён pMetro. `PLANNER_MODE=dummy` явно возвращает
 демонстрационные маршруты; OTP и Яндекс пока не подключены.
 
 ## Хранилище
 
 PVC `transit-data` (10 GiB, `local-path`, RWO) монтируется в `/data`. API читает
-его read-only, updater пишет `/data/gtfs`. Хранится только последний GTFS и
+его read-only, updater пишет `/data/gtfs`, updater метро — `/data/metro`. Хранится только последний GTFS и
 подготовленные из него таблицы; при успешном обновлении предыдущий набор заменяется.
 Временные файлы подготовки не являются историей и удаляются после обновления.
 Не удаляйте PVC при обычной выкладке или rollback.
@@ -16,7 +17,7 @@ Updatеr использует pod affinity к API, чтобы оба pod зап�
 при его расширении перенос данных между узлами требует отдельной процедуры.
 
 CronJob: `*/20 * * * *` (каждые 20 минут), `Forbid`, deadline 240 секунд, один повтор. Если проверка
-занимает дольше пяти минут, новый запуск пропускается. Обновление идемпотентно;
+занимает дольше 20 минут, новый запуск пропускается. Обновление идемпотентно;
 проверка блокировки в updater дополнительно защищает от ручного Job.
 Код cronjob и API выкатывается одним commit SHA. GTFS не включается в Docker-образ
 и хранится независимо от его версии.
@@ -96,7 +97,7 @@ HTTPS до источника проверяется штатным CA bundle.
 Остановить только этот прокси:
 `ssh arctur '/etc/init.d/traffic-proxy stop; /etc/init.d/traffic-proxy disable'`.
 
-Через этот Secret ходит только GTFS updater. Яндекс из backend продолжает
+Через этот Secret ходят GTFS updater и metro updater. Яндекс из backend продолжает
 вызываться напрямую с k3s (`trust_env=False`); его маршрут не изменён.
 
 Сделать GHCR package публичным, либо заранее настроить `imagePullSecrets` для
@@ -112,12 +113,14 @@ SSH. `workflow_dispatch` также разрешает сборку/деплой
 Для ручной проверки рендера и первой выкладки:
 
 ```bash
-# В рабочей копии указать опубликованный commit SHA в api.yaml и gtfs-cronjob.yaml.
+# В рабочей копии указать опубликованный commit SHA в api.yaml, gtfs-cronjob.yaml и metro-cronjob.yaml.
 kubectl kustomize deploy/k8s
 kubectl apply -k deploy/k8s
 kubectl -n peresadochnaya rollout status deployment/api --timeout=180s
 kubectl -n peresadochnaya create job --from=cronjob/gtfs-refresh gtfs-bootstrap
 kubectl -n peresadochnaya logs -f job/gtfs-bootstrap
+kubectl -n peresadochnaya create job --from=cronjob/metro-refresh metro-bootstrap
+kubectl -n peresadochnaya logs -f job/metro-bootstrap
 curl --fail https://peresadochnaya.rjnk.cc/health/ready
 curl --fail https://peresadochnaya.rjnk.cc/api/v1/data/status
 ```
@@ -130,9 +133,9 @@ curl --fail https://peresadochnaya.rjnk.cc/api/v1/data/status
 
 ## Rollback
 
-Вернуть оба image (API и CronJob) на предыдущий известный commit SHA и повторно
+Вернуть все image (API и оба CronJob) на предыдущий известный commit SHA и повторно
 применить манифесты. PVC остаётся на месте. `kubectl rollout undo` откатывает
-только Deployment и не меняет CronJob, поэтому для полного отката нужны оба image.
+только Deployment и не меняет CronJob, поэтому для полного отката нужны image обоих CronJob.
 История GTFS не хранится: откат image не возвращает предыдущий ZIP или таблицы.
 При ошибке получения/проверки нового набора updater оставляет последний успешно
 сохранённый набор на месте.
