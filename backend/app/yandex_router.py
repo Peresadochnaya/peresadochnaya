@@ -1,6 +1,8 @@
 """Road estimates from Router API, independently of OTP and transit algorithms."""
 import hashlib
 import math
+import httpx
+
 from datetime import datetime, timezone
 
 from pydantic import ValidationError
@@ -89,42 +91,42 @@ def parse_route(data: dict, request: RoadRouteRequest, now: datetime) -> RoadRou
 
 class YandexRouter(YandexClient):
     error_prefix = "router_provider"
-    _cache: dict[str, tuple[RoadRouteResponse, float]] = {}
+    
+    def __init__(self, client: httpx.Client | None = None):
+        super().__init__(client)
+        self.cache = {}
 
-    @classmethod
-    def _cache_key(cls, request: RoadRouteRequest) -> str:
+    def cache_key(self, request: RoadRouteRequest) -> str:
         raw = "|".join(f"{p.lat},{p.lon}" for p in request.points)
         raw += f"|{request.traffic_mode}"
         if request.departure_at is not None:
             raw += f"|{request.departure_at.isoformat()}"
         return hashlib.sha256(raw.encode()).hexdigest()
 
-    @classmethod
-    def _cache_get(cls, request: RoadRouteRequest) -> RoadRouteResponse | None:
-        key = cls._cache_key(request)
-        entry = cls._cache.get(key)
+    def cache_get(self, request: RoadRouteRequest) -> RoadRouteResponse | None:
+        key = self.cache_key(request)
+        entry = self.cache.get(key)
         if entry is None:
             return None
         route, cached_at = entry
         if datetime.now(timezone.utc).timestamp() - cached_at > CACHE_ENTRY_LIFETIME:
-            del cls._cache[key]
+            del self.cache[key]
             return None
         return route
 
-    @classmethod
-    def _cache_put(cls, request: RoadRouteRequest, response: RoadRouteResponse) -> None:
-        key = cls._cache_key(request)
-        cls._cache[key] = (response, datetime.now(timezone.utc).timestamp())
+    def cache_put(self, request: RoadRouteRequest, response: RoadRouteResponse) -> None:
+        key = self.cache_key(request)
+        self.cache[key] = (response, datetime.now(timezone.utc).timestamp())
 
     def estimate(self, request: RoadRouteRequest) -> RoadRouteResponse:
-        cached = self._cache_get(request)
+        cached = self.cache_get(request)
         if cached is not None:
             return cached
         now = datetime.now(timezone.utc)
         params = driving_params(request, now)
         data = self._get(ROUTER_URL, "YANDEX_ROUTER_API_KEY", params)
         response = parse_route(data, request, datetime.now(timezone.utc))
-        self._cache_put(request, response)
+        self.cache_put(request, response)
         return response
 
 
