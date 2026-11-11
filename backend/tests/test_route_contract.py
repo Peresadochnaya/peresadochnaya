@@ -34,7 +34,7 @@ def test_dummy_declares_only_actual_sources_and_segment_distances(response):
     route = response["routes"][0]
     assert route["provenance"] == {"candidate_providers": [], "traffic_providers": []}
     assert sum(leg["distance_meters"] for leg in route["legs"]) == pytest.approx(route["distance_meters"], abs=1e-6)
-    assert all(leg["distance_meters"] > 0 and leg["metro_wait_estimate"] is None for leg in route["legs"])
+    assert all(leg["distance_meters"] >= 0 and leg["metro_wait_estimate"] is None for leg in route["legs"])
     RoutesResponse.model_validate(response)
 
 

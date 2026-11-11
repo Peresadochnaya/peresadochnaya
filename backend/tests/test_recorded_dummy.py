@@ -35,7 +35,7 @@ def test_original_live_response_still_normalizes_offline(tmp_path, monkeypatch, 
         client = TestClient(create_app(tmp_path, address_provider=YandexAddresses(provider),
                                       road_provider=YandexRouter(provider)))
         req = case["request"]
-        response = client.request(req["method"], req["path"], params=req["params"], json=req["body"])
+        response = client.request(req["method"], req["path"], params={**req["params"], "dummy": False}, json=req["body"])
     assert response.status_code == 200 and len(calls) == 1
     actual, expected = response.json(), dict(case["api_response"])
     expected["provider"] = "yandex"
@@ -45,44 +45,32 @@ def test_original_live_response_still_normalizes_offline(tmp_path, monkeypatch, 
     assert actual == expected
 
 
-def test_recorded_suggest_geocode_flow_is_dummy_and_never_uses_real_uris(tmp_path, monkeypatch):
-    def forbidden(*args, **kwargs):
-        raise AssertionError("Dummy must not reach provider")
-    monkeypatch.setattr(YandexClient, "_get", forbidden)
+def test_demo_suggest_geocode_resolves_every_result_on_shared_network(tmp_path, monkeypatch):
+    monkeypatch.setattr(YandexClient, "_get", lambda *a, **kw: pytest.fail("Demo must not call provider"))
     client = TestClient(create_app(tmp_path))
-    response = client.get("/api/v1/suggest", params={"q": " пионерская ", "limit": 3})
-    data = response.json()
-    assert data["mode"] == "dummy" and len(data["items"]) == 3
-    assert data["items"][0]["title"] == "Пионерская улица"
-    assert all(item["uri"].startswith(DUMMY_URI_PREFIX) for item in data["items"])
-    assert any("Recorded" in warning for warning in data["warnings"])
-    uri = data["items"][0]["uri"]
-    place = client.get("/api/v1/geocode", params={"uri": uri}).json()
-    assert place["mode"] == "dummy"
-    assert place["items"] == recorded_samples()["cases"]["geocode"]["api_response"]["items"]
-    assert client.get("/api/v1/geocode", params={"uri": uri, "dummy": False}).status_code == 422
-    # Do not assign the first suggestion's coordinates to another city.
-    other = client.get("/api/v1/geocode", params={"uri": data["items"][1]["uri"]}).json()
-    assert not any("Recorded" in warning for warning in other["warnings"])
+    items = client.get("/api/v1/suggest", params={"q": "Пионерская", "limit": 3}).json()["items"]
+    assert len(items) == 3
+    for item in items:
+        assert item["uri"].startswith("dummy:yandex:stop:")
+        place = client.get("/api/v1/geocode", params={"uri": item["uri"]}).json()
+        assert place["mode"] == "dummy" and place["items"][0]["label"] == item["title"]
+        assert client.get("/api/v1/geocode", params={"uri": item["uri"], "dummy": False}).status_code == 422
     assert len(client.get("/api/v1/suggest", params={"q": "Пионерская", "limit": 1}).json()["items"]) == 1
-    # A truncated response must not mutate the cached original fixture.
     assert len(client.get("/api/v1/suggest", params={"q": "Пионерская", "limit": 3}).json()["items"]) == 3
 
 
-def test_recorded_geocode_text_reverse_and_route_replay_keep_provenance(tmp_path, monkeypatch):
-    monkeypatch.setattr(YandexClient, "_get", lambda *a, **kw: pytest.fail("No provider calls in replay"))
+def test_unrelated_saved_geocoder_results_do_not_override_demo_network(tmp_path, monkeypatch):
+    from app.gtfs_store import demo_stops
+    monkeypatch.setattr(YandexClient, "_get", lambda *a, **kw: pytest.fail("Demo must not call provider"))
     client = TestClient(create_app(tmp_path))
-    cases = recorded_samples()["cases"]
-    geocode = client.get("/api/v1/geocode", params={"q": "Пионерская улица"}).json()
-    assert geocode["items"] == cases["geocode"]["api_response"]["items"]
-    reverse = client.get("/api/v1/reverse", params={"lat": 59.956433, "lon": 30.310138}).json()
-    assert reverse["mode"] == "dummy" and reverse["items"] == cases["reverse"]["api_response"]["items"]
-    response = client.post("/api/v1/road-route", json=cases["road-route"]["request"]["body"])
-    data = response.json()
-    assert data["route"] == cases["road-route"]["api_response"]["route"]
+    place = client.get("/api/v1/geocode", params={"q": "Пионерская улица"}).json()["items"][0]
+    assert any((s["lat"], s["lon"], s["name"]) == (place["lat"], place["lon"], place["label"]) for s in demo_stops())
+    reverse = client.get("/api/v1/reverse", params={"lat": place["lat"], "lon": place["lon"]}).json()
+    assert reverse["items"][0] == place
+    body = {"points": [{"lat": place["lat"], "lon": place["lon"]}, {"lat": 60.04, "lon": 30.44}]}
+    data = client.post("/api/v1/road-route", json=body).json()
     assert data["mode"] == "dummy" and data["traffic_type"] is None
-    assert data["calculated_at"] == cases["road-route"]["api_response"]["calculated_at"]
-    assert any("not a current lookup" in warning for warning in data["warnings"])
+    assert data["route"]["geometry"]["coordinates"][0] == [place["lon"], place["lat"]]
     assert datetime.fromisoformat(data["calculated_at"]).tzinfo is not None
 
 

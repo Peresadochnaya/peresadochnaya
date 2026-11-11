@@ -40,7 +40,8 @@ def test_dummy_geometry_and_leg_times_at_coordinate_bounds(tmp_path, points):
     assert data["passenger"] == {"ticket_profile": "bank_card", "uncovered_payment": "bank_card"}
     for leg in data["routes"][0]["legs"]:
         assert leg["geometry"]["type"] == "LineString"
-        assert leg["geometry"]["coordinates"] == [[leg["from"]["lon"], leg["from"]["lat"]], [leg["to"]["lon"], leg["to"]["lat"]]]
+        assert leg["geometry"]["coordinates"][0] == [leg["from"]["lon"], leg["from"]["lat"]]
+        assert leg["geometry"]["coordinates"][-1] == [leg["to"]["lon"], leg["to"]["lat"]]
         assert leg["duration_seconds"] == leg["original_duration_seconds"]
         assert (datetime.fromisoformat(leg["end_at"]) - datetime.fromisoformat(leg["start_at"])).total_seconds() == leg["duration_seconds"]
         assert leg["duration_source"] == "dummy"

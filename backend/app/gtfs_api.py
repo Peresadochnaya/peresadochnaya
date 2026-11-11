@@ -48,7 +48,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
     @router.get('/stops',response_model=GtfsStopsResponse,responses=errors)
     def stops(bbox: str=Query(),q: str|None=Query(default=None,min_length=1,max_length=256,pattern=r'\S'),
               modes: str|None=Query(default=None),limit:int=Query(default=500,ge=1,le=2000),
-              offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True)):
+              offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             bounds=parse_bbox(bbox);wanted=parse_modes(modes)
             serving=s.stop_routes() if wanted is not None else None
@@ -62,7 +62,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
         return execute(dummy,action)
 
     @router.get('/stops/{stop_id}',response_model=GtfsStopResponse,responses=errors)
-    def stop(stop_id:str,dummy:bool=Query(default=True)):
+    def stop(stop_id:str,dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             obj=s.get_stop(stop_id)
             lines=[s.routes[r] for r in sorted(s.stop_routes().get(stop_id,()))]
@@ -71,7 +71,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
 
     @router.get('/stops/{stop_id}/departures',response_model=GtfsDeparturesResponse,responses=errors)
     def departures(stop_id:str,departure_at:AwareDatetime,lookahead_minutes:int=Query(default=120,ge=1,le=1440),
-                   limit:int=Query(default=20,ge=1,le=100),dummy:bool=Query(default=True)):
+                   limit:int=Query(default=20,ge=1,le=100),dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             items,more,warnings=s.departures(stop_id,departure_at,lookahead_minutes,limit)
             meta=s.metadata;meta['warnings'].extend(warnings)
@@ -82,7 +82,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
     @router.get('/transit-routes',response_model=GtfsRoutesResponse,responses=errors)
     def lines(q:str|None=Query(default=None,min_length=1,max_length=256,pattern=r'\S'),
               modes:str|None=Query(default=None),limit:int=Query(default=100,ge=1,le=500),
-              offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True)):
+              offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             wanted=parse_modes(modes)
             rows=[v for _,v in sorted(s.routes.items()) if (wanted is None or v.mode in wanted)
@@ -91,7 +91,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
         return execute(dummy,action)
 
     @router.get('/transit-routes/{route_id}',response_model=GtfsRouteResponse,responses=errors)
-    def line(route_id:str,limit:int=Query(default=50,ge=1,le=200),offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True)):
+    def line(route_id:str,limit:int=Query(default=50,ge=1,le=200),offset:int=Query(default=0,ge=0),dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             route=s.get_route(route_id)
             rows=[t for _,t in sorted(s.trips.items()) if t.route_id==route_id]
@@ -101,7 +101,7 @@ def create_gtfs_router(root: Path) -> APIRouter:
         return execute(dummy,action)
 
     @router.get('/trips/{trip_id}',response_model=GtfsTripResponse,responses=errors)
-    def trip(trip_id:str,dummy:bool=Query(default=True)):
+    def trip(trip_id:str,dummy:bool=Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники")):
         def action(s):
             result,warnings=s.trip(trip_id);meta=s.metadata;meta['warnings'].extend(warnings)
             return GtfsTripResponse(**meta,trip=result)

@@ -5,5 +5,5 @@
     "81730566",
     "81730567"
   ],
-  "note": "Real SPb stops/routes/trips/shapes; synthetic all-week demo calendar 2000-2099. Selected frequency rows preserved for one direction; other direction illustrates timetable departures."
+  "note": "Real SPb stops/routes/trip patterns/shapes; synthetic all-week calendar 2000-2099 and exact 10-minute departure grids, all day in both directions. Not real service availability."
 }

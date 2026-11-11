@@ -30,13 +30,13 @@ def positions():
 
 
 def test_dummy_default_filtering_precedes_truncation_and_bbox_is_inclusive(tmp_path, monkeypatch):
-    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _: positions())
+    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _, at=None: positions())
     api = client(tmp_path, clock=lambda: DEMO_TIMESTAMP + timedelta(seconds=61))
     response = api.get("/api/v1/vehicles", params={"bbox": "30,60,30.2,60.2", "modes": "bus", "limit": 1})
     assert response.status_code == 200
     data = response.json()
-    assert data["mode"] == "dummy" and data["stale"] is True
-    assert data["updated_at"] == "2026-11-11T09:00:00Z"
+    assert data["mode"] == "dummy" and data["stale"] is False
+    assert data["updated_at"] == "2026-11-11T09:01:01Z"
     assert [p["vehicle_id"] for p in data["items"]] == ["dummy:test:0"]
     assert "vehicles_truncated" in data["warnings"]
     # The tram is the second original item: modes must filter before applying limit.
@@ -47,7 +47,7 @@ def test_dummy_default_filtering_precedes_truncation_and_bbox_is_inclusive(tmp_p
 
 
 def test_no_matches_is_empty_success_and_multiple_modes_supported(tmp_path, monkeypatch):
-    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _: positions())
+    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _, at=None: positions())
     api = client(tmp_path)
     data = api.get("/api/v1/vehicles", params={"bbox": "30,60,30.2,60.2", "modes": "metro,rail"}).json()
     assert data["mode"] == "dummy" and data["items"] == []
@@ -56,13 +56,13 @@ def test_no_matches_is_empty_success_and_multiple_modes_supported(tmp_path, monk
     assert len(data["items"]) == 3
 
 
-@pytest.mark.parametrize("seconds, stale", [(30, False), (60, False), (61, True)])
-def test_freshness_uses_fixed_demo_timestamp(tmp_path, monkeypatch, seconds, stale):
-    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _: [])
+@pytest.mark.parametrize("seconds", [30, 60, 61])
+def test_empty_demo_snapshot_uses_generation_time(tmp_path, monkeypatch, seconds):
+    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _, at=None: [])
     api = client(tmp_path, clock=lambda: DEMO_TIMESTAMP + timedelta(seconds=seconds))
     data = api.get("/api/v1/vehicles", params={"bbox": "29,59,31,61"}).json()
-    assert data["stale"] is stale
-    assert data["updated_at"] == "2026-11-11T09:00:00Z"
+    assert data["stale"] is False
+    assert data["updated_at"] == (DEMO_TIMESTAMP + timedelta(seconds=seconds)).isoformat().replace("+00:00", "Z")
 
 
 @pytest.mark.parametrize("params", [
@@ -75,12 +75,12 @@ def test_freshness_uses_fixed_demo_timestamp(tmp_path, monkeypatch, seconds, sta
     {"bbox": "30,60,31,61", "dummy": "maybe"},
 ])
 def test_invalid_query_is_validation_error(tmp_path, monkeypatch, params):
-    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _: pytest.fail("Invalid query reached data"))
+    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _, at=None: pytest.fail("Invalid query reached data"))
     assert client(tmp_path).get("/api/v1/vehicles", params=params).status_code == 422
 
 
 def test_real_mode_is_explicitly_unavailable_and_does_not_read_fixture(tmp_path, monkeypatch):
-    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _: pytest.fail("Real mode must not fabricate markers"))
+    monkeypatch.setattr(vehicles_api, "demo_positions", lambda _, at=None: pytest.fail("Real mode must not fabricate markers"))
     response = client(tmp_path).get("/api/v1/vehicles", params={"bbox": "29,59,31,61", "dummy": False})
     assert response.status_code == 503
     assert response.json() == {"error": {"code": "realtime_unavailable", "message": "GTFS-RT vehicle positions are not configured"}}
