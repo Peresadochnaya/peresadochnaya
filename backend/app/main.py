@@ -202,6 +202,13 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
 
     def documented_openapi():
         document = generated_openapi()
+        # Python versions use different reason phrases for HTTP 422. Keep the
+        # published contract identical in CI, developer environments and Docker.
+        for path_item in document["paths"].values():
+            for operation in path_item.values():
+                validation = operation.get("responses", {}).get("422")
+                if validation is not None:
+                    validation["description"] = "Unprocessable Content"
         for path, description in OPERATION_DESCRIPTIONS.items():
             for operation in document["paths"].get(path, {}).values():
                 operation["description"] = description

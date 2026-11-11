@@ -503,7 +503,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
         '422':
-          description: Validation Error
+          description: Unprocessable Content
           content:
             application/json:
               schema:

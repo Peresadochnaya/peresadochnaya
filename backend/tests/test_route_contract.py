@@ -98,3 +98,16 @@ def test_root_openapi_matches_served_contract(tmp_path):
     assert "distance_meters" in schemas["Leg"]["required"]
     assert schemas["RoutesResponse"]["properties"]["mode"]["enum"] == ["dummy", "real"]
     assert {"502", "503", "504"} <= actual["paths"]["/api/v1/routes"]["post"]["responses"].keys()
+
+
+@pytest.mark.parametrize("phrase", ["Unprocessable Entity", "Unprocessable Content"])
+def test_validation_response_description_is_independent_of_python_version(phrase, tmp_path):
+    app = create_app(tmp_path)
+    document = app.openapi()
+    responses = [operation["responses"]["422"] for path in document["paths"].values()
+                 for operation in path.values() if "422" in operation.get("responses", {})]
+    assert responses
+    for response in responses:
+        response["description"] = phrase
+    app.openapi()
+    assert all(response["description"] == "Unprocessable Content" for response in responses)
