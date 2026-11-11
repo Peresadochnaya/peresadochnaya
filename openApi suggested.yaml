@@ -369,7 +369,16 @@ paths:
         — предпочтения для OTP. passenger задаёт один из пяти профилей и uncovered_payment
         для поездок вне покрытия проездного. Сейчас backend принимает эти поля только
         как контракт, возвращает явно синтетический ответ либо 503 planner_unavailable
-        и не применяет предпочтения к реальным маршрутам.'
+        и не применяет предпочтения к реальным маршрутам. Для метро доступны справочные
+        интервалы, режимы работы, топология и переходы из data/processed/metro. Половина
+        модельного интервала допускается как явно помеченная эвристика ожидания с
+        metro_wait_estimate, но не как точное расписание. Начало/конец работы проверяются
+        по направлению и станции. Праздничные дни и изменённый режим требуют отдельного
+        календаря. Отдельный оценочный GTFS метро собирается data.metro.refresh:
+        времена перегонов и переходов берутся из pMetro и имеют duration_source=estimated.
+        Это справочные оценки, а не официальное расписание. Исходные CSV связей
+        остаются без длительностей; обогащённые таблицы и происхождение данных лежат
+        в metro_reference.json внутри GTFS ZIP.'
       parameters:
       - name: dummy
         in: query
@@ -1364,6 +1373,8 @@ components:
           - dummy
           - schedule
           - yandex
+          - 2gis
+          - estimated
         line:
           oneOf:
           - $ref: '#/components/schemas/TransitLine'
@@ -1375,6 +1386,13 @@ components:
           minimum: 0
           description: Расстояние участка, для ожидания 0. Сумма по участкам равна
             distance_meters маршрута.
+        metro_wait_estimate:
+          anyOf:
+          - $ref: '#/components/schemas/MetroWaitEstimate'
+          - type: 'null'
+          description: Только для моделируемого ожидания метро. Реальный departure
+            timestamp по этим данным неизвестен; start_at/end_at такого участка обозначают
+            модельную временную цепочку.
     Route:
       type: object
       additionalProperties: false
@@ -2474,3 +2492,66 @@ components:
             - 2gis
           description: Только фактически применённые источники дорожных поправок.
             В MVP OTP без поправок — пустой список.
+    MetroWaitEstimate:
+      type: object
+      additionalProperties: false
+      required:
+      - line
+      - day_type
+      - period_start
+      - period_end
+      - min_headway_seconds
+      - max_headway_seconds
+      - representative_headway_seconds
+      - estimated_wait_seconds
+      - model
+      - source_url
+      - source_valid_from
+      description: Оценка ожидания по опубликованным интервалам, не GTFS-расписание
+        и не realtime. min/max интервалов недостаточно для точного математического
+        ожидания. Время прибытия поезда не выдумывается.
+      properties:
+        line:
+          type: string
+        day_type:
+          type: string
+          enum:
+          - weekday
+          - saturday
+          - sunday
+        period_start:
+          type: string
+          description: Локальное начало периода обслуживания, Europe/Moscow; может
+            быть после полуночи.
+        period_end:
+          type: string
+        min_headway_seconds:
+          type: integer
+          minimum: 1
+        max_headway_seconds:
+          type: integer
+          minimum: 1
+        representative_headway_seconds:
+          type: number
+          exclusiveMinimum: 0
+          description: Явно выбранный модельный интервал, например середина опубликованного
+            диапазона. Это предположение, не измерение.
+        estimated_wait_seconds:
+          type: number
+          minimum: 0
+          description: Половина representative_headway_seconds при модели случайного
+            прихода. Не верхняя граница и не гарантированное время ожидания.
+        model:
+          type: string
+          const: half_representative_headway
+        source_url:
+          type: string
+          format: uri
+        source_valid_from:
+          type: string
+          format: date
+        warnings:
+          type: array
+          items:
+            type: string
+          default: []
