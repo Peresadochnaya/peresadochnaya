@@ -38,6 +38,7 @@ def test_original_live_response_still_normalizes_offline(tmp_path, monkeypatch, 
         response = client.request(req["method"], req["path"], params=req["params"], json=req["body"])
     assert response.status_code == 200 and len(calls) == 1
     actual, expected = response.json(), dict(case["api_response"])
+    expected["provider"] = "yandex"
     if name == "road-route":
         actual.pop("calculated_at")
         expected.pop("calculated_at")
@@ -93,7 +94,7 @@ def test_other_inputs_and_traffic_mode_do_not_reuse_unrelated_live_geometry(tmp_
     assert len(data["route"]["geometry"]["coordinates"]) == 2
     assert not any("Recorded" in warning for warning in data["warnings"])
     other = client.get("/api/v1/suggest", params={"q": "Ручьи"}).json()
-    assert other["items"][0]["title"] == "Демо: Ручьи"
+    assert other["items"][0]["uri"].startswith("dummy:yandex:stop:")
 
 
 def test_saved_call_ledger_and_fixture_have_no_credential_parameters():

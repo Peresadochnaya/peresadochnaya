@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 
 class Model(BaseModel):
@@ -12,14 +12,18 @@ class Point(Model):
     lon: float = Field(ge=-180, le=180, allow_inf_nan=False)
 
 
+GeoProvider = Literal["yandex", "2gis"]
+
+
 class Suggestion(Model):
     title: str = Field(description="Main display text")
     subtitle: str | None = Field(default=None, description="Address or area clarification")
-    uri: str = Field(description="Opaque Yandex object URI to resolve with the geocoder; not a URL to fetch")
+    uri: str = Field(description="Opaque provider-specific identifier for geocoding; preserve provider and never fetch this as a URL")
 
 
 class SuggestResponse(Model):
-    mode: Literal["dummy", "yandex"]
+    mode: Literal["dummy", "yandex", "2gis"]
+    provider: GeoProvider = "yandex"
     items: list[Suggestion]
     warnings: list[str] = Field(default_factory=list)
 
@@ -30,22 +34,28 @@ class GeocodedPlace(Point):
 
 
 class GeocodeResponse(Model):
-    mode: Literal["dummy", "yandex"]
+    mode: Literal["dummy", "yandex", "2gis"]
+    provider: GeoProvider = "yandex"
     items: list[GeocodedPlace]
     warnings: list[str] = Field(default_factory=list)
 
 
-TicketProfile = Literal["full_fare", "podorozhnik_wallet", "monthly_unified", "monthly_surface", "monthly_bus", "monthly_metro", "student_unified", "student_surface", "student_metro", "school_unified", "school_bus", "concession_unified"]
+TicketProfile = Literal["podorozhnik_wallet", "unlimited_surface", "unlimited_metro", "unlimited_all", "bank_card"]
 
 
 class Passenger(Model):
-    ticket_profile: TicketProfile = "full_fare"
+    ticket_profile: TicketProfile = "bank_card"
+    uncovered_payment: Literal["podorozhnik_wallet", "bank_card"] = Field(default="bank_card",
+        description="Payment for rides not covered by the selected unlimited pass; irrelevant for wallet-only or bank-card-only profiles")
 
 
 class TicketProfileInfo(Model):
     id: TicketProfile
     label_ru: str
     coverage_status: Literal["not_implemented"] = "not_implemented"
+    description_ru: str
+    covered_modes: list[Literal["bus", "tram", "trolleybus", "metro"]] = Field(default_factory=list)
+    transfer_window_seconds: int | None = Field(default=None, ge=0)
 
 
 class RouteRequest(Model):
@@ -55,6 +65,21 @@ class RouteRequest(Model):
     departure_at: AwareDatetime
     traffic_mode: Literal["off", "on"] = "off"
     max_results: int = Field(default=5, ge=1, le=10)
+    providers: list[Literal["otp", "yandex", "2gis"]] = Field(default_factory=lambda: ["otp"], min_length=1, max_length=3,
+        description="Enabled candidate planners; MVP uses OTP only. Does not turn on live requests without dummy=false.")
+    modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, min_length=1, max_length=5,
+        description="Allowed public transport modes; null means all. Walking access remains possible.")
+    exclude_modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, max_length=5)
+    max_transfers: int | None = Field(default=None, ge=0, le=5)
+    walk_speed: Literal["slow", "normal", "fast"] = Field(default="normal", description="Walking speed preset for the future OTP adapter")
+    less_walking: bool = Field(default=False, description="Prefer less walking; does not prohibit walking access or transfers")
+
+    @field_validator("providers", "modes", "exclude_modes")
+    @classmethod
+    def no_duplicate_options(cls, values):
+        if values is not None and len(values) != len(set(values)):
+            raise ValueError("Options must not contain duplicates")
+        return values
 
 
 class Place(Point):
@@ -91,7 +116,8 @@ class RoadRoute(Model):
 
 
 class RoadRouteResponse(Model):
-    mode: Literal["dummy", "yandex"]
+    mode: Literal["dummy", "yandex", "2gis"]
+    provider: GeoProvider = "yandex"
     traffic_mode: Literal["off", "on"]
     traffic_type: Literal["realtime", "forecast", "disabled"] | None
     departure_at: AwareDatetime | None

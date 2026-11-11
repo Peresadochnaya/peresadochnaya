@@ -7,7 +7,7 @@
 ## Уже подготовлено
 
 - FastAPI, CI/CD, HTTPS и health endpoints работают в k3s.
-- GTFS проверяется каждые 20 минут через авторизованный HTTP-прокси TrueNAS
+- GTFS проверяется каждые 20 минут через авторизованный HTTP-прокси arctur
   по NetBird. Хранится только свежая версия.
 - Контракт принимает массив `points` строго из двух точек. Маршрут содержит
   свободное `name`, `distance_meters`, `duration_seconds`, общую GeoJSON
@@ -66,6 +66,12 @@
    координатный порядок, отсутствие маршрута, квоту, таймаут и повреждённый ответ.
 
 Документация: https://yandex.ru/maps-api/docs/router-api/index.html
+
+## MVP поиска
+
+Только OTP, без Яндекс/2ГИС-поправок и без realtime. Реальный /routes пока не реализовывать.
+Предпочтения: массив modes, walk_speed enum, less_walking; пять ticket_profile и
+настраиваемый uncovered_payment. Будущая агрегация сохраняет provenance каждого кандидата.
 
 ## 2. Интеграция OTP
 

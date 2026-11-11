@@ -37,6 +37,9 @@ spec:
             - name: YANDEX_ROUTER_API_KEY
               valueFrom:
                 secretKeyRef: {name: yandex-api, key: router, optional: true}
+            - name: DGIS_API_KEY
+              valueFrom:
+                secretKeyRef: {name: dgis-api, key: apikey, optional: true}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
