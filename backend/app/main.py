@@ -8,13 +8,14 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from .api_docs import API_DESCRIPTION, OPERATION_DESCRIPTIONS
 from .data_status import load_status
 from . import demo_addresses
 from .dgis import DgisAddresses, DgisRouter
 from .gtfs_api import create_gtfs_router
 from .vehicles_api import create_vehicles_router
 from .recorded_dummy import recorded_geocode, recorded_reverse, recorded_road_route, recorded_suggest
-from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RoutesResponse, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
+from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RouteProvenance, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
 from .yandex_router import YandexRouter, dummy_road_route
 
@@ -39,6 +40,13 @@ def error(status: int, code: str, message: str):
     return JSONResponse(status_code=status, content={"error": {"code": code, "message": message}})
 
 
+def point_distance(left: Place, right: Place) -> float:
+    lat1, lat2 = math.radians(left.lat), math.radians(right.lat)
+    dlat, dlon = lat2 - lat1, math.radians(right.lon - left.lon)
+    h = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    return 6371000 * 2 * math.asin(math.sqrt(min(1.0, max(0.0, h))))
+
+
 def dummy_route(request: RouteRequest) -> Route:
     """Synthetic fixture for frontend development, not a geographic itinerary."""
     start = request.departure_at
@@ -53,20 +61,17 @@ def dummy_route(request: RouteRequest) -> Route:
         end = start + timedelta(seconds=seconds)
         legs.append(Leg(mode=mode, origin=points[i], destination=points[i+1], start_at=start,
                         end_at=end, duration_seconds=seconds, original_duration_seconds=seconds,
-                        duration_source="dummy", line=TransitLine(short_name="DEMO", route_id=f"dummy:{mode}") if mode != "walk" else None,
+                        duration_source="dummy", distance_meters=round(point_distance(points[i], points[i+1]), 2),
+                        line=TransitLine(short_name="DEMO", route_id=f"dummy:{mode}") if mode != "walk" else None,
                         geometry={"type": "LineString", "coordinates": [[points[i].lon, points[i].lat], [points[i+1].lon, points[i+1].lat]]}))
         start = end
     coordinates = [[point.lon, point.lat] for point in points]
-    distance = 0.0
-    for left, right in zip(points, points[1:]):
-        lat1, lat2 = math.radians(left.lat), math.radians(right.lat)
-        dlat, dlon = lat2 - lat1, math.radians(right.lon - left.lon)
-        h = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-        distance += 6371000 * 2 * math.asin(math.sqrt(min(1.0, max(0.0, h))))
-    return Route(id="dummy:route-1", name="Демонстрационный маршрут", distance_meters=round(distance, 2),
+    distance = round(sum(leg.distance_meters for leg in legs), 2)
+    return Route(id="dummy:route-1", name="Демонстрационный маршрут", distance_meters=distance,
                  geometry={"type": "LineString", "coordinates": coordinates},
                  start_at=request.departure_at, end_at=start,
-                 duration_seconds=1500, transfers=1, legs=legs)
+                 duration_seconds=1500, transfers=1, legs=legs,
+                 provenance=RouteProvenance(candidate_providers=[], traffic_providers=[]))
 
 
 def create_app(data_root: Path | None = None, planner_mode: str | None = None,
@@ -78,7 +83,7 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     mode = planner_mode or os.getenv("PLANNER_MODE", "unavailable")
     if mode not in ("dummy", "unavailable"):
         raise ValueError("PLANNER_MODE must be dummy or unavailable until planner integration is implemented")
-    app = FastAPI(title="Пересадочная API", version="0.2.0")
+    app = FastAPI(title="Пересадочная API", version="0.2.0", description=API_DESCRIPTION)
     app.include_router(create_gtfs_router(root))
     app.include_router(create_vehicles_router(root))
     addresses = address_provider or YandexAddresses()
@@ -173,13 +178,15 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         return (roads if provider == "yandex" else dgis_roads).estimate(request)
 
     @app.post("/api/v1/routes", response_model=RoutesResponse,
-              responses={422: {"model": ErrorResponse | ValidationErrorResponse}, 503: {"model": ErrorResponse}})
+              responses={422: {"model": ErrorResponse | ValidationErrorResponse},
+                         **{status: {"model": ErrorResponse} for status in (502, 503, 504)}})
     def routes(request: RouteRequest,
                dummy: bool = Query(default=True, description="Synthetic response without Yandex calls; explicitly pass false to enable real planning and provider access")):
         if dummy:
             if request.departure_at.replace(tzinfo=None) > datetime.max - timedelta(seconds=1500):
                 return error(422, "invalid_departure_time", "Departure time leaves no representable space for route arrival")
-            return RoutesResponse(mode="dummy", passenger=request.passenger, routes=[dummy_route(request)], gtfs_version=None,
+            return RoutesResponse(mode="dummy", sources=RoutesResponseSources(
+                candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[dummy_route(request)], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
                                   warnings=["Synthetic demonstration route; no planner, GTFS, traffic or real transit data was used",
                                             "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
@@ -190,6 +197,17 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                 return error(422, "invalid_service_date", "GTFS has no active services on the requested date")
         return error(503, "planner_unavailable", "A route planner is not configured")
 
+    # Apply documentation to the generated schema, including lazily included routers.
+    generated_openapi = app.openapi
+
+    def documented_openapi():
+        document = generated_openapi()
+        for path, description in OPERATION_DESCRIPTIONS.items():
+            for operation in document["paths"].get(path, {}).values():
+                operation["description"] = description
+        return document
+
+    app.openapi = documented_openapi
     return app
 
 

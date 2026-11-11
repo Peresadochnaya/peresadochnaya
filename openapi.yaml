@@ -1,6 +1,10 @@
 openapi: 3.1.0
 info:
   title: Пересадочная API
+  description: 'Контракт front/back. Справочные и геосервисные ручки реализованы.
+    /routes возвращает dummy-ответ; реальный поиск ещё не подключён. MVP реального
+    поиска — только OTP. mode=real означает расчёт планировщика и не обещает пробки
+    или realtime: их фактические источники указаны в sources.'
   version: 0.2.0
 paths:
   /api/v1/stops:
@@ -87,6 +91,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: Список остановок и станций в bbox. Фильтры q и modes применяются
+        до пагинации; modes означает наличие обслуживающей линии указанного типа.
+        Порядок stop_id стабилен в пределах снимка. Нет совпадений — items=[], total=0.
+        total — число совпадений до пагинации. Данные читаются из одного локального
+        снимка, идентификаторы относятся к gtfs_version. Нет загруженного снимка —
+        503 gtfs_unavailable. Запрос не запускает обновление GTFS.
   /api/v1/stops/{stop_id}:
     get:
       tags:
@@ -135,6 +145,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: Название, координаты и доступные сведения из stops.txt, а также
+        обслуживающие транспортные линии. Поле description соответствует stop_desc;
+        почтовый адрес не выдумывается. Неизвестный stop_id — 404 stop_not_found.
+        Данные читаются из одного локального снимка, идентификаторы относятся к gtfs_version.
+        Нет загруженного снимка — 503 gtfs_unavailable. Запрос не запускает обновление
+        GTFS.
   /api/v1/stops/{stop_id}/departures:
     get:
       tags:
@@ -208,6 +224,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: Отправления из локального снимка GTFS. Для точного расписания scheduled_departure_at
+        содержит ISO-время с offset. Для frequencies.txt exact_times=0 возвращается
+        schedule_type=frequency, scheduled_departure_at=null, headway_seconds и окно
+        frequency_start_at/frequency_end_at; это интервал, не обещание конкретной
+        посадки. Частотное окно пересекается с запрошенным окном; сортировка по точному
+        времени либо началу пересечения. Учитываются service day, исключения calendar_dates,
+        времена >=24:00:00 и часовой пояс перевозчика. Некорректный календарь — 422
+        invalid_service_date. Доступ к внешним API не требуется.
   /api/v1/transit-routes:
     get:
       tags:
@@ -286,6 +310,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: Номера, названия и виды транспорта из routes.txt. Это линии ОТ,
+        а не результаты планирования поездки A → B. Фильтры применяются до пагинации;
+        сортировка по route_id. Нет совпадений — items=[], total=0. Данные читаются
+        из одного локального снимка, идентификаторы относятся к gtfs_version. Нет
+        загруженного снимка — 503 gtfs_unavailable. Запрос не запускает обновление
+        GTFS.
   /api/v1/transit-routes/{route_id}:
     get:
       tags:
@@ -351,6 +381,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: 'Линия, направления и страница связанных рейсов из trips.txt, независимо
+        от календарной активности на текущую дату. direction_id=0/1 не означает универсально
+        прямое/обратное направление: для подписи используется headsign. Направление
+        может отсутствовать. trips отсортированы по trip_id; offset, limit, total,
+        has_more относятся только к trips. Неизвестная линия — 404 transit_route_not_found.
+        Данные читаются из одного локального снимка, идентификаторы относятся к gtfs_version.
+        Нет загруженного снимка — 503 gtfs_unavailable. Запрос не запускает обновление
+        GTFS.'
   /api/v1/trips/{trip_id}:
     get:
       tags:
@@ -399,11 +437,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+      description: 'Рейс с service_id, остановками по stop_sequence, временами stop_times
+        и геометрией shapes.txt. Порядок времени — сервисный день GTFS: 25:10:00 означает
+        01:10 следующего календарного дня. Времена возвращаются исходными строками,
+        не приводятся к 00–23 и не обещают активности рейса сегодня. Время промежуточной
+        остановки может отсутствовать; в таком случае null, без выдуманной интерполяции.
+        Геометрия — LineString в [lon,lat], либо null с предупреждением, если shape
+        отсутствует. Неизвестный trip_id — 404 trip_not_found. Данные читаются из
+        одного локального снимка, идентификаторы относятся к gtfs_version. Нет загруженного
+        снимка — 503 gtfs_unavailable. Запрос не запускает обновление GTFS.'
   /api/v1/vehicles:
     get:
       summary: Vehicles
-      description: 'Synthetic positions tied to the GTFS demo. GTFS-RT is not connected:
-        dummy=false returns 503.'
+      description: 'Текущие позиции транспорта из GTFS-RT VehiclePosition.
+
+        Кэш сервера 15–30 с. Если фид молчит дольше 2× интервала — stale=true.
+
+        Если лимит достигнут и есть ещё — warning vehicles_truncated.
+
+        '
       operationId: vehicles_api_v1_vehicles_get
       parameters:
       - name: bbox
@@ -476,6 +528,8 @@ paths:
           content:
             application/json:
               schema: {}
+      description: Готовность HTTP API. Доступность GTFS и графа планировщика проверяется
+        отдельно через /api/v1/data/status.
   /api/v1/data/status:
     get:
       summary: Data Status
@@ -843,12 +897,44 @@ paths:
                 - $ref: '#/components/schemas/ValidationErrorResponse'
                 title: Response 422 Routes Api V1 Routes Post
           description: Unprocessable Content
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Gateway
         '503':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Service Unavailable
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Gateway Timeout
+      description: 'Контракт поиска поездки A → B. В MVP используется только OTP:
+        providers=[otp], без Яндекс/2ГИС-поправок и без GTFS-RT. Реальный поиск пока
+        не подключён: dummy=false возвращает 503 planner_unavailable. providers —
+        массив источников кандидатов, отдельный от режима dummy. Позднее варианты
+        OTP, Яндекса и 2ГИС объединяются и переранжируются; provenance в каждом варианте
+        сохраняет происхождение кандидата и фактически применённые поправки. modes
+        — массив видов транспорта; walk_speed=slow|normal|fast и less_walking — предпочтения
+        для OTP. passenger задаёт один из пяти профилей и uncovered_payment для поездок
+        вне покрытия проездного. Сейчас backend принимает эти поля только как контракт,
+        возвращает явно синтетический ответ либо 503 planner_unavailable и не применяет
+        предпочтения к реальным маршрутам. Для метро доступны справочные интервалы,
+        режимы работы, топология и переходы из data/processed/metro. Половина модельного
+        интервала допускается как явно помеченная эвристика ожидания с metro_wait_estimate,
+        но не как точное расписание. Начало/конец работы проверяются по направлению
+        и станции. Праздничные дни и изменённый режим требуют отдельного календаря.
+        Отдельный оценочный GTFS метро собирается data.metro.refresh: времена перегонов
+        и переходов берутся из pMetro и имеют duration_source=estimated. Это справочные
+        оценки, а не официальное расписание. Исходные CSV связей остаются без длительностей;
+        обогащённые таблицы и происхождение данных лежат в metro_reference.json внутри
+        GTFS ZIP.'
 components:
   schemas:
     DataStatus:
@@ -930,6 +1016,8 @@ components:
           - yandex
           - 2gis
           title: Provider
+          description: Выбранный геосервис. Совместимая dummy-структура не означает
+            живое обращение.
           default: yandex
         items:
           items:
@@ -1640,12 +1728,16 @@ components:
           type: integer
           minimum: 0.0
           title: Original Duration Seconds
+          description: Исходная длительность из расписания или модели, до дорожных
+            поправок
         duration_source:
           type: string
           enum:
           - dummy
           - schedule
           - yandex
+          - 2gis
+          - estimated
           title: Duration Source
         line:
           anyOf:
@@ -1653,6 +1745,19 @@ components:
           - type: 'null'
         geometry:
           $ref: '#/components/schemas/LineString'
+        distance_meters:
+          type: number
+          minimum: 0.0
+          title: Distance Meters
+          description: Расстояние участка, для ожидания 0. Сумма по участкам равна
+            distance_meters маршрута.
+        metro_wait_estimate:
+          anyOf:
+          - $ref: '#/components/schemas/MetroWaitEstimate'
+          - type: 'null'
+          description: Только для моделируемого ожидания метро. Реальный departure
+            timestamp по этим данным неизвестен; start_at/end_at такого участка обозначают
+            модельную временную цепочку.
       additionalProperties: false
       type: object
       required:
@@ -1665,6 +1770,7 @@ components:
       - original_duration_seconds
       - duration_source
       - geometry
+      - distance_meters
       title: Leg
     LineString:
       properties:
@@ -1694,6 +1800,85 @@ components:
       - coordinates
       title: LineString
       description: WGS84 GeoJSON line; positions are [longitude, latitude].
+    MetroWaitEstimate:
+      properties:
+        line:
+          type: string
+          title: Line
+        day_type:
+          type: string
+          enum:
+          - weekday
+          - saturday
+          - sunday
+          title: Day Type
+        period_start:
+          type: string
+          title: Period Start
+          description: Локальное начало периода обслуживания, Europe/Moscow; может
+            быть после полуночи.
+        period_end:
+          type: string
+          title: Period End
+        min_headway_seconds:
+          type: integer
+          minimum: 1.0
+          title: Min Headway Seconds
+        max_headway_seconds:
+          type: integer
+          minimum: 1.0
+          title: Max Headway Seconds
+        representative_headway_seconds:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Representative Headway Seconds
+          description: Явно выбранный модельный интервал, например середина опубликованного
+            диапазона. Это предположение, не измерение.
+        estimated_wait_seconds:
+          type: number
+          minimum: 0.0
+          title: Estimated Wait Seconds
+          description: Половина representative_headway_seconds при модели случайного
+            прихода. Не верхняя граница и не гарантированное время ожидания.
+        model:
+          type: string
+          const: half_representative_headway
+          title: Model
+        source_url:
+          type: string
+          minLength: 1
+          format: uri
+          title: Source Url
+        source_valid_from:
+          type: string
+          format: date
+          title: Source Valid From
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - line
+      - day_type
+      - period_start
+      - period_end
+      - min_headway_seconds
+      - max_headway_seconds
+      - representative_headway_seconds
+      - estimated_wait_seconds
+      - model
+      - source_url
+      - source_valid_from
+      title: MetroWaitEstimate
+      description: 'Оценка ожидания по опубликованным интервалам, не GTFS-расписание
+        и не realtime.
+
+
+        min/max интервалов недостаточно для точного математического ожидания. Время
+        прибытия поезда не выдумывается.'
     Passenger:
       properties:
         ticket_profile:
@@ -1827,6 +2012,8 @@ components:
           - yandex
           - 2gis
           title: Provider
+          description: Выбранный геосервис. Совместимая dummy-структура не означает
+            живое обращение.
           default: yandex
         traffic_mode:
           type: string
@@ -1914,6 +2101,8 @@ components:
             $ref: '#/components/schemas/Leg'
           type: array
           title: Legs
+        provenance:
+          $ref: '#/components/schemas/RouteProvenance'
       additionalProperties: false
       type: object
       required:
@@ -1926,7 +2115,40 @@ components:
       - duration_seconds
       - transfers
       - legs
+      - provenance
       title: Route
+    RouteProvenance:
+      properties:
+        candidate_providers:
+          items:
+            type: string
+            enum:
+            - otp
+            - yandex
+            - 2gis
+          type: array
+          uniqueItems: true
+          title: Candidate Providers
+          description: Источники исходного варианта. После дедупликации их может быть
+            несколько. Для реального маршрута минимум один; для dummy допускается
+            пустой список.
+        traffic_providers:
+          items:
+            type: string
+            enum:
+            - yandex
+            - 2gis
+          type: array
+          uniqueItems: true
+          title: Traffic Providers
+          description: Только фактически применённые источники дорожных поправок.
+            В MVP OTP без поправок — пустой список.
+      additionalProperties: false
+      type: object
+      required:
+      - candidate_providers
+      - traffic_providers
+      title: RouteProvenance
     RouteRequest:
       properties:
         points:
@@ -2033,8 +2255,12 @@ components:
           type: string
           enum:
           - dummy
-          - planner
+          - real
           title: Mode
+          description: dummy — демонстрационные данные; real — расчёт планировщика.
+            Наличие пробок и realtime определяется отдельно по sources.
+        sources:
+          $ref: '#/components/schemas/RoutesResponseSources'
         passenger:
           $ref: '#/components/schemas/Passenger'
         routes:
@@ -2061,10 +2287,18 @@ components:
             type: string
           type: array
           title: Warnings
+          description: "Предупреждения. В dummy-ответе возвращается поясняющий текст.\
+            \ Для будущих адаптеров предусмотрены коды: code или code:k=v,k2=v2.\n\
+            Известные коды:\n  otp_timeout, otp_unavailable, otp_no_routes,\n  traffic_disabled,\
+            \ yandex_router_failed:leg=N, yandex_router_timeout:leg=N, yandex_quota_exceeded,\n\
+            \  tight_transfer:leg=N, may_miss_transfer:leg=N,\n  gtfs_rt_stale, gtfs_rt_unavailable,\n\
+            \  departure_in_past, departure_far_future_traffic_off,\n  walk_too_long,\
+            \ no_ground_transport\n"
       additionalProperties: false
       type: object
       required:
       - mode
+      - sources
       - passenger
       - routes
       - gtfs_version
@@ -2072,6 +2306,46 @@ components:
       - calculated_at
       - warnings
       title: RoutesResponse
+    RoutesResponseSources:
+      properties:
+        candidate_providers:
+          items:
+            type: string
+            enum:
+            - otp
+            - yandex
+            - 2gis
+          type: array
+          uniqueItems: true
+          title: Candidate Providers
+          description: Источники исходного варианта. После дедупликации их может быть
+            несколько. Для реального маршрута минимум один; для dummy допускается
+            пустой список.
+        traffic_providers:
+          items:
+            type: string
+            enum:
+            - yandex
+            - 2gis
+          type: array
+          uniqueItems: true
+          title: Traffic Providers
+          description: Только фактически применённые источники дорожных поправок.
+            В MVP OTP без поправок — пустой список.
+        realtime:
+          type: string
+          enum:
+          - gtfs_rt
+          - unavailable
+          - dummy
+          title: Realtime
+      additionalProperties: false
+      type: object
+      required:
+      - candidate_providers
+      - traffic_providers
+      - realtime
+      title: RoutesResponseSources
     SuggestResponse:
       properties:
         mode:
@@ -2087,6 +2361,8 @@ components:
           - yandex
           - 2gis
           title: Provider
+          description: Выбранный геосервис. Совместимая dummy-структура не означает
+            живое обращение.
           default: yandex
         items:
           items:

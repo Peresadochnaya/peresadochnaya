@@ -1,6 +1,9 @@
+from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from .api_docs import ROUTE_WARNINGS_DESCRIPTION
 
 
 class Model(BaseModel):
@@ -23,7 +26,7 @@ class Suggestion(Model):
 
 class SuggestResponse(Model):
     mode: Literal["dummy", "yandex", "2gis"]
-    provider: GeoProvider = "yandex"
+    provider: GeoProvider = Field(default="yandex", description="Выбранный геосервис. Совместимая dummy-структура не означает живое обращение.")
     items: list[Suggestion]
     warnings: list[str] = Field(default_factory=list)
 
@@ -35,7 +38,7 @@ class GeocodedPlace(Point):
 
 class GeocodeResponse(Model):
     mode: Literal["dummy", "yandex", "2gis"]
-    provider: GeoProvider = "yandex"
+    provider: GeoProvider = Field(default="yandex", description="Выбранный геосервис. Совместимая dummy-структура не означает живое обращение.")
     items: list[GeocodedPlace]
     warnings: list[str] = Field(default_factory=list)
 
@@ -117,13 +120,62 @@ class RoadRoute(Model):
 
 class RoadRouteResponse(Model):
     mode: Literal["dummy", "yandex", "2gis"]
-    provider: GeoProvider = "yandex"
+    provider: GeoProvider = Field(default="yandex", description="Выбранный геосервис. Совместимая dummy-структура не означает живое обращение.")
     traffic_mode: Literal["off", "on"]
     traffic_type: Literal["realtime", "forecast", "disabled"] | None
     departure_at: AwareDatetime | None
     calculated_at: AwareDatetime
     route: RoadRoute | None = Field(description="Null when Yandex reports a failed route; no partial routes are returned")
     warnings: list[str] = Field(default_factory=list)
+
+
+class RouteProvenance(Model):
+    candidate_providers: list[Literal["otp", "yandex", "2gis"]] = Field(
+        json_schema_extra={"uniqueItems": True},
+        description="Источники исходного варианта. После дедупликации их может быть несколько. Для реального маршрута минимум один; для dummy допускается пустой список.")
+    traffic_providers: list[GeoProvider] = Field(
+        json_schema_extra={"uniqueItems": True},
+        description="Только фактически применённые источники дорожных поправок. В MVP OTP без поправок — пустой список.")
+
+    @field_validator("candidate_providers", "traffic_providers")
+    @classmethod
+    def unique_providers(cls, values):
+        if len(values) != len(set(values)):
+            raise ValueError("Providers must not contain duplicates")
+        return values
+
+
+class RoutesResponseSources(RouteProvenance):
+    realtime: Literal["gtfs_rt", "unavailable", "dummy"]
+
+
+class MetroWaitEstimate(Model):
+    """Оценка ожидания по опубликованным интервалам, не GTFS-расписание и не realtime.
+
+    min/max интервалов недостаточно для точного математического ожидания. Время прибытия поезда не выдумывается.
+    """
+    line: str
+    day_type: Literal["weekday", "saturday", "sunday"]
+    period_start: str = Field(description="Локальное начало периода обслуживания, Europe/Moscow; может быть после полуночи.")
+    period_end: str
+    min_headway_seconds: int = Field(ge=1)
+    max_headway_seconds: int = Field(ge=1)
+    representative_headway_seconds: float = Field(gt=0, allow_inf_nan=False,
+        description="Явно выбранный модельный интервал, например середина опубликованного диапазона. Это предположение, не измерение.")
+    estimated_wait_seconds: float = Field(ge=0, allow_inf_nan=False,
+        description="Половина representative_headway_seconds при модели случайного прихода. Не верхняя граница и не гарантированное время ожидания.")
+    model: Literal["half_representative_headway"]
+    source_url: AnyUrl
+    source_valid_from: date
+    warnings: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def coherent_estimate(self):
+        if self.min_headway_seconds > self.max_headway_seconds:
+            raise ValueError("Minimum headway must not exceed maximum")
+        if self.estimated_wait_seconds != self.representative_headway_seconds / 2:
+            raise ValueError("Wait estimate must be half the representative headway")
+        return self
 
 
 class Leg(Model):
@@ -133,11 +185,23 @@ class Leg(Model):
     start_at: AwareDatetime
     end_at: AwareDatetime
     duration_seconds: int = Field(ge=0)
-    original_duration_seconds: int = Field(ge=0)
-    duration_source: Literal["dummy", "schedule", "yandex"]
+    original_duration_seconds: int = Field(ge=0, description="Исходная длительность из расписания или модели, до дорожных поправок")
+    duration_source: Literal["dummy", "schedule", "yandex", "2gis", "estimated"]
     line: TransitLine | None = None
     # GeoJSON LineString coordinate order: longitude, latitude.
     geometry: LineString
+    distance_meters: float = Field(ge=0, allow_inf_nan=False,
+        description="Расстояние участка, для ожидания 0. Сумма по участкам равна distance_meters маршрута.")
+    metro_wait_estimate: MetroWaitEstimate | None = Field(default=None,
+        description="Только для моделируемого ожидания метро. Реальный departure timestamp по этим данным неизвестен; start_at/end_at такого участка обозначают модельную временную цепочку.")
+
+    @model_validator(mode="after")
+    def coherent_wait(self):
+        if self.mode == "wait" and self.distance_meters != 0:
+            raise ValueError("Waiting has zero distance")
+        if self.metro_wait_estimate is not None and (self.mode != "wait" or self.duration_source != "estimated"):
+            raise ValueError("Metro wait metadata requires an estimated waiting leg")
+        return self
 
 
 class Route(Model):
@@ -150,16 +214,18 @@ class Route(Model):
     duration_seconds: int = Field(ge=0)
     transfers: int = Field(ge=0)
     legs: list[Leg]
+    provenance: RouteProvenance
 
 
 class RoutesResponse(Model):
-    mode: Literal["dummy", "planner"]
+    mode: Literal["dummy", "real"] = Field(description="dummy — демонстрационные данные; real — расчёт планировщика. Наличие пробок и realtime определяется отдельно по sources.")
+    sources: RoutesResponseSources
     passenger: Passenger
     routes: list[Route]
     gtfs_version: str | None
     graph_version: str | None
     calculated_at: AwareDatetime
-    warnings: list[str]
+    warnings: list[str] = Field(description=ROUTE_WARNINGS_DESCRIPTION)
 
 
 class ErrorDetail(Model):
