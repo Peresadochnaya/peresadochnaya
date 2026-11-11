@@ -956,6 +956,18 @@ components:
           - type: string
           - type: 'null'
           title: Graph Version
+        graph:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Graph
+        graph_check:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Graph Check
         last_check:
           anyOf:
           - additionalProperties: true

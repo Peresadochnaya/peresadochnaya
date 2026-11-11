@@ -245,6 +245,8 @@ class DataStatus(Model):
     state: Literal["missing", "ready", "degraded"]
     gtfs_version: str | None = None
     graph_version: str | None = None
+    graph: dict | None = None
+    graph_check: dict | None = None
     last_check: dict | None = None
     manifest: dict | None = None
     warnings: list[str] = Field(default_factory=list)

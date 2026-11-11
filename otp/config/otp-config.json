@@ -1,0 +1,8 @@
+{
+  "otpFeatures": {
+    "DebugUi": true,
+    "GtfsGraphQlApi": true,
+    "TransmodelGraphQlApi": true,
+    "ActuatorAPI": true
+  }
+}
