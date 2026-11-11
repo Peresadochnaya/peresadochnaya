@@ -1,0 +1,16 @@
+{
+  "configVersion": "local",
+  "updaters": [],
+  "routingDefaults": {
+    "walk": {
+      "speed": 1.3,
+      "reluctance": 4.0
+    },
+    "numItineraries": 5,
+    "searchWindow": "PT2H",
+    "transferSlack": "PT2M",
+    "accessEgress": {
+      "maxDuration": "PT30M"
+    }
+  }
+}

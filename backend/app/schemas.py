@@ -46,6 +46,35 @@ class GeocodeResponse(Model):
 TicketProfile = Literal["podorozhnik_wallet", "unlimited_surface", "unlimited_metro", "unlimited_all", "bank_card"]
 
 
+FareMode = Literal["bus", "tram", "trolleybus", "metro", "rail"]
+
+
+class FareRule(Model):
+    mode: FareMode
+    cost_rub: float = Field(ge=0, le=100000, allow_inf_nan=False,
+                            description="Fare charged for one boarding of this mode, in rubles; 0 means free")
+
+
+class FarePreferences(Model):
+    """Explicit tariffs for the search. They replace the ticket profile:
+    the profile is only recorded, while these rules affect the itinerary.
+    """
+    rules: list[FareRule] = Field(min_length=1, max_length=5,
+                                  description="One rule per transit mode; missing modes are treated as free")
+    transfer_cost_rub: float = Field(default=0, ge=0, le=100000, allow_inf_nan=False,
+                                     description="Extra charge for every transfer between two transit legs")
+    value_of_time_rub_per_hour: float = Field(default=600, gt=0, le=100000, allow_inf_nan=False,
+                                              description="How many rubles one hour of travel time is worth; converts fares into routing cost")
+
+    @field_validator("rules")
+    @classmethod
+    def unique_modes(cls, rules: list[FareRule]) -> list[FareRule]:
+        modes = [rule.mode for rule in rules]
+        if len(set(modes)) != len(modes):
+            raise ValueError("Each transit mode may have only one fare rule")
+        return rules
+
+
 class Passenger(Model):
     ticket_profile: TicketProfile = "bank_card"
     uncovered_payment: Literal["podorozhnik_wallet", "bank_card"] = Field(default="bank_card",
@@ -76,6 +105,7 @@ class RouteRequest(Model):
     max_transfers: int | None = Field(default=None, ge=0, le=5)
     walk_speed: Literal["slow", "normal", "fast"] = Field(default="normal", description="Walking speed preset for the future OTP adapter")
     less_walking: bool = Field(default=False, description="Prefer less walking; does not prohibit walking access or transfers")
+    fare: FarePreferences | None = Field(default=None, description="Per-mode tariffs; omitted means no fare influence on routing")
 
     @field_validator("providers", "modes", "exclude_modes")
     @classmethod
@@ -204,6 +234,20 @@ class Leg(Model):
         return self
 
 
+class FareItem(Model):
+    mode: FareMode
+    rides: int = Field(ge=0, description="Number of boardings of this mode")
+    cost_rub: float = Field(ge=0, allow_inf_nan=False, description="rides × fare of this mode")
+
+
+class RouteFare(Model):
+    currency: Literal["RUB"] = "RUB"
+    amount_rub: float = Field(ge=0, allow_inf_nan=False, description="Total for boardings and transfers")
+    items: list[FareItem]
+    transfers: int = Field(ge=0, description="Transfers between two transit legs charged by transfer_cost_rub")
+    transfer_cost_rub: float = Field(ge=0, allow_inf_nan=False)
+
+
 class Route(Model):
     id: str
     name: str = Field(min_length=1, description="Free-form display label, not a fixed route category")
@@ -215,6 +259,7 @@ class Route(Model):
     transfers: int = Field(ge=0)
     legs: list[Leg]
     provenance: RouteProvenance
+    fare: RouteFare | None = Field(default=None, description="Calculated only when the request provides fare rules")
 
 
 class RoutesResponse(Model):

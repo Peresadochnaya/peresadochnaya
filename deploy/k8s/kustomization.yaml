@@ -4,6 +4,7 @@ resources:
   - storage.yaml
   - config.yaml
   - api.yaml
+  - otp.yaml
   - gtfs-cronjob.yaml
   - metro-cronjob.yaml
   - ingress.yaml

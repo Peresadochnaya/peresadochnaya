@@ -959,13 +959,15 @@ paths:
         exclude_modes и walk_speed; стоимость проездного не рассчитывается. Время
         начала округляется вверх до секунды. Идентификаторы линии, рейса и остановок
         совпадают со справочными ручками; времена автобуса совпадают с демо-отправлениями.
-        dummy=false требует реального планировщика: он пока не подключён и возвращает
-        503 planner_unavailable. Реальный MVP — только OTP; будущие дорожные поправки
-        Яндекса/2ГИС и GTFS-RT отмечаются в provenance и sources. Оценочный GTFS метро
-        отдельно собирается data.metro.refresh из официальной сети, интервалов и справочных
-        времён pMetro; точное расписание поездов неизвестно. Ожидание метро может
-        описываться metro_wait_estimate с duration_source=estimated. В метро-демо
-        эти данные пока не используются.'
+        dummy=false при PLANNER_MODE=otp вызывает OTP; без настройки возвращает 503
+        planner_unavailable. Реальный MVP — только providers=[otp]; modes и exclude_modes
+        передаются в OTP. max_transfers, walk_speed кроме normal и less_walking=true
+        пока возвращают 422 unsupported_planner_options. Дорожные поправки и realtime
+        не подключены; фактические источники отмечены в provenance и sources. Оценочный
+        GTFS метро отдельно собирается data.metro.refresh из официальной сети, интервалов
+        и справочных времён pMetro; точное расписание поездов неизвестно. Ожидание
+        метро может описываться metro_wait_estimate с duration_source=estimated. В
+        метро-демо эти данные пока не используются.'
 components:
   schemas:
     DataStatus:
@@ -1032,6 +1034,91 @@ components:
       required:
       - error
       title: ErrorResponse
+    FareItem:
+      properties:
+        mode:
+          type: string
+          enum:
+          - bus
+          - tram
+          - trolleybus
+          - metro
+          - rail
+          title: Mode
+        rides:
+          type: integer
+          minimum: 0.0
+          title: Rides
+          description: Number of boardings of this mode
+        cost_rub:
+          type: number
+          minimum: 0.0
+          title: Cost Rub
+          description: rides × fare of this mode
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - rides
+      - cost_rub
+      title: FareItem
+    FarePreferences:
+      properties:
+        rules:
+          items:
+            $ref: '#/components/schemas/FareRule'
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Rules
+          description: One rule per transit mode; missing modes are treated as free
+        transfer_cost_rub:
+          type: number
+          maximum: 100000.0
+          minimum: 0.0
+          title: Transfer Cost Rub
+          description: Extra charge for every transfer between two transit legs
+          default: 0
+        value_of_time_rub_per_hour:
+          type: number
+          maximum: 100000.0
+          exclusiveMinimum: 0.0
+          title: Value Of Time Rub Per Hour
+          description: How many rubles one hour of travel time is worth; converts
+            fares into routing cost
+          default: 600
+      additionalProperties: false
+      type: object
+      required:
+      - rules
+      title: FarePreferences
+      description: 'Explicit tariffs for the search. They replace the ticket profile:
+
+        the profile is only recorded, while these rules affect the itinerary.'
+    FareRule:
+      properties:
+        mode:
+          type: string
+          enum:
+          - bus
+          - tram
+          - trolleybus
+          - metro
+          - rail
+          title: Mode
+        cost_rub:
+          type: number
+          maximum: 100000.0
+          minimum: 0.0
+          title: Cost Rub
+          description: Fare charged for one boarding of this mode, in rubles; 0 means
+            free
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - cost_rub
+      title: FareRule
     GeocodeResponse:
       properties:
         mode:
@@ -2134,6 +2221,11 @@ components:
           title: Legs
         provenance:
           $ref: '#/components/schemas/RouteProvenance'
+        fare:
+          anyOf:
+          - $ref: '#/components/schemas/RouteFare'
+          - type: 'null'
+          description: Calculated only when the request provides fare rules
       additionalProperties: false
       type: object
       required:
@@ -2148,6 +2240,40 @@ components:
       - legs
       - provenance
       title: Route
+    RouteFare:
+      properties:
+        currency:
+          type: string
+          const: RUB
+          title: Currency
+          default: RUB
+        amount_rub:
+          type: number
+          minimum: 0.0
+          title: Amount Rub
+          description: Total for boardings and transfers
+        items:
+          items:
+            $ref: '#/components/schemas/FareItem'
+          type: array
+          title: Items
+        transfers:
+          type: integer
+          minimum: 0.0
+          title: Transfers
+          description: Transfers between two transit legs charged by transfer_cost_rub
+        transfer_cost_rub:
+          type: number
+          minimum: 0.0
+          title: Transfer Cost Rub
+      additionalProperties: false
+      type: object
+      required:
+      - amount_rub
+      - items
+      - transfers
+      - transfer_cost_rub
+      title: RouteFare
     RouteProvenance:
       properties:
         candidate_providers:
@@ -2274,6 +2400,11 @@ components:
           title: Less Walking
           description: Prefer less walking; does not prohibit walking access or transfers
           default: false
+        fare:
+          anyOf:
+          - $ref: '#/components/schemas/FarePreferences'
+          - type: 'null'
+          description: Per-mode tariffs; omitted means no fare influence on routing
       additionalProperties: false
       type: object
       required:

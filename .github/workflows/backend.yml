@@ -31,6 +31,7 @@ jobs:
         run: |
           (cd backend && python -m pytest tests)
           python -m pytest data/gtfs/tests data/metro/tests
+          python -m pytest otp/scripts/tests
       - name: Render deployment
         run: kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
 

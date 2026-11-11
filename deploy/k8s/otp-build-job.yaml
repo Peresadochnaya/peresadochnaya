@@ -1,0 +1,69 @@
+# Manual Job only; deliberately absent from kustomization.yaml.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: otp-build
+  namespace: peresadochnaya
+  labels:
+    app: peresadochnaya-otp-build
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: {app: peresadochnaya-otp-build}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: prepare
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, /app/otp/scripts/prepare_combined.py, prepare]
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: '1', memory: 1Gi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: tmp, mountPath: /tmp}
+        - name: build
+          image: opentripplanner/opentripplanner@sha256:9840beed08759cffac9be01f83e9fad89b8123f8fbce7890a601cc6581c1fa59
+          command: [/bin/bash, -ec]
+          args:
+            - |
+              if [ -f /var/opentripplanner/.skip-build ]; then
+                echo 'Graph unchanged; build skipped'
+                exit 0
+              fi
+              exec /docker-entrypoint.sh --build --save --abortOnUnknownConfig
+          env:
+            - {name: JAVA_OPTS, value: '-Xmx6G'}
+            - {name: OTP_HEAP_SIZE, value: '6G'}
+          resources:
+            requests: {cpu: '1', memory: 6Gi}
+            limits: {cpu: '2', memory: 8Gi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: data, mountPath: /var/opentripplanner, subPath: otp/staging}
+            - {name: tmp, mountPath: /tmp}
+      containers:
+        - name: publish
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, /app/otp/scripts/prepare_combined.py, publish]
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: '1', memory: 1Gi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: transit-data}
+        - name: tmp
+          emptyDir: {}

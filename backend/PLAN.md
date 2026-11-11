@@ -77,7 +77,8 @@
 
 ## MVP поиска
 
-Только OTP, без Яндекс/2ГИС-поправок и без realtime. Реальный /routes пока не реализовывать.
+Только OTP, без Яндекс/2ГИС-поправок и без realtime. Реальный /routes подключён
+через внутренний OTP; текущие ограничения перечислены в backend/README.md.
 Предпочтения: массив modes, walk_speed enum, less_walking; пять ticket_profile и
 настраиваемый uncovered_payment. Будущая агрегация сохраняет provenance каждого кандидата.
 
