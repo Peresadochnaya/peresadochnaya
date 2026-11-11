@@ -25,7 +25,7 @@ def test_saved_2gis_examples_replay_offline(tmp_path,monkeypatch,name):
         return httpx.Response(case['upstream_status'],json=case['upstream_response'])
     with httpx.Client(transport=httpx.MockTransport(handler)) as http:
         client=TestClient(create_app(tmp_path,dgis_address_provider=DgisAddresses(http),dgis_road_provider=DgisRouter(http)))
-        req=case['request'];response=client.request(req['method'],req['path'],params=req['params'],json=req['body'])
+        req=case['request'];response=client.request(req['method'],req['path'],params={**req['params'], 'dummy': False},json=req['body'])
     assert response.status_code==200 and len(calls)==1
     actual=response.json();expected=dict(case['api_response'])
     if name=='road-route':
