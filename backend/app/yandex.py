@@ -21,7 +21,7 @@ class _HideAPIKeys(logging.Filter):
         # HTTPX logs full query URLs at INFO, including apikey. Apply to
         # records before they reach any configured handlers or parent loggers.
         message = record.getMessage()
-        record.msg = re.sub(r"([?&]apikey=)[^&\s\"']+", r"\1[REDACTED]", message)
+        record.msg = re.sub(r"([?&](?:apikey|key|api_key|token)=)[^&\s\"']+", r"\1[REDACTED]", message, flags=re.IGNORECASE)
         record.args = ()
         return True
 

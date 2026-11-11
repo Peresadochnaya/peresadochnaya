@@ -9,27 +9,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .data_status import load_status
+from . import demo_addresses
+from .dgis import DgisAddresses, DgisRouter
+from .gtfs_api import create_gtfs_router
+from .vehicles_api import create_vehicles_router
 from .recorded_dummy import recorded_geocode, recorded_reverse, recorded_road_route, recorded_suggest
-from .schemas import DataStatus, ErrorResponse, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RoutesResponse, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
+from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, Leg, Place, RoadRouteRequest, RoadRouteResponse, Route, RouteRequest, RoutesResponse, Suggestion, SuggestResponse, TransitLine, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
 from .yandex_router import YandexRouter, dummy_road_route
 
 
 TICKET_PROFILES = [
-    TicketProfileInfo(id=key, label_ru=label) for key, label in [
-        ("full_fare", "Без проездного, полный тариф"),
-        ("podorozhnik_wallet", "Единый электронный билет на «Подорожнике»"),
-        ("monthly_unified", "Месячный единый"),
-        ("monthly_surface", "Месячный наземный (трамвай, троллейбус, автобус)"),
-        ("monthly_bus", "Месячный автобусный"),
-        ("monthly_metro", "Месячный метрополитен"),
-        ("student_unified", "Студенческий единый"),
-        ("student_surface", "Студенческий наземный"),
-        ("student_metro", "Студенческий метрополитен"),
-        ("school_unified", "Ученический единый"),
-        ("school_bus", "Ученический автобусный"),
-        ("concession_unified", "Льготный единый"),
-    ]
+    TicketProfileInfo(id="podorozhnik_wallet", label_ru="Только «Подорожник» — электронный кошелёк",
+        description_ru="В 2026 году пересадочный тариф городского наземного транспорта: 65 ₽ за первую, 14 ₽ за вторую, 0 ₽ за последующие посадки в пределах 60 минут от первой валидации. Это не скользящее окно; метро прекращает наземную пересадочную цепочку. Электрички и областные маршруты не считаются включёнными.",
+        transfer_window_seconds=3600),
+    TicketProfileInfo(id="unlimited_surface", label_ru="Безлимит только наземный",
+        covered_modes=["bus", "tram", "trolleybus"],
+        description_ru="Профиль уже действующего проездного на городской наземный транспорт. Метро, электрички и областные маршруты не считаются покрытыми."),
+    TicketProfileInfo(id="unlimited_metro", label_ru="Безлимит только метро", covered_modes=["metro"],
+        description_ru="Профиль уже действующего проездного на метро. Наземные поездки оплачиваются отдельно; их способ оплаты и тариф требуют отдельного расчёта."),
+    TicketProfileInfo(id="unlimited_all", label_ru="Полный городской безлимит", covered_modes=["bus", "tram", "trolleybus", "metro"],
+        description_ru="Профиль уже действующего проездного на городской наземный транспорт и метро. Не обещает покрытие электричек, областных или иных специальных маршрутов; условия конкретного билета отдельно проверяются."),
+    TicketProfileInfo(id="bank_card", label_ru="Всегда банковской картой, без скидок",
+        description_ru="Каждая посадка оплачивается по полному банковскому тарифу соответствующего перевозчика; скидки ЕКП/Мир, пересадочные скидки и кешбэк не применяются."),
 ]
 
 
@@ -69,14 +71,20 @@ def dummy_route(request: RouteRequest) -> Route:
 
 def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                address_provider: YandexAddresses | None = None,
-               road_provider: YandexRouter | None = None) -> FastAPI:
+               road_provider: YandexRouter | None = None,
+               dgis_address_provider: DgisAddresses | None = None,
+               dgis_road_provider: DgisRouter | None = None) -> FastAPI:
     root = data_root or Path(os.getenv("DATA_ROOT", "/data"))
     mode = planner_mode or os.getenv("PLANNER_MODE", "unavailable")
     if mode not in ("dummy", "unavailable"):
         raise ValueError("PLANNER_MODE must be dummy or unavailable until planner integration is implemented")
-    app = FastAPI(title="Пересадочная API", version="0.1.0")
+    app = FastAPI(title="Пересадочная API", version="0.2.0")
+    app.include_router(create_gtfs_router(root))
+    app.include_router(create_vehicles_router(root))
     addresses = address_provider or YandexAddresses()
     roads = road_provider or YandexRouter()
+    dgis_addresses = dgis_address_provider or DgisAddresses()
+    dgis_roads = dgis_road_provider or DgisRouter()
 
     @app.exception_handler(ProviderError)
     async def provider_error_handler(request, exc):
@@ -110,56 +118,59 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
              responses=address_errors)
     def suggest(q: str = Query(min_length=2, max_length=256, pattern=r"\S"),
                 limit: int = Query(default=5, ge=1, le=10),
+                provider: GeoProvider = Query(default="yandex"),
                 dummy: bool = Query(default=True, description="Recorded or synthetic demo response without Yandex calls; explicitly pass false to enable provider access")):
         if dummy:
-            recorded = recorded_suggest(q, limit)
+            recorded = recorded_suggest(q, limit) if provider == "yandex" else None
             if recorded is not None:
                 return recorded
-            return SuggestResponse(mode="dummy", items=[Suggestion(title=f"Демо: {q.strip()}",
-                subtitle="Синтетическая подсказка, не результат поиска", uri="dummy:suggestion:1")],
-                warnings=["Synthetic suggestion; Yandex was not called. Dummy URIs must not be sent to Yandex"])
-        return addresses.suggest(q.strip(), limit)
+            return demo_addresses.suggestions(provider, q, limit)
+        return (addresses if provider == "yandex" else dgis_addresses).suggest(q.strip(), limit)
 
     @app.get("/api/v1/geocode", response_model=GeocodeResponse, responses=address_errors,
              description="Resolve exactly one of q (address) or uri (selected suggestion). At most one result; no match yields items=[].")
     def geocode(q: str | None = Query(default=None, min_length=2, max_length=256, pattern=r"\S"),
                 uri: str | None = Query(default=None, min_length=1, max_length=4096, pattern=r"\S"),
+                provider: GeoProvider = Query(default="yandex"),
                 dummy: bool = Query(default=True)):
         if (q is None) == (uri is None):
             return error(422, "invalid_geocode_query", "Provide exactly one of q or uri")
         if dummy:
-            recorded = recorded_geocode(q, uri)
+            if uri is not None and uri.startswith("dummy:") and uri.startswith(f"dummy:{'2gis' if provider == 'yandex' else 'yandex'}:"):
+                return error(422, "invalid_geocode_uri", "Suggestion provider does not match geocode provider")
+            recorded = recorded_geocode(q, uri) if provider == "yandex" else None
             if recorded is not None:
                 return recorded
-            return GeocodeResponse(mode="dummy", items=[GeocodedPlace(lat=59.956433, lon=30.310138,
-                label="Демонстрационная точка, не результат поиска")],
-                warnings=["Synthetic fixed coordinates; Yandex was not called"])
-        if uri is not None and not uri.startswith("ymapsbm1://"):
-            return error(422, "invalid_geocode_uri", "Provide a Yandex suggestion URI; dummy URIs cannot be resolved in real mode")
-        return addresses.geocode(q=q.strip() if q else None, uri=uri)
+            return demo_addresses.geocode(provider, q, uri)
+        prefix = "ymapsbm1://" if provider == "yandex" else "dgis:"
+        if uri is not None and not uri.startswith(prefix):
+            return error(422, "invalid_geocode_uri", "Provide a suggestion identifier from the selected provider; dummy URIs cannot be resolved in real mode")
+        return (addresses if provider == "yandex" else dgis_addresses).geocode(q=q.strip() if q else None, uri=uri)
 
     @app.get("/api/v1/reverse", response_model=GeocodeResponse, responses=address_errors,
              description="Resolve coordinates to an address. Result coordinates belong to the found object; keep the original clicked point for routing.")
     def reverse(lat: float = Query(ge=-90, le=90, allow_inf_nan=False),
                 lon: float = Query(ge=-180, le=180, allow_inf_nan=False),
+                provider: GeoProvider = Query(default="yandex"),
                 dummy: bool = Query(default=True)):
         if dummy:
-            recorded = recorded_reverse(lat, lon)
+            recorded = recorded_reverse(lat, lon) if provider == "yandex" else None
             if recorded is not None:
                 return recorded
-            return GeocodeResponse(mode="dummy", items=[GeocodedPlace(lat=lat, lon=lon,
-                label=f"Демо: точка {lon:.5f}, {lat:.5f}")],
-                warnings=["Synthetic address label; Yandex was not called"])
-        return addresses.geocode(lat=lat, lon=lon)
+            return demo_addresses.reverse(provider, lat, lon)
+        return (addresses if provider == "yandex" else dgis_addresses).geocode(lat=lat, lon=lon)
 
     @app.post("/api/v1/road-route", response_model=RoadRouteResponse, responses=address_errors,
               description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one Yandex request with dummy=false. Not a public transport route. No automatic traffic comparison.")
     def road_route(request: RoadRouteRequest,
+                   provider: GeoProvider = Query(default="yandex"),
                    dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one Router API request")):
         if dummy:
-            recorded = recorded_road_route(request)
-            return recorded if recorded is not None else dummy_road_route(request)
-        return roads.estimate(request)
+            recorded = recorded_road_route(request) if provider == "yandex" else None
+            response = recorded if recorded is not None else dummy_road_route(request)
+            response.provider = provider
+            return response
+        return (roads if provider == "yandex" else dgis_roads).estimate(request)
 
     @app.post("/api/v1/routes", response_model=RoutesResponse,
               responses={422: {"model": ErrorResponse | ValidationErrorResponse}, 503: {"model": ErrorResponse}})

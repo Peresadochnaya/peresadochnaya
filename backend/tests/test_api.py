@@ -64,12 +64,12 @@ def test_exactly_two_ordered_points_required(tmp_path):
 def test_ticket_profiles_are_declared_without_fare_claims(tmp_path):
     client = TestClient(create_app(tmp_path, "dummy"))
     profiles = client.get("/api/v1/ticket-profiles").json()
-    assert len(profiles) == 12
+    assert {p["id"] for p in profiles} == {"podorozhnik_wallet", "unlimited_surface", "unlimited_metro", "unlimited_all", "bank_card"}
     for profile in profiles:
         assert profile["coverage_status"] == "not_implemented"
         passenger = {"ticket_profile": profile["id"]}
         data = client.post("/api/v1/routes", json={**REQUEST, "passenger": passenger}).json()
-        assert data["passenger"] == passenger
+        assert data["passenger"] == {**passenger, "uncovered_payment": "bank_card"}
         assert any("fare" in warning and "not calculated" in warning for warning in data["warnings"])
         assert "price" not in data["routes"][0]
     assert client.post("/api/v1/routes", json={**REQUEST, "passenger": {"ticket_profile": "unknown"}}).status_code == 422

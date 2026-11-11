@@ -37,7 +37,7 @@ def test_dummy_geometry_and_leg_times_at_coordinate_bounds(tmp_path, points):
     response = client.post("/api/v1/routes", json={**REQUEST, "points": points, "traffic_mode": "on"})
     assert response.status_code == 200
     data = response.json()
-    assert data["passenger"] == {"ticket_profile": "full_fare"}
+    assert data["passenger"] == {"ticket_profile": "bank_card", "uncovered_payment": "bank_card"}
     for leg in data["routes"][0]["legs"]:
         assert leg["geometry"]["type"] == "LineString"
         assert leg["geometry"]["coordinates"] == [[leg["from"]["lon"], leg["from"]["lat"]], [leg["to"]["lon"], leg["to"]["lat"]]]

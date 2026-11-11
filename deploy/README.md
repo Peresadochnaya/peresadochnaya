@@ -79,10 +79,25 @@ NetBird, а не `authorized_keys`: указанный в workflow пользо�
 Environment variable `API_BASE_URL` по умолчанию `https://peresadochnaya.rjnk.cc`.
 GTFS updater получает `HTTPS_PROXY` из Secret `gtfs-proxy`, ключ `url`.
 Secret создаётся отдельно от Git; его отсутствие допускает прямое подключение.
-Прокси работает на TrueNAS `10.147.8.15:18080`, порт опубликован только на
-NetBird IP. Политика NetBird разрешает K3S → GTFS Proxy, TCP 18080.
-Логин — `traffic`, пароль хранится только в настройках приложения TrueNAS
-и Kubernetes Secret. HTTPS до источника проверяется штатным CA bundle.
+Прокси работает на роутере arctur `10.147.8.92:18080`, слушает только
+NetBird IP. Политика NetBird `K3S to Arctur HTTP proxy` разрешает K3S →
+Arctur HTTP Proxy, TCP 18080. Это замена недоступного TrueNAS.
+Логин — `traffic`, прежний пароль сохранён в Kubernetes Secret и закрытом
+`/etc/traffic-proxy/config.json` на роутере (0600, каталог 0700).
+HTTPS до источника проверяется штатным CA bundle.
+
+На arctur используется установленный sing-box отдельным процессом, без Docker
+и без изменений основного sing-box/Podkop. Сервис `/etc/init.d/traffic-proxy`
+управляется procd, включён в `/etc/rc.d/S99traffic-proxy` и использует
+`respawn 3600 5 0` (перезапуск через 5 секунд без ограничения числа попыток).
+Обёртка `/etc/traffic-proxy/run.sh` перед запуском ждёт появления адреса
+`10.147.8.92` на `wt0`. Автозапуск включён, восстановление процесса после
+остановки проверено; весь роутер для проверки не перезагружался.
+Остановить только этот прокси:
+`ssh arctur '/etc/init.d/traffic-proxy stop; /etc/init.d/traffic-proxy disable'`.
+
+Через этот Secret ходит только GTFS updater. Яндекс из backend продолжает
+вызываться напрямую с k3s (`trust_env=False`); его маршрут не изменён.
 
 Сделать GHCR package публичным, либо заранее настроить `imagePullSecrets` для
 API и CronJob. Токен registry не включать в ConfigMap или манифест в Git.

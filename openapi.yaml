@@ -1,8 +1,461 @@
 openapi: 3.1.0
 info:
   title: Пересадочная API
-  version: 0.1.0
+  version: 0.2.0
 paths:
+  /api/v1/stops:
+    get:
+      tags:
+      - GTFS
+      summary: Stops
+      operationId: stops_api_v1_stops_get
+      parameters:
+      - name: bbox
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Bbox
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 256
+            pattern: \S
+          - type: 'null'
+          title: Q
+      - name: modes
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modes
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 2000
+          minimum: 1
+          default: 500
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsStopsResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Stops Api V1 Stops Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/stops/{stop_id}:
+    get:
+      tags:
+      - GTFS
+      summary: Stop
+      operationId: stop_api_v1_stops__stop_id__get
+      parameters:
+      - name: stop_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Stop Id
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsStopResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Stop Api V1 Stops  Stop Id  Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/stops/{stop_id}/departures:
+    get:
+      tags:
+      - GTFS
+      summary: Departures
+      operationId: departures_api_v1_stops__stop_id__departures_get
+      parameters:
+      - name: stop_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Stop Id
+      - name: departure_at
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          title: Departure At
+      - name: lookahead_minutes
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1440
+          minimum: 1
+          default: 120
+          title: Lookahead Minutes
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsDeparturesResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Departures Api V1 Stops  Stop Id  Departures Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/transit-routes:
+    get:
+      tags:
+      - GTFS
+      summary: Lines
+      operationId: lines_api_v1_transit_routes_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            minLength: 1
+            maxLength: 256
+            pattern: \S
+          - type: 'null'
+          title: Q
+      - name: modes
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modes
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsRoutesResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Lines Api V1 Transit Routes Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/transit-routes/{route_id}:
+    get:
+      tags:
+      - GTFS
+      summary: Line
+      operationId: line_api_v1_transit_routes__route_id__get
+      parameters:
+      - name: route_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Route Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsRouteResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Line Api V1 Transit Routes  Route Id  Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/trips/{trip_id}:
+    get:
+      tags:
+      - GTFS
+      summary: Trip
+      operationId: trip_api_v1_trips__trip_id__get
+      parameters:
+      - name: trip_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Trip Id
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GtfsTripResponse'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                title: Response 422 Trip Api V1 Trips  Trip Id  Get
+          description: Unprocessable Content
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+  /api/v1/vehicles:
+    get:
+      summary: Vehicles
+      description: 'Synthetic positions tied to the GTFS demo. GTFS-RT is not connected:
+        dummy=false returns 503.'
+      operationId: vehicles_api_v1_vehicles_get
+      parameters:
+      - name: bbox
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^-?\d+(\.\d+)?(,-?\d+(\.\d+)?){3}$
+          title: Bbox
+      - name: modes
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modes
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 2000
+          minimum: 1
+          default: 500
+          title: Limit
+      - name: dummy
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Dummy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclesResponse'
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Service Unavailable
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /health/live:
     get:
       summary: Live
@@ -74,6 +527,16 @@ paths:
           minimum: 1
           default: 5
           title: Limit
+      - name: provider
+        in: query
+        required: false
+        schema:
+          enum:
+          - yandex
+          - 2gis
+          type: string
+          default: yandex
+          title: Provider
       - name: dummy
         in: query
         required: false
@@ -148,6 +611,16 @@ paths:
             pattern: \S
           - type: 'null'
           title: Uri
+      - name: provider
+        in: query
+        required: false
+        schema:
+          enum:
+          - yandex
+          - 2gis
+          type: string
+          default: yandex
+          title: Provider
       - name: dummy
         in: query
         required: false
@@ -212,6 +685,16 @@ paths:
           maximum: 180
           minimum: -180
           title: Lon
+      - name: provider
+        in: query
+        required: false
+        schema:
+          enum:
+          - yandex
+          - 2gis
+          type: string
+          default: yandex
+          title: Provider
       - name: dummy
         in: query
         required: false
@@ -261,6 +744,16 @@ paths:
         Not a public transport route. No automatic traffic comparison.
       operationId: road_route_api_v1_road_route_post
       parameters:
+      - name: provider
+        in: query
+        required: false
+        schema:
+          enum:
+          - yandex
+          - 2gis
+          type: string
+          default: yandex
+          title: Provider
       - name: dummy
         in: query
         required: false
@@ -429,7 +922,15 @@ components:
           enum:
           - dummy
           - yandex
+          - 2gis
           title: Mode
+        provider:
+          type: string
+          enum:
+          - yandex
+          - 2gis
+          title: Provider
+          default: yandex
         items:
           items:
             $ref: '#/components/schemas/GeocodedPlace'
@@ -473,6 +974,639 @@ components:
       - lon
       - label
       title: GeocodedPlace
+    GtfsDeparture:
+      properties:
+        trip_id:
+          type: string
+          title: Trip Id
+        service_id:
+          type: string
+          title: Service Id
+        stop_id:
+          type: string
+          title: Stop Id
+        stop_sequence:
+          type: integer
+          minimum: 0.0
+          title: Stop Sequence
+        line:
+          $ref: '#/components/schemas/GtfsRoute'
+        headsign:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Headsign
+        service_date:
+          type: string
+          format: date
+          title: Service Date
+        scheduled_departure_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Scheduled Departure At
+        departure_time:
+          anyOf:
+          - type: string
+            pattern: ^\d{2,}:[0-5]\d:[0-5]\d$
+          - type: 'null'
+          title: Departure Time
+        schedule_type:
+          type: string
+          enum:
+          - timetable
+          - frequency
+          title: Schedule Type
+          default: timetable
+        headway_seconds:
+          anyOf:
+          - type: integer
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Headway Seconds
+        frequency_start_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Frequency Start At
+        frequency_end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Frequency End At
+        time_source:
+          type: string
+          const: schedule
+          title: Time Source
+          default: schedule
+      additionalProperties: false
+      type: object
+      required:
+      - trip_id
+      - service_id
+      - stop_id
+      - stop_sequence
+      - line
+      - headsign
+      - service_date
+      - scheduled_departure_at
+      - departure_time
+      title: GtfsDeparture
+    GtfsDeparturesResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        stop_id:
+          type: string
+          title: Stop Id
+        departure_at:
+          type: string
+          format: date-time
+          title: Departure At
+        lookahead_minutes:
+          type: integer
+          maximum: 1440.0
+          minimum: 1.0
+          title: Lookahead Minutes
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+        has_more:
+          type: boolean
+          title: Has More
+        items:
+          items:
+            $ref: '#/components/schemas/GtfsDeparture'
+          type: array
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - stop_id
+      - departure_at
+      - lookahead_minutes
+      - limit
+      - has_more
+      - items
+      title: GtfsDeparturesResponse
+    GtfsDirection:
+      properties:
+        direction_id:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+          - type: 'null'
+          title: Direction Id
+        headsign:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Headsign
+      additionalProperties: false
+      type: object
+      required:
+      - direction_id
+      - headsign
+      title: GtfsDirection
+    GtfsRoute:
+      properties:
+        route_id:
+          type: string
+          title: Route Id
+        agency_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Agency Id
+        short_name:
+          type: string
+          title: Short Name
+        long_name:
+          type: string
+          title: Long Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        mode:
+          type: string
+          enum:
+          - bus
+          - tram
+          - trolleybus
+          - metro
+          - rail
+          - unknown
+          title: Mode
+        route_type:
+          type: integer
+          minimum: 0.0
+          title: Route Type
+        color:
+          anyOf:
+          - type: string
+            pattern: ^[0-9A-Fa-f]{6}$
+          - type: 'null'
+          title: Color
+        text_color:
+          anyOf:
+          - type: string
+            pattern: ^[0-9A-Fa-f]{6}$
+          - type: 'null'
+          title: Text Color
+      additionalProperties: false
+      type: object
+      required:
+      - route_id
+      - short_name
+      - long_name
+      - mode
+      - route_type
+      title: GtfsRoute
+    GtfsRouteResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+        limit:
+          type: integer
+          minimum: 1.0
+          title: Limit
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+        has_more:
+          type: boolean
+          title: Has More
+        line:
+          $ref: '#/components/schemas/GtfsRoute'
+        directions:
+          items:
+            $ref: '#/components/schemas/GtfsDirection'
+          type: array
+          title: Directions
+        trips:
+          items:
+            $ref: '#/components/schemas/GtfsTripSummary'
+          type: array
+          title: Trips
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - offset
+      - limit
+      - total
+      - has_more
+      - line
+      - directions
+      - trips
+      title: GtfsRouteResponse
+    GtfsRoutesResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+        limit:
+          type: integer
+          minimum: 1.0
+          title: Limit
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+        has_more:
+          type: boolean
+          title: Has More
+        items:
+          items:
+            $ref: '#/components/schemas/GtfsRoute'
+          type: array
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - offset
+      - limit
+      - total
+      - has_more
+      - items
+      title: GtfsRoutesResponse
+    GtfsStop:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        stop_id:
+          type: string
+          title: Stop Id
+        name:
+          type: string
+          title: Name
+        code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Code
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        parent_station:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parent Station
+        zone_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Zone Id
+        location_type:
+          type: integer
+          maximum: 4.0
+          minimum: 0.0
+          title: Location Type
+          default: 0
+      additionalProperties: false
+      type: object
+      required:
+      - lat
+      - lon
+      - stop_id
+      - name
+      title: GtfsStop
+    GtfsStopResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        stop:
+          $ref: '#/components/schemas/GtfsStop'
+        routes:
+          items:
+            $ref: '#/components/schemas/GtfsRoute'
+          type: array
+          title: Routes
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - stop
+      - routes
+      title: GtfsStopResponse
+    GtfsStopTime:
+      properties:
+        stop:
+          $ref: '#/components/schemas/GtfsStop'
+        stop_sequence:
+          type: integer
+          minimum: 0.0
+          title: Stop Sequence
+        arrival_time:
+          anyOf:
+          - type: string
+            pattern: ^\d{2,}:[0-5]\d:[0-5]\d$
+          - type: 'null'
+          title: Arrival Time
+        departure_time:
+          anyOf:
+          - type: string
+            pattern: ^\d{2,}:[0-5]\d:[0-5]\d$
+          - type: 'null'
+          title: Departure Time
+        pickup_type:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          - type: 'null'
+          title: Pickup Type
+        drop_off_type:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          - type: 'null'
+          title: Drop Off Type
+        timepoint:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+          - type: 'null'
+          title: Timepoint
+      additionalProperties: false
+      type: object
+      required:
+      - stop
+      - stop_sequence
+      - arrival_time
+      - departure_time
+      title: GtfsStopTime
+    GtfsStopsResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+        limit:
+          type: integer
+          minimum: 1.0
+          title: Limit
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+        has_more:
+          type: boolean
+          title: Has More
+        items:
+          items:
+            $ref: '#/components/schemas/GtfsStop'
+          type: array
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - offset
+      - limit
+      - total
+      - has_more
+      - items
+      title: GtfsStopsResponse
+    GtfsTrip:
+      properties:
+        trip_id:
+          type: string
+          title: Trip Id
+        route_id:
+          type: string
+          title: Route Id
+        service_id:
+          type: string
+          title: Service Id
+        headsign:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Headsign
+        direction_id:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+          - type: 'null'
+          title: Direction Id
+        shape_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Shape Id
+        stop_times:
+          items:
+            $ref: '#/components/schemas/GtfsStopTime'
+          type: array
+          title: Stop Times
+        geometry:
+          anyOf:
+          - $ref: '#/components/schemas/LineString'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      required:
+      - trip_id
+      - route_id
+      - service_id
+      - headsign
+      - direction_id
+      - stop_times
+      - geometry
+      title: GtfsTrip
+    GtfsTripResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - gtfs
+          title: Mode
+        gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gtfs Version
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        trip:
+          $ref: '#/components/schemas/GtfsTrip'
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - gtfs_version
+      - trip
+      title: GtfsTripResponse
+    GtfsTripSummary:
+      properties:
+        trip_id:
+          type: string
+          title: Trip Id
+        route_id:
+          type: string
+          title: Route Id
+        service_id:
+          type: string
+          title: Service Id
+        headsign:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Headsign
+        direction_id:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+          - type: 'null'
+          title: Direction Id
+        shape_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Shape Id
+      additionalProperties: false
+      type: object
+      required:
+      - trip_id
+      - route_id
+      - service_id
+      - headsign
+      - direction_id
+      title: GtfsTripSummary
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     Leg:
       properties:
         mode:
@@ -565,20 +1699,22 @@ components:
         ticket_profile:
           type: string
           enum:
-          - full_fare
           - podorozhnik_wallet
-          - monthly_unified
-          - monthly_surface
-          - monthly_bus
-          - monthly_metro
-          - student_unified
-          - student_surface
-          - student_metro
-          - school_unified
-          - school_bus
-          - concession_unified
+          - unlimited_surface
+          - unlimited_metro
+          - unlimited_all
+          - bank_card
           title: Ticket Profile
-          default: full_fare
+          default: bank_card
+        uncovered_payment:
+          type: string
+          enum:
+          - podorozhnik_wallet
+          - bank_card
+          title: Uncovered Payment
+          description: Payment for rides not covered by the selected unlimited pass;
+            irrelevant for wallet-only or bank-card-only profiles
+          default: bank_card
       additionalProperties: false
       type: object
       title: Passenger
@@ -683,7 +1819,15 @@ components:
           enum:
           - dummy
           - yandex
+          - 2gis
           title: Mode
+        provider:
+          type: string
+          enum:
+          - yandex
+          - 2gis
+          title: Provider
+          default: yandex
         traffic_mode:
           type: string
           enum:
@@ -812,6 +1956,71 @@ components:
           minimum: 1.0
           title: Max Results
           default: 5
+        providers:
+          items:
+            type: string
+            enum:
+            - otp
+            - yandex
+            - 2gis
+          type: array
+          maxItems: 3
+          minItems: 1
+          title: Providers
+          description: Enabled candidate planners; MVP uses OTP only. Does not turn
+            on live requests without dummy=false.
+        modes:
+          anyOf:
+          - items:
+              type: string
+              enum:
+              - bus
+              - tram
+              - trolleybus
+              - metro
+              - rail
+            type: array
+            maxItems: 5
+            minItems: 1
+          - type: 'null'
+          title: Modes
+          description: Allowed public transport modes; null means all. Walking access
+            remains possible.
+        exclude_modes:
+          anyOf:
+          - items:
+              type: string
+              enum:
+              - bus
+              - tram
+              - trolleybus
+              - metro
+              - rail
+            type: array
+            maxItems: 5
+          - type: 'null'
+          title: Exclude Modes
+        max_transfers:
+          anyOf:
+          - type: integer
+            maximum: 5.0
+            minimum: 0.0
+          - type: 'null'
+          title: Max Transfers
+        walk_speed:
+          type: string
+          enum:
+          - slow
+          - normal
+          - fast
+          title: Walk Speed
+          description: Walking speed preset for the future OTP adapter
+          default: normal
+        less_walking:
+          type: boolean
+          title: Less Walking
+          description: Prefer less walking; does not prohibit walking access or transfers
+          default: false
       additionalProperties: false
       type: object
       required:
@@ -870,7 +2079,15 @@ components:
           enum:
           - dummy
           - yandex
+          - 2gis
           title: Mode
+        provider:
+          type: string
+          enum:
+          - yandex
+          - 2gis
+          title: Provider
+          default: yandex
         items:
           items:
             $ref: '#/components/schemas/Suggestion'
@@ -902,8 +2119,8 @@ components:
         uri:
           type: string
           title: Uri
-          description: Opaque Yandex object URI to resolve with the geocoder; not
-            a URL to fetch
+          description: Opaque provider-specific identifier for geocoding; preserve
+            provider and never fetch this as a URL
       additionalProperties: false
       type: object
       required:
@@ -915,18 +2132,11 @@ components:
         id:
           type: string
           enum:
-          - full_fare
           - podorozhnik_wallet
-          - monthly_unified
-          - monthly_surface
-          - monthly_bus
-          - monthly_metro
-          - student_unified
-          - student_surface
-          - student_metro
-          - school_unified
-          - school_bus
-          - concession_unified
+          - unlimited_surface
+          - unlimited_metro
+          - unlimited_all
+          - bank_card
           title: Id
         label_ru:
           type: string
@@ -936,11 +2146,31 @@ components:
           const: not_implemented
           title: Coverage Status
           default: not_implemented
+        description_ru:
+          type: string
+          title: Description Ru
+        covered_modes:
+          items:
+            type: string
+            enum:
+            - bus
+            - tram
+            - trolleybus
+            - metro
+          type: array
+          title: Covered Modes
+        transfer_window_seconds:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Transfer Window Seconds
       additionalProperties: false
       type: object
       required:
       - id
       - label_ru
+      - description_ru
       title: TicketProfileInfo
     TransitLine:
       properties:
@@ -961,6 +2191,32 @@ components:
       - short_name
       - route_id
       title: TransitLine
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
     ValidationErrorResponse:
       properties:
         detail:
@@ -973,3 +2229,102 @@ components:
       required:
       - detail
       title: ValidationErrorResponse
+    VehiclePosition:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        vehicle_id:
+          type: string
+          title: Vehicle Id
+        route_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Route Id
+        trip_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Trip Id
+        heading:
+          anyOf:
+          - type: number
+            maximum: 360.0
+            minimum: 0.0
+          - type: 'null'
+          title: Heading
+        speed_mps:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Speed Mps
+        mode:
+          type: string
+          enum:
+          - bus
+          - tram
+          - trolleybus
+          - metro
+          - rail
+          - unknown
+          title: Mode
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+      additionalProperties: false
+      type: object
+      required:
+      - lat
+      - lon
+      - vehicle_id
+      - mode
+      - timestamp
+      title: VehiclePosition
+    VehiclesResponse:
+      properties:
+        mode:
+          type: string
+          enum:
+          - dummy
+          - realtime
+          title: Mode
+        items:
+          items:
+            $ref: '#/components/schemas/VehiclePosition'
+          type: array
+          title: Items
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        stale:
+          type: boolean
+          title: Stale
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      - items
+      - updated_at
+      - stale
+      title: VehiclesResponse
