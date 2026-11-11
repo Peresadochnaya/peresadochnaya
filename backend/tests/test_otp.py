@@ -402,3 +402,28 @@ def test_graph_with_modelled_metro_marks_ride_and_wait_estimated(tmp_path):
     for index,leg in enumerate(legs):
         if leg["mode"]=="metro" or (leg["mode"]=="wait" and index+1<len(legs) and legs[index+1]["mode"]=="metro"):
             assert leg["duration_source"]=="estimated"
+
+
+def test_otp_feed_namespace_is_removed_for_gtfs_detail_endpoints(tmp_path):
+    response=client(data_root(tmp_path),lambda request:httpx.Response(200,json=payload())).post(
+        "/api/v1/routes?dummy=false",json=REQUEST)
+    assert response.status_code==200
+    legs=response.json()["routes"][0]["legs"]
+    transit=next(leg for leg in legs if leg["mode"]=="bus")
+    assert transit["line"]["route_id"]=="229"
+    assert transit["line"]["trip_id"]=="79658598"
+    assert transit["from"]["stop_id"]=="36758"
+    assert not any((place["stop_id"] or "").startswith("1:") for leg in legs for place in (leg["from"],leg["to"]))
+
+
+def test_native_metro_colons_survive_removing_only_otp_namespace(tmp_path):
+    body=payload()
+    raw=next(leg for leg in body["data"]["planConnection"]["edges"][0]["node"]["legs"] if leg.get("mode")=="BUS")
+    raw["route"]["gtfsId"]="1:metro:2"
+    raw["trip"]["gtfsId"]="1:metro:2:1:weekday"
+    raw["from"]["stop"]["gtfsId"]="1:metro:mop-par"
+    data=client(data_root(tmp_path),lambda request:httpx.Response(200,json=body)).post(
+        "/api/v1/routes?dummy=false",json=REQUEST).json()
+    transit=next(leg for leg in data["routes"][0]["legs"] if leg["line"] and leg["line"]["route_id"]=="metro:2")
+    assert transit["line"]["trip_id"]=="metro:2:1:weekday"
+    assert transit["from"]["stop_id"]=="metro:mop-par"

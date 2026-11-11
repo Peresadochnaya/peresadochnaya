@@ -150,6 +150,20 @@ def _time(value: dict | None, fallback: str | None = None) -> datetime:
     raise ValueError("Missing leg time")
 
 
+def _native_gtfs_id(value: str | None) -> str | None:
+    """Remove OTP's feed namespace, preserving colons in the native GTFS ID."""
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise ValueError("Invalid OTP GTFS identifier")
+    namespace, separator, native = value.partition(":")
+    if separator:
+        if not namespace or not native:
+            raise ValueError("Empty OTP feed namespace or GTFS identifier")
+        return native
+    return value
+
+
 def _place(value: dict) -> Place:
     lat, lon = value.get("lat"), value.get("lon")
     if type(lat) not in (int, float) or type(lon) not in (int, float):
@@ -159,7 +173,7 @@ def _place(value: dict) -> Place:
     stop = value.get("stop") or {}
     return Place(lat=lat, lon=lon,
                  name=value.get("name") or "Точка на карте",
-                 stop_id=stop.get("gtfsId"))
+                 stop_id=_native_gtfs_id(stop.get("gtfsId")))
 
 
 def _line(value: list[tuple[float, float]]) -> LineString:
@@ -199,11 +213,11 @@ def _transit_line(leg: dict) -> TransitLine | None:
         return None
     route = leg.get("route") or {}
     trip = leg.get("trip") or {}
-    route_id = route.get("gtfsId")
+    route_id = _native_gtfs_id(route.get("gtfsId"))
     if not route_id:
         raise ValueError("Transit leg without route id")
     return TransitLine(short_name=route.get("shortName") or route.get("longName") or route_id,
-                       route_id=route_id, trip_id=trip.get("gtfsId"))
+                       route_id=route_id, trip_id=_native_gtfs_id(trip.get("gtfsId")))
 
 
 def mode_reluctance(cost_rub: float, value_of_time_rub_per_hour: float) -> float:
