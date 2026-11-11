@@ -53,6 +53,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 OTP_DIR = SCRIPT_DIR.parent
+ROOT_DIR = OTP_DIR.parent
 DEFAULT_DATA_DIR = OTP_DIR / "data"
 DEFAULT_CONFIG_DIR = OTP_DIR / "config"
 CONFIG_FILES = ("otp-config.json", "build-config.json", "router-config.json")
@@ -61,9 +62,11 @@ KEEP_VERSIONS = 2
 GTFS_READ_ATTEMPTS = 5
 # OTP определяет GTFS по имени файла (шаблон (?i)gtfs), а не по содержимому.
 GTFS_FILENAME = "feed.gtfs.zip"
+# Второй фид: оценочный GTFS метро из data.metro.refresh.
+METRO_FILENAME = "metro.gtfs.zip"
 # Меняется при изменении логики подготовки/сборки: старая версия графа
 # перестаёт считаться эквивалентной и пересобирается.
-PIPELINE_VERSION = 1
+PIPELINE_VERSION = 2
 
 
 def log(message: str) -> None:
@@ -147,10 +150,12 @@ def normalized_config_sha(configs: dict[str, dict]) -> str:
 
 
 def graph_version(gtfs_fixed_sha: str, osm_sha: str, config_sha: str,
-                  otp_version: str, otp_serialization_version_id: str) -> str:
+                  otp_version: str, otp_serialization_version_id: str,
+                  metro_sha: str = "") -> str:
     return sha256_json({
         "pipeline_version": PIPELINE_VERSION,
         "gtfs_fixed_sha256": gtfs_fixed_sha,
+        "metro_sha256": metro_sha,
         "osm_sha256": osm_sha,
         "config_sha256": config_sha,
         "otp_version": otp_version,
@@ -248,6 +253,32 @@ def update_build_status(data_dir: Path, status: dict) -> None:
     atomic_json(data_dir / "build-status.json", {**previous, **status})
 
 
+def resolve_metro(metro_zip: Path | None, metro_store: Path | None) -> tuple[Path | None, str]:
+    """Найти GTFS метро: явный файл или текущая версия из data/metro.
+
+    Метро необязательно: без него граф собирается только по наземному
+    транспорту, а пустая строка в версии сохраняет прежние идентификаторы.
+    """
+    if metro_zip is not None:
+        if not metro_zip.is_file():
+            raise SystemExit(f"ERROR: GTFS метро не найден: {metro_zip}")
+        return metro_zip, sha256_file(metro_zip)
+    if metro_store is None or not (metro_store / "current.json").is_file():
+        log("GTFS метро не найден — граф будет без метро")
+        return None, ""
+    for attempt in range(GTFS_READ_ATTEMPTS):
+        pointer = read_json(metro_store / "current.json")
+        digest = pointer.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64:
+            raise SystemExit(f"ERROR: некорректный указатель GTFS метро: {metro_store / 'current.json'}")
+        feed = metro_store / "versions" / digest / "feed.zip"
+        if feed.is_file():
+            return feed, digest
+        log(f"GTFS метро {digest[:12]} исчез между чтением указателя и копированием, повтор {attempt + 1}")
+        time.sleep(1)
+    raise SystemExit("ERROR: не удалось прочитать текущий GTFS метро из версионного хранилища")
+
+
 def prepare(args) -> int:
     data_dir = Path(args.data_dir).resolve()
     staging = data_dir / "staging"
@@ -265,6 +296,11 @@ def prepare(args) -> int:
         if not osm_path.is_file():
             raise SystemExit(f"ERROR: OSM PBF не найден: {osm_path}")
 
+        metro_path, metro_sha = resolve_metro(
+            Path(args.metro_zip).resolve() if args.metro_zip else None,
+            Path(args.metro_store).resolve() if args.metro_store else None,
+        )
+
         if temporary.exists():
             shutil.rmtree(temporary)
         temporary.mkdir(parents=True)
@@ -272,10 +308,14 @@ def prepare(args) -> int:
         shutil.copyfile(gtfs_path, feed)
         calendar_fixed = fix_calendar(feed)
         fixed_sha = sha256_file(feed)
+        if metro_path is not None:
+            # OTP определяет тип файла по имени: шаблон (?i)gtfs.
+            shutil.copyfile(metro_path, temporary / METRO_FILENAME)
         osm_sha = sha256_file(osm_path)
         config_sha = normalized_config_sha(configs)
         version = graph_version(fixed_sha, osm_sha, config_sha,
-                                args.otp_version, args.otp_serialization_version_id)
+                                args.otp_version, args.otp_serialization_version_id,
+                                metro_sha)
 
         published = data_dir / "versions" / version / "graph.obj"
         if published.is_file() and not args.force:
@@ -292,6 +332,7 @@ def prepare(args) -> int:
             "gtfs_source_sha256": source_sha,
             "gtfs_fixed_sha256": fixed_sha,
             "gtfs_calendar_fixed": calendar_fixed,
+            "metro_sha256": metro_sha or None,
             "osm_sha256": osm_sha,
             "osm_file": osm_path.name,
             "config_sha256": config_sha,
@@ -370,6 +411,7 @@ def publish(args) -> int:
             # Входные данные нужны только на время сборки. Нулевой .pbf —
             # плейсхолдер Docker, созданный под точку монтирования OSM.
             (destination / GTFS_FILENAME).unlink(missing_ok=True)
+            (destination / METRO_FILENAME).unlink(missing_ok=True)
             for placeholder in destination.glob("*.pbf"):
                 if placeholder.stat().st_size == 0:
                     placeholder.unlink(missing_ok=True)
@@ -463,6 +505,9 @@ def main() -> int:
     prepare_parser.add_argument("--osm-pbf", default=str(DEFAULT_DATA_DIR / "osm" / "spb-lo.osm.pbf"))
     prepare_parser.add_argument("--gtfs-zip", help="явный GTFS ZIP для локальной отладки")
     prepare_parser.add_argument("--gtfs-store", help="каталог версионного хранилища GTFS")
+    prepare_parser.add_argument("--metro-zip", help="явный GTFS ZIP метро")
+    prepare_parser.add_argument("--metro-store", default=str(ROOT_DIR / "data" / "metro"),
+                                help="каталог версионного хранилища GTFS метро")
     prepare_parser.add_argument("--otp-version", default="unknown")
     prepare_parser.add_argument("--otp-serialization-version-id", default="unknown")
     prepare_parser.add_argument("--force", action="store_true", help="пересобрать существующую версию")

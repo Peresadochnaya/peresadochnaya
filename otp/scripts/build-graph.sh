@@ -17,7 +17,9 @@
 #   ./scripts/build-graph.sh --restart             # + пересоздать контейнер otp
 #   ./scripts/build-graph.sh --force               # пересобрать ту же версию
 #
-# Переменные: OTP_DATA_DIR, OSM_PBF, GTFS_STORE, GTFS_ZIP, OTP_IMAGE.
+# Переменные: OTP_DATA_DIR, OSM_PBF, GTFS_STORE, GTFS_ZIP, METRO_STORE,
+#             METRO_ZIP, OTP_IMAGE.
+# METRO_STORE="" отключает метро; по умолчанию берётся ../data/metro.
 # ============================================================================
 set -euo pipefail
 
@@ -29,6 +31,8 @@ DATA_DIR="${OTP_DATA_DIR:-${OTP_DIR}/data}"
 OSM_PBF="${OSM_PBF:-${DATA_DIR}/osm/spb-lo.osm.pbf}"
 GTFS_STORE="${GTFS_STORE:-${ROOT_DIR}/data/gtfs}"
 GTFS_ZIP="${GTFS_ZIP:-}"
+METRO_STORE="${METRO_STORE-${ROOT_DIR}/data/metro}"
+METRO_ZIP="${METRO_ZIP:-}"
 OTP_IMAGE="${OTP_IMAGE:-peresadochnaya/otp:local}"
 RESTART=0
 FORCE=0
@@ -85,6 +89,11 @@ if [ -n "${GTFS_ZIP}" ]; then
   PREPARE_ARGS+=(--gtfs-zip "${GTFS_ZIP}")
 else
   PREPARE_ARGS+=(--gtfs-store "${GTFS_STORE}")
+fi
+if [ -n "${METRO_ZIP}" ]; then
+  PREPARE_ARGS+=(--metro-zip "${METRO_ZIP}")
+elif [ -n "${METRO_STORE}" ]; then
+  PREPARE_ARGS+=(--metro-store "${METRO_STORE}")
 fi
 [ "${FORCE}" -eq 1 ] && PREPARE_ARGS+=(--force)
 
