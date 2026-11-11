@@ -119,12 +119,12 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         return TICKET_PROFILES
 
     @app.get("/api/v1/suggest", response_model=SuggestResponse,
-             description="Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve the selected URI through the geocoder to obtain coordinates. Yandex is contacted only with dummy=false.",
+             description="Address suggestions biased towards Saint Petersburg and Leningrad Oblast. Resolve the selected URI through the geocoder to obtain coordinates. The selected provider is contacted only with dummy=false.",
              responses=address_errors)
     def suggest(q: str = Query(min_length=2, max_length=256, pattern=r"\S"),
                 limit: int = Query(default=5, ge=1, le=10),
                 provider: GeoProvider = Query(default="yandex"),
-                dummy: bool = Query(default=True, description="Recorded or synthetic demo response without Yandex calls; explicitly pass false to enable provider access")):
+                dummy: bool = Query(default=True, description="Recorded or synthetic demo response without external API calls; explicitly pass false to enable selected provider access")):
         if dummy:
             recorded = recorded_suggest(q, limit) if provider == "yandex" else None
             if recorded is not None:
@@ -166,10 +166,10 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         return (addresses if provider == "yandex" else dgis_addresses).geocode(lat=lat, lon=lon)
 
     @app.post("/api/v1/road-route", response_model=RoadRouteResponse, responses=address_errors,
-              description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one Yandex request with dummy=false. Not a public transport route. No automatic traffic comparison.")
+              description="Driving estimate for exactly two ordered points, independently of OTP. One traffic mode per call, at most one selected provider request with dummy=false. Not a public transport route. No automatic traffic comparison.")
     def road_route(request: RoadRouteRequest,
                    provider: GeoProvider = Query(default="yandex"),
-                   dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one Router API request")):
+                   dummy: bool = Query(default=True, description="Recorded or synthetic driving sample; explicitly pass false to spend one selected provider request")):
         if dummy:
             recorded = recorded_road_route(request) if provider == "yandex" else None
             response = recorded if recorded is not None else dummy_road_route(request)

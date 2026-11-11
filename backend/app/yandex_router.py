@@ -105,4 +105,4 @@ def dummy_road_route(request: RoadRouteRequest) -> RoadRouteResponse:
         calculated_at=datetime.now(timezone.utc),
         route=RoadRoute(distance_meters=round(distance, 2), duration_seconds=round(distance / 10, 2),
                         geometry={"type": "LineString", "coordinates": [(a.lon, a.lat), (b.lon, b.lat)]}),
-        warnings=["Synthetic straight line at a fixed speed; no real road or traffic data; Yandex was not called", DRIVING_WARNING])
+        warnings=["Synthetic straight line at a fixed speed; no real road or traffic data; no external API was called", DRIVING_WARNING])

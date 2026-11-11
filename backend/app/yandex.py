@@ -52,6 +52,8 @@ class YandexClient:
             else:
                 with httpx.Client(timeout=8, follow_redirects=False, trust_env=False) as client:
                     response = client.get(url, **kwargs)
+            if response.status_code in (408, 504):
+                raise ProviderError(504, f"{self.error_prefix}_timeout", "Yandex provider timed out")
             if response.status_code == 429:
                 raise ProviderError(503, f"{self.error_prefix}_quota", "Yandex provider quota or rate limit reached")
             if response.status_code != 200:

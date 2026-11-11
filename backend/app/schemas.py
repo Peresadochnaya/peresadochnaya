@@ -125,7 +125,7 @@ class RoadRouteResponse(Model):
     traffic_type: Literal["realtime", "forecast", "disabled"] | None
     departure_at: AwareDatetime | None
     calculated_at: AwareDatetime
-    route: RoadRoute | None = Field(description="Null when Yandex reports a failed route; no partial routes are returned")
+    route: RoadRoute | None = Field(description="Null when the selected provider reports a failed route; no partial routes are returned")
     warnings: list[str] = Field(default_factory=list)
 
 
