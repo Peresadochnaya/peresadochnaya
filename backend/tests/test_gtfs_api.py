@@ -219,3 +219,49 @@ def test_exact_frequency_generates_only_bounded_prefix(tmp_path,monkeypatch):
     assert response.status_code==200
     assert response.json()['has_more'] and len(response.json()['items'])==2
     assert len(constructed)<20
+
+
+def graph_calendar_policy(root, **overrides):
+    meta = {'gtfs_calendar_fixed': True, 'activated_at': '2026-11-11T12:00:00Z',
+            'gtfs_service_end': '2026-12-31', 'gtfs_source_sha256': 'a' * 64}
+    meta.update(overrides)
+    path = root / 'otp/current.json'
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(meta))
+
+
+def test_departures_use_explicit_loaded_graph_policy_for_inverted_calendar(tmp_path):
+    t = tables(); t['calendar.txt'][0]['end_date'] = '20190101'
+    _, version = publish(tmp_path, t)
+    source = (version / 'feed.zip').read_bytes()
+    graph_calendar_policy(tmp_path)
+    response = api(tmp_path).get('/api/v1/stops/b/departures', params={
+        'dummy': False, 'departure_at': '2026-11-11T00:50:00+03:00'})
+    assert response.status_code == 200, response.text
+    assert response.json()['items'][0]['trip_id'] == 't1'
+    assert any('calendar_repaired:' in w for w in response.json()['warnings'])
+    assert (version / 'feed.zip').read_bytes() == source
+
+
+@pytest.mark.parametrize('overrides', [
+    {'activated_at': None}, {'gtfs_calendar_fixed': False},
+    {'gtfs_service_end': 'not-a-date'}, {'gtfs_service_end': '2025-01-01'},
+])
+def test_departures_do_not_guess_calendar_without_usable_graph_policy(tmp_path, overrides):
+    t = tables(); t['calendar.txt'][0]['end_date'] = '20190101'
+    publish(tmp_path, t); graph_calendar_policy(tmp_path, **overrides)
+    response = api(tmp_path).get('/api/v1/stops/b/departures', params={
+        'dummy': False, 'departure_at': '2026-11-11T00:50:00+03:00'})
+    assert response.status_code == 422
+
+
+def test_calendar_repair_preserves_exceptions_and_finite_valid_calendars(tmp_path):
+    t = tables(); t['calendar.txt'][0]['end_date'] = '20190101'
+    t['calendar_dates.txt'] = [{'service_id': 'service', 'date': '20261110', 'exception_type': '2'}]
+    publish(tmp_path, t); graph_calendar_policy(tmp_path)
+    params = {'dummy': False, 'departure_at': '2026-11-11T00:50:00+03:00'}
+    items = api(tmp_path).get('/api/v1/stops/b/departures', params=params).json()['items']
+    assert all(item['trip_id'] != 't1' for item in items)
+    t = tables(); t['calendar.txt'][0]['end_date'] = '20261109'
+    publish(tmp_path, t)
+    assert api(tmp_path).get('/api/v1/stops/b/departures', params=params).status_code == 422
