@@ -1,0 +1,87 @@
+{
+  "status": "updated",
+  "sha256": "c30ed038cdb6b26f4dee5255cbb71e0a93a36281961e393a79951f78033710b9",
+  "checked_at": "2026-11-12T16:43:18.259959+03:00",
+  "routes": 839,
+  "stops": 414,
+  "invalid_calendar_rows": 0,
+  "active_service_ids": 1,
+  "latest_exception_date": "20261118",
+  "service_date": "20261112",
+  "warning": null,
+  "usable": true,
+  "trips": 4046,
+  "stop_times": 68489,
+  "service_dates": [
+    "20261111",
+    "20261112",
+    "20261113",
+    "20261114",
+    "20261115",
+    "20261116",
+    "20261117",
+    "20261118"
+  ],
+  "requested_dates": [
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-16",
+    "2026-11-17",
+    "2026-11-18"
+  ],
+  "daily": [
+    {
+      "date": "2026-11-12",
+      "routes": 610,
+      "trips": 610,
+      "stops": 389,
+      "sha256": "b96f6ad6d7b14510bbe0bf122093ef9daccc35acf8e222f7b135e9bacde192a3"
+    },
+    {
+      "date": "2026-11-13",
+      "routes": 612,
+      "trips": 612,
+      "stops": 407,
+      "sha256": "ef6ff34631419d5890da8921ce9ad225317334545aa5470ea471dadb4b7180f8"
+    },
+    {
+      "date": "2026-11-14",
+      "routes": 498,
+      "trips": 498,
+      "stops": 413,
+      "sha256": "eb29778b7f9ad71fffe8389e677c98f54fbb60a5fb13ebe556248595ef08a56f"
+    },
+    {
+      "date": "2026-11-15",
+      "routes": 495,
+      "trips": 495,
+      "stops": 414,
+      "sha256": "13fbeab6d5a05f3aad031d4d1f2c7499fd9499b73368fac3ea9e9d1cf4642734"
+    },
+    {
+      "date": "2026-11-16",
+      "routes": 613,
+      "trips": 613,
+      "stops": 406,
+      "sha256": "a14ddc34aea65159482ea8744f4b8bed002e499d6f489647dc577c0d6c107956"
+    },
+    {
+      "date": "2026-11-17",
+      "routes": 610,
+      "trips": 610,
+      "stops": 389,
+      "sha256": "a21f4ae8c2e531ed705f2e788448fffc091e25393f5da8338c47cb7d34f69251"
+    },
+    {
+      "date": "2026-11-18",
+      "routes": 608,
+      "trips": 608,
+      "stops": 396,
+      "sha256": "a2b069083a778dcd69eff147ef041a330806148009cb33fc84e350e15596adb6"
+    }
+  ],
+  "source": "Yandex Rasp API v3.0",
+  "coverage": "Only trips observed at requested stations; not the entire suburban network"
+}
