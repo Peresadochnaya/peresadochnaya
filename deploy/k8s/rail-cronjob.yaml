@@ -40,8 +40,8 @@ spec:
           containers:
             - name: refresh
               image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
-              command: [python, -m, data.rail.refresh]
-              args: [--store-dir, /data/rail, --raw-dir, /data/rail-raw, --days, '7']
+              command: [python, -m, app.refresh_gtfs_index]
+              args: [rail, --data-root, /data]
               envFrom:
                 - configMapRef: {name: backend-config}
               env:

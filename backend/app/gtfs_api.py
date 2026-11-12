@@ -1,5 +1,8 @@
 """Six read-only GTFS endpoints, deliberately independent of the route planner."""
 import math
+import os
+from contextlib import asynccontextmanager
+from starlette.concurrency import run_in_threadpool
 from pathlib import Path
 
 from fastapi import APIRouter, Query
@@ -36,8 +39,13 @@ def parse_bbox(value):
 
 
 def create_gtfs_router(root: Path) -> APIRouter:
-    router = APIRouter(prefix='/api/v1',tags=['GTFS'])
     store = MultiFeedGtfsStore(root)
+    @asynccontextmanager
+    async def lifespan(app):
+        if os.getenv('GTFS_PRELOAD', '').lower() == 'true':
+            await run_in_threadpool(store.preload)
+        yield
+    router = APIRouter(prefix='/api/v1', tags=['GTFS'], lifespan=lifespan)
     errors={404:{'model':ErrorResponse},422:{'model':ErrorResponse|ValidationErrorResponse},503:{'model':ErrorResponse}}
 
     def execute(dummy, action):

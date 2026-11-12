@@ -22,3 +22,5 @@ coverage/
 *.log
 data/raw/rail/
 data/processed/rail/tables
+# Local GTFS performance measurements (large archives and indexes)
+.bench-data/
