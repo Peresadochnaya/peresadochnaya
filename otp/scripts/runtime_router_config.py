@@ -11,6 +11,9 @@ def configure(base: Path, defaults: Path, output: Path) -> None:
     if not isinstance(filters, dict) or not filters:
         raise ValueError('Expected nonempty itineraryFilters')
     config.setdefault('routingDefaults', {}).setdefault('itineraryFilters', {}).update(filters)
+    managed = {(u['type'], u.get('feedId')) for u in settings.get('updaters', [])}
+    config['updaters'] = [u for u in config.get('updaters', [])
+                          if (u.get('type'), u.get('feedId')) not in managed] + settings.get('updaters', [])
     output.write_text(json.dumps(config, ensure_ascii=False, indent=2) + '\n')
 
 

@@ -1,6 +1,13 @@
 {
   "configVersion": "local",
-  "updaters": [],
+  "updaters": [
+    {
+      "type": "stop-time-updater",
+      "feedId": "2",
+      "url": "http://realtime:8001/api/v1/raw_feed",
+      "frequency": "10s"
+    }
+  ],
   "routingDefaults": {
     "walk": {
       "speed": 1.3,

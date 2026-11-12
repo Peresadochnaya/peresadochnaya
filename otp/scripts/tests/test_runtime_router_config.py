@@ -20,6 +20,7 @@ def test_only_filters_change_and_graph_config_is_preserved(tmp_path):
     result = json.loads(output.read_text())
     expected = json.loads(base.read_text())
     expected['routingDefaults']['itineraryFilters']['removeItinerariesWithSameRoutesAndStops'] = True
+    expected['updaters'] = json.loads(defaults.read_text())['updaters']
     assert result == expected
     assert json.loads(base.read_text()) == original
 
@@ -31,3 +32,15 @@ def test_invalid_filter_settings_fail_before_writing(tmp_path):
     with pytest.raises(ValueError):
         module.configure(base, defaults, output)
     assert not output.exists()
+
+
+def test_realtime_updater_preserves_other_feeds_and_is_idempotent(tmp_path):
+    base,output=tmp_path/'base.json',tmp_path/'output.json'
+    defaults=Path(__file__).parents[2]/'config/router-config.json'
+    other={'type':'stop-time-updater','feedId':'other','url':'https://example.com/feed'}
+    base.write_text(json.dumps({'updaters':[other]}))
+    module.configure(base,defaults,output)
+    first=json.loads(output.read_text())
+    module.configure(output,defaults,base)
+    assert json.loads(base.read_text())==first
+    assert other in first['updaters'] and len(first['updaters'])==2

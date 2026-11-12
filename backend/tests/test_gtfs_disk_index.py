@@ -105,3 +105,17 @@ def test_startup_preloads_tables_before_first_request(tmp_path, monkeypatch):
             raise AssertionError('Startup must finish importing GTFS before accepting requests')
         monkeypatch.setattr(zipfile.ZipFile, 'open', forbidden)
         assert c.get('/api/v1/transit-routes', params={'dummy': False}).status_code == 200
+
+
+def test_gc_preserves_index_used_by_loaded_otp_graph(tmp_path):
+    import os
+    import time
+    from test_gtfs_api import tables
+    old,_=publish(tmp_path);gtfs_index.warm(tmp_path)
+    folder=tmp_path/'otp/current';folder.mkdir(parents=True)
+    (folder/'manifest.json').write_text(json.dumps({'gtfs_source_sha256':old}))
+    old_index=tmp_path/'indexes'/f'v1-{old}.sqlite3'
+    os.utime(old_index,(time.time()-7200,)*2)
+    data=tables();data['routes.txt'][0]['route_short_name']='NEW'
+    publish(tmp_path,data);gtfs_index.warm(tmp_path)
+    assert old_index.exists()
