@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Point, Route, GtfsStop, Leg, LegMode } from '../types/api';
-import { getRouteOffsetMeters, offsetPolyline } from '../utils/routeGeometry';
 
 declare const ymaps: any;
 
@@ -10,6 +9,7 @@ interface YandexMapProps {
   onPointChange: (type: 'A' | 'B', point: Point) => void;
   routes: Route[];
   selectedRouteIndex: number;
+  onSelectRoute: (index: number) => void;
   onSelectStop: (stop: GtfsStop) => void;
   loadStops: (bbox: string) => Promise<GtfsStop[]>;
   dummyStops: boolean;
@@ -60,6 +60,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   onPointChange,
   routes,
   selectedRouteIndex,
+  onSelectRoute,
   onSelectStop,
   loadStops,
   dummyStops
@@ -70,7 +71,6 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   const markerBRef = useRef<any>(null);
   const routesCollectionRef = useRef<any>(null);
   const stopsCollectionRef = useRef<any>(null);
-  const [mapZoom, setMapZoom] = useState(13);
 
   // Ссылки на актуальные точки для событий клика
   const pointAState = useRef(pointA);
@@ -83,6 +83,8 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   useEffect(() => { onPointChangeRef.current = onPointChange; }, [onPointChange]);
   const onSelectStopRef = useRef(onSelectStop);
   useEffect(() => { onSelectStopRef.current = onSelectStop; }, [onSelectStop]);
+  const onSelectRouteRef = useRef(onSelectRoute);
+  useEffect(() => { onSelectRouteRef.current = onSelectRoute; }, [onSelectRoute]);
 
   // Держим актуальный загрузчик остановок, не пересоздавая функцию отрисовки
   const loadStopsRef = useRef(loadStops);
@@ -194,13 +196,10 @@ export const YandexMap: React.FC<YandexMapProps> = ({
 
       // Перезапрос остановок при сдвиге или зуме карты
       map.events.add('boundschange', () => {
-        const nextZoom = Math.round(map.getZoom());
-        setMapZoom(prev => (prev === nextZoom ? prev : nextZoom));
         fetchAndRenderStops();
       });
 
       mapInstance.current = map;
-      setMapZoom(Math.round(map.getZoom()));
 
       // Загружаем остановки сразу, не дожидаясь первого сдвига карты
       fetchAndRenderStops();
@@ -275,41 +274,49 @@ export const YandexMap: React.FC<YandexMapProps> = ({
 
     if (!routes.length) return;
 
+    // Сначала рисуем все невыбранные маршруты. На общих участках
+    // выбранный маршрут будет добавлен поверх них.
     routes.forEach((route, index) => {
-      const isSelected = index === selectedRouteIndex;
-      const latitude = route.geometry.coordinates[0]?.[1] ?? 60;
-      const offsetMeters = getRouteOffsetMeters(index, routes.length, mapZoom, latitude);
+      if (index === selectedRouteIndex) return;
 
-      if (!isSelected) {
-        const coords = offsetPolyline(route.geometry.coordinates, offsetMeters)
-          .map(([lon, lat]) => [lat, lon]);
-        const polyline = new ymaps.Polyline(coords, {}, {
-          strokeColor: '#94A3B8',
-          strokeWidth: 4,
-          strokeOpacity: 1
-        });
-        routesCollectionRef.current.add(polyline);
-      } else {
-        route.legs.forEach((leg) => {
-          if (!leg.geometry?.coordinates?.length) return;
-          const legCoords = offsetPolyline(leg.geometry.coordinates, offsetMeters)
-            .map(([lon, lat]) => [lat, lon]);
-          const color = getLegColor(leg);
-
-          const legPolyline = new ymaps.Polyline(legCoords, {
-            hintContent: leg.line?.short_name ? `${leg.mode}: ${leg.line.short_name}` : leg.mode
-          }, {
-            strokeColor: color,
-            strokeWidth: 6,
-            strokeOpacity: 1,
-            strokeStyle: leg.mode === 'walk' ? 'dash' : 'solid'
-          });
-
-          routesCollectionRef.current.add(legPolyline);
-        });
-      }
+      const coords = route.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+      const polyline = new ymaps.Polyline(coords, {
+        hintContent: 'Нажмите, чтобы выбрать маршрут'
+      }, {
+        strokeColor: '#94A3B8',
+        strokeWidth: 4,
+        strokeOpacity: 0.55,
+        cursor: 'pointer',
+        zIndex: 10
+      });
+      polyline.events.add('click', (e: any) => {
+        e.stopPropagation();
+        onSelectRouteRef.current(index);
+      });
+      routesCollectionRef.current.add(polyline);
     });
-  }, [routes, selectedRouteIndex, mapZoom]);
+
+    // Выбранный маршрут рисуем последним и выше остальных:
+    // там, где линии совпадают, видна только его цветная линия.
+    const selectedRoute = routes[selectedRouteIndex];
+    selectedRoute?.legs.forEach((leg) => {
+      if (!leg.geometry?.coordinates?.length) return;
+      const legCoords = leg.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+      const color = getLegColor(leg);
+
+      const legPolyline = new ymaps.Polyline(legCoords, {
+        hintContent: leg.line?.short_name ? `${leg.mode}: ${leg.line.short_name}` : leg.mode
+      }, {
+        strokeColor: color,
+        strokeWidth: 6,
+        strokeOpacity: 1,
+        strokeStyle: leg.mode === 'walk' ? 'dash' : 'solid',
+        zIndex: 20
+      });
+
+      routesCollectionRef.current.add(legPolyline);
+    });
+  }, [routes, selectedRouteIndex]);
 
   // Подгоняем карту под выбранный маршрут только при смене маршрута,
   // чтобы ручной зум пользователя не сбрасывался.

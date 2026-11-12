@@ -168,6 +168,7 @@ export const App: React.FC = () => {
           onPointChange={handlePointChange}
           routes={routes}
           selectedRouteIndex={selectedRouteIndex}
+          onSelectRoute={setSelectedRouteIndex}
           onSelectStop={setSelectedStop}
           loadStops={handleLoadStops}
           dummyStops={dummyConfig.stops}
