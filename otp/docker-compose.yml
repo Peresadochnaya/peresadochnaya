@@ -1,0 +1,68 @@
+# ============================================================================
+# OpenTripPlanner (OTP) — модуль маршрутизации для карты
+# ============================================================================
+# Использование:
+#   ./scripts/build-graph.sh              # prepare + build + publish
+#   docker compose up -d otp              # запустить сервер маршрутизации
+#   docker compose logs -f otp            # смотреть логи
+#
+# Версия графа — каталог ./data/versions/<version>. Сервис otp монтирует
+# каталог ./data целиком и работает с ./data/current (симлинк) через
+# OTP_HOMEDIR, поэтому после публикации новой версии контейнер нужно
+# пересоздать: docker compose up -d --force-recreate otp
+#
+# Healthcheck в compose не задан: в официальном образе нет curl/wget, а
+# прежняя проверка старого REST-пути давала ложный статус unhealthy.
+# Проверка: curl http://localhost:8080/otp/actuators/health
+# ============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # Сервер маршрутизации (GraphQL API на :8080)
+  # --------------------------------------------------------------------------
+  otp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: peresadochnaya/otp:local
+    container_name: otp
+    restart: unless-stopped
+    environment:
+      OTP_MODE: serve
+      OTP_PORT: "8080"
+      OTP_HEAP_SIZE: "4G"
+      JAVA_OPTS: "-Xmx4G"
+      # Активная версия графа: симлинк внутри смонтированного каталога data.
+      OTP_HOMEDIR: /otp-data/current
+    ports:
+      - "8080:8080"
+    volumes:
+      # Монтируется весь data, а не data/current: Docker Desktop резолвит
+      # симлинк при создании контейнера и запоминает цель, поэтому после
+      # публикации новой версии контейнер продолжал бы читать прежний граф.
+      # entrypoint передаёт OTP уже разрешённый путь.
+      - ./data:/otp-data:ro
+    command: ["serve"]
+
+  # --------------------------------------------------------------------------
+  # Однократная сборка графа в ./data/staging (запускается build-graph.sh)
+  # --------------------------------------------------------------------------
+  otp-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: peresadochnaya/otp:local
+    container_name: otp-build
+    # Граф пишется от имени хоста, чтобы publish мог атомарно перенести
+    # каталог и удалить старую версию без sudo.
+    user: "${OTP_UID:-1000}:${OTP_GID:-1000}"
+    environment:
+      OTP_MODE: build
+      OTP_HEAP_SIZE: "6G"
+      JAVA_OPTS: "-Xmx6G"
+    volumes:
+      - ./data/staging:/var/opentripplanner
+      # OSM монтируется отдельным файлом: копировать 145 МБ в staging не нужно
+      - ./data/osm/spb-lo.osm.pbf:/var/opentripplanner/spb-lo.osm.pbf:ro
+    command: ["build"]
+

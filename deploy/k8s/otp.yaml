@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otp
+  namespace: peresadochnaya
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: peresadochnaya-otp}
+  template:
+    metadata:
+      labels: {app: peresadochnaya-otp}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: router-config
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, /app/otp/scripts/runtime_router_config.py]
+          args:
+            - --base
+            - /data/otp/current/router-config.json
+            - --defaults
+            - /app/otp/config/router-config.json
+            - --output
+            - /runtime/router-config.json
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: '1', memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data, readOnly: true}
+            - {name: runtime-config, mountPath: /runtime}
+      containers:
+        - name: otp
+          # The builder must use this same pinned runtime/serialization version.
+          image: opentripplanner/opentripplanner@sha256:9840beed08759cffac9be01f83e9fad89b8123f8fbce7890a601cc6581c1fa59
+          command: [/docker-entrypoint.sh]
+          args: [--load, --port, '8080', --abortOnUnknownConfig]
+          env:
+            - {name: OTP_HEAP_SIZE, value: 4G}
+            - {name: JAVA_OPTS, value: -Xmx4G}
+          ports:
+            - {name: http, containerPort: 8080}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 500m, memory: 4Gi}
+            limits: {cpu: '2', memory: 6Gi}
+          startupProbe:
+            httpGet: {path: /otp/actuators/health, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet: {path: /otp/actuators/health, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: {path: /otp/actuators/health, port: http}
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+          volumeMounts:
+            - {name: data, mountPath: /data, readOnly: true}
+            # Kubernetes resolves current on pod start. Restart after publishing
+            # a new graph to load the new immutable version.
+            - {name: data, mountPath: /var/opentripplanner, subPath: otp/current, readOnly: true}
+            - {name: runtime-config, mountPath: /var/opentripplanner/router-config.json, subPath: router-config.json, readOnly: true}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: transit-data}
+        - name: runtime-config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otp
+  namespace: peresadochnaya
+spec:
+  type: ClusterIP
+  selector: {app: peresadochnaya-otp}
+  ports:
+    - {name: http, port: 8080, targetPort: http}

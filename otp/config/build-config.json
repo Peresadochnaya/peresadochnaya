@@ -1,0 +1,10 @@
+{
+  "configVersion": "local",
+  "transitServiceStart": "-P1Y",
+  "transitServiceEnd": "P3Y",
+  "transitModelTimeZone": "Europe/Moscow",
+  "osmDefaults": {
+    "timeZone": "Europe/Moscow"
+  }
+}
+

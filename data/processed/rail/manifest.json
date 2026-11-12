@@ -1,0 +1,23 @@
+{
+  "sha256": "c30ed038cdb6b26f4dee5255cbb71e0a93a36281961e393a79951f78033710b9",
+  "source_sha256": "c30ed038cdb6b26f4dee5255cbb71e0a93a36281961e393a79951f78033710b9",
+  "created_at": "2026-11-12T16:43:18.259959+03:00",
+  "routes": 839,
+  "stops": 414,
+  "invalid_calendar_rows": 0,
+  "active_service_ids": 1,
+  "latest_exception_date": "20261118",
+  "service_date": "20261112",
+  "warning": null,
+  "usable": true,
+  "files": {
+    "agency.csv": 198,
+    "stops.csv": 24087,
+    "routes.csv": 124025,
+    "trips.csv": 525098,
+    "stop_times.csv": 5101122,
+    "calendar.csv": 88,
+    "calendar_dates.csv": 231,
+    "feed_info.csv": 164
+  }
+}

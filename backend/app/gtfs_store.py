@@ -71,8 +71,11 @@ class Index:
 
 
 class GtfsStore:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, feed: str = 'gtfs'):
+        if feed not in ('gtfs', 'rail'):
+            raise ValueError('Unknown GTFS feed')
         self.root = Path(root)
+        self.feed = feed
         self._cache = {}  # One current metadata index per real/demo mode.
         self._lock = threading.RLock()
         self._requests = threading.BoundedSemaphore(2)
@@ -96,12 +99,12 @@ class GtfsStore:
             else:
                 # Retry only local publication races, never remote/API requests.
                 for attempt in range(3):
-                    pointer = json.loads((self.root / 'gtfs' / 'current.json').read_text())
+                    pointer = json.loads((self.root / self.feed / 'current.json').read_text())
                     version = pointer['sha256']
                     if not isinstance(version, str) or not re.fullmatch(r'[a-f0-9]{64}', version):
                         raise ValueError('Invalid version pointer')
                     try:
-                        stream = (self.root / 'gtfs' / 'versions' / version / 'feed.zip').open('rb')
+                        stream = (self.root / self.feed / 'versions' / version / 'feed.zip').open('rb')
                         break
                     except FileNotFoundError:
                         if attempt == 2: raise
@@ -234,12 +237,33 @@ class Snapshot:
         if not times: warnings.append('stop_times_unavailable: GTFS trip has no stop times')
         return GtfsTrip(**summary.model_dump(), stop_times=times, geometry=geometry), warnings
 
+    def _calendar_repair_end(self):
+        """Reuse the loaded OTP graph's explicit calendar policy, never invent one."""
+        if self.dummy or getattr(self.store, 'feed', 'gtfs') != 'gtfs':
+            return None
+        try:
+            graph = json.loads((self.store.root / 'otp' / 'current.json').read_text())
+            if graph.get('gtfs_calendar_fixed') is not True or not graph.get('activated_at'):
+                return None
+            end = date.fromisoformat(graph['gtfs_service_end'])
+            if not re.fullmatch(r'[a-f0-9]{64}', graph.get('gtfs_source_sha256', '')):
+                return None
+            return end
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+
     def _calendar(self, days):
         active = {d:set() for d in days}
         coverage = set()
+        repaired = False
+        repair_end = self._calendar_repair_end()
         for row in self.rows('calendar.txt', required=False):
             start, end = datetime.strptime(row['start_date'],'%Y%m%d').date(), datetime.strptime(row['end_date'],'%Y%m%d').date()
-            if start > end: continue
+            if start > end:
+                if repair_end is None or repair_end < start:
+                    continue
+                end = repair_end
+                repaired = True
             for day in days:
                 if start <= day <= end:
                     coverage.add(day)
@@ -252,7 +276,7 @@ class Snapshot:
             if row['exception_type'] == '1': active[day].add(row['service_id'])
             elif row['exception_type'] == '2': active[day].discard(row['service_id'])
             else: raise ValueError('Invalid service exception')
-        return active, coverage
+        return active, coverage, repaired
 
     def departures(self, stop_id, start, lookahead_minutes, limit):
         self.get_stop(stop_id)
@@ -305,7 +329,7 @@ class Snapshot:
                 if (until is None and start <= at < end) or (until is not None and at < end and until > start):
                     candidate_events.append((event,day,at,until));days.add(day)
                 day += timedelta(days=1)
-        active, coverage = self._calendar(days)
+        active, coverage, repaired = self._calendar(days)
         if not (coverage & days):
             raise GtfsError(422, 'invalid_service_date', 'GTFS calendar does not cover the requested service date')
         results, interval_present = [], False
@@ -347,6 +371,8 @@ class Snapshot:
                 retain(GtfsDeparture(**common, scheduled_departure_at=at, departure_time=row['departure_time']))
         results.sort(key=sort_key)
         warnings=['frequency_based_departures: interval only, not a precise departure'] if interval_present else []
+        if repaired:
+            warnings.append('calendar_repaired: inverted source calendar dates use the loaded OTP graph calendar end; service availability is estimated, not confirmed by the source')
         return results[:limit],len(results)>limit,warnings
 
 

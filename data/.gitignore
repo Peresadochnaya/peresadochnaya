@@ -1,3 +1,13 @@
 __pycache__/
 *.py[cod]
 raw/*.previous.zip
+
+# Версионные хранилища: снимки скачиваются/генерируются, в Git не попадают
+gtfs/current.json
+gtfs/versions/
+gtfs/refresh-status.json
+gtfs/.store.lock
+metro/current.json
+metro/versions/
+metro/refresh-status.json
+metro/.refresh.lock

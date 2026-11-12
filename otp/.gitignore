@@ -1,0 +1,28 @@
+# Собранный граф OTP и производные файлы (сотни МБ)
+*.obj
+
+# Входные данные: OSM и GTFS не хранятся в Git
+*.osm.pbf
+*.gtfs.zip
+data/incoming/
+data/osm/
+data/legacy/
+
+# Версионное хранилище графа и его указатели
+data/versions/
+data/staging/
+data/staging.tmp/
+data/current
+data/current.tmp
+data/current.json
+data/build-status.json
+data/.build.lock
+
+# Хвосты ADS от скачивания файлов из Windows
+*.Zone.Identifier
+
+# Временные файлы
+*.tmp
+*.log
+__pycache__/
+*.pyc
