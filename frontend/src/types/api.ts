@@ -63,6 +63,20 @@ export interface Leg {
   distance_meters: number;
 }
 
+export interface FareItem {
+  mode: TransportMode;
+  rides: number;
+  cost_rub: number;
+}
+
+export interface RouteFare {
+  currency: 'RUB';
+  amount_rub: number;
+  items: FareItem[];
+  transfers: number;
+  transfer_cost_rub: number;
+}
+
 export interface Route {
   id: string;
   name: string;
@@ -77,6 +91,7 @@ export interface Route {
     candidate_providers: string[];
     traffic_providers: string[];
   };
+  fare?: RouteFare | null;
 }
 
 export interface RouteRequest {

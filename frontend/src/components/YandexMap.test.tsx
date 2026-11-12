@@ -292,4 +292,19 @@ describe('YandexMap metro line colors', () => {
 
     expect(polylineCalls.map((call) => call.options.strokeColor)).toContain(color);
   });
+
+  it('ignores the OTP feed namespace prefix in gtfsId', () => {
+    const route = createMetroRoute(2);
+    route.legs[0] = {
+      ...route.legs[0],
+      line: { short_name: '2', route_id: '1:metro:2' },
+    };
+
+    render(
+      <YandexMap {...baseProps} pointA={null} pointB={null} routes={[route]} />
+    );
+
+    expect(polylineCalls.map((call) => call.options.strokeColor)).toContain('#0078C9');
+    expect(polylineCalls.map((call) => call.options.strokeColor)).not.toContain('#D6083B');
+  });
 });

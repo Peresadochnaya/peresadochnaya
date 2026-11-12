@@ -34,6 +34,13 @@ const createRoute = (durationSeconds: number): Route => ({
     },
   ],
   provenance: { candidate_providers: [], traffic_providers: [] },
+  fare: {
+    currency: 'RUB',
+    amount_rub: 176,
+    items: [{ mode: 'bus', rides: 1, cost_rub: 176 }],
+    transfers: 0,
+    transfer_cost_rub: 0,
+  },
 });
 
 afterEach(() => cleanup());
@@ -117,6 +124,53 @@ describe('RouteResults wait legs', () => {
     expect(container.textContent).toMatch(/\d{2}:\d{2}/);
     expect(container.textContent).not.toContain('Станция отправления');
     expect(container.textContent).not.toContain('Станция прибытия');
+  });
+});
+
+describe('RouteResults fare', () => {
+  it('shows the route price in rubles', () => {
+    const { container } = render(
+      <RouteResults
+        routes={[createRoute(10 * 60)]}
+        selectedIndex={-1}
+        onSelectRoute={() => {}}
+        isLoading={false}
+      />
+    );
+
+    expect(container.textContent).toContain('176 ₽');
+  });
+
+  it('keeps two decimals for fractional prices', () => {
+    const route = createRoute(10 * 60);
+    route.fare = { ...route.fare!, amount_rub: 123.45 };
+
+    const { container } = render(
+      <RouteResults
+        routes={[route]}
+        selectedIndex={-1}
+        onSelectRoute={() => {}}
+        isLoading={false}
+      />
+    );
+
+    expect(container.textContent).toContain('123.45 ₽');
+  });
+
+  it('does not show a price when fare is missing', () => {
+    const route = createRoute(10 * 60);
+    route.fare = null;
+
+    const { container } = render(
+      <RouteResults
+        routes={[route]}
+        selectedIndex={-1}
+        onSelectRoute={() => {}}
+        isLoading={false}
+      />
+    );
+
+    expect(container.textContent).not.toContain('₽');
   });
 });
 
