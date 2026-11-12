@@ -32,6 +32,17 @@ jobs:
           (cd backend && python -m pytest tests)
           python -m pytest data/gtfs/tests data/metro/tests
           python -m pytest otp/scripts/tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Test and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run build
       - name: Render deployment
         run: kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
 

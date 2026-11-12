@@ -9,6 +9,7 @@ let clickHandlers: MapClickHandler[] = [];
 
 const createFakeYmaps = () => {
   const map = {
+    controls: { add: vi.fn() },
     geoObjects: { add: vi.fn(), remove: vi.fn() },
     events: {
       add: vi.fn((event: string, handler: MapClickHandler) => {
@@ -24,6 +25,7 @@ const createFakeYmaps = () => {
   return {
     ready: (callback: () => void) => callback(),
     Map: vi.fn(() => map),
+    control: { ZoomControl: vi.fn(), GeolocationControl: vi.fn() },
     GeoObjectCollection: vi.fn(() => ({ add: vi.fn(), removeAll: vi.fn() })),
     Placemark: vi.fn(() => ({
       events: { add: vi.fn() },
