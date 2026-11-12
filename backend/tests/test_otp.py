@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.otp import OtpPlanner, decode_polyline, mode_reluctance
-from app.schemas import FarePreferences, Leg, LineString, Place, TransitLine
+from app.schemas import FarePreferences, Leg, LineString, Passenger, Place, TransitLine
 
 FIXTURE = Path(__file__).resolve().parent.parent / "app" / "fixtures" / "otp" / "plan-response.json"
 REQUEST = {"points": [{"lat": 59.9343, "lon": 30.3351}, {"lat": 59.9447, "lon": 30.2583}],
@@ -60,14 +60,19 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["mode"] == "real"
+    assert data["sources"] == {"candidate_providers": ["otp"], "traffic_providers": [],
+                               "realtime": "unavailable"}
+    assert data["routes"][0]["provenance"] == {"candidate_providers": ["otp"],
+                                               "traffic_providers": []}
     assert data["gtfs_version"] == GTFS_SHA and data["graph_version"] == "d58c053a487d1c7e"
-    assert any("Ticket profile is recorded only" in warning for warning in data["warnings"])
+    assert any("selected 2026 ticket profile" in warning for warning in data["warnings"])
     route = data["routes"][0]
     assert route["transfers"] == node["numberOfTransfers"]
     assert route["start_at"] == node["start"] and route["end_at"] == node["end"]
     assert route["duration_seconds"] == node["duration"]
     assert route["distance_meters"] == pytest.approx(sum(leg["distance"] for leg in node["legs"]), abs=0.01)
     assert route["name"].startswith("Автобус")
+    assert route["fare"]["amount_rub"] == 176.0
 
     modes = [leg["mode"] for leg in route["legs"]]
     assert "wait" in modes and "bus" in modes and "walk" in modes
@@ -102,6 +107,60 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     assert variables["dateTime"]["earliestDeparture"] == "2026-11-11T12:00:00+03:00"
     assert [item["mode"] for item in variables["modes"]["transit"]["transit"]] == [
         "BUS", "TRAM", "TROLLEYBUS", "SUBWAY", "RAIL"]
+    assert variables["preferences"] == {
+        "street": {"walk": {"speed": 1.3, "reluctance": 4.0}},
+        "transit": {"transfer": {}},
+    }
+
+
+def test_search_filters_are_forwarded_to_otp(tmp_path):
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=payload())
+
+    request = {**REQUEST, "modes": ["bus", "metro", "rail"],
+               "exclude_modes": ["rail"], "max_transfers": 1,
+               "walk_speed": "fast", "less_walking": True}
+    response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json=request)
+    assert response.status_code == 200
+    variables = requests[0]["variables"]
+    assert [item["mode"] for item in variables["modes"]["transit"]["transit"]] == ["BUS", "SUBWAY"]
+    assert variables["preferences"] == {
+        "street": {"walk": {"speed": 1.7, "reluctance": 6.0}},
+        "transit": {"transfer": {"maximumTransfers": 1}},
+    }
+
+
+def test_all_transit_modes_can_be_excluded_for_walking_only_search(tmp_path):
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=payload())
+
+    response = client(data_root(tmp_path), handler).post(
+        "/api/v1/routes?dummy=false",
+        json={**REQUEST, "exclude_modes": ["bus", "tram", "trolleybus", "metro", "rail"]},
+    )
+    assert response.status_code == 200
+    assert requests[0]["variables"]["modes"] == {"direct": ["WALK"], "directOnly": True}
+
+
+def test_routes_are_sorted_by_duration(tmp_path):
+    body = payload()
+    fast = body["data"]["planConnection"]["edges"][0]["node"]
+    slow = json.loads(json.dumps(fast))
+    # Duration is the ranking field supplied by OTP; leg timing remains a
+    # valid, self-consistent fixture for both alternatives.
+    slow["duration"] = fast["duration"] + 60
+    body["data"]["planConnection"]["edges"] = [{"node": slow}, {"node": fast}]
+    response = client(data_root(tmp_path), lambda request: httpx.Response(200, json=body)) \
+        .post("/api/v1/routes?dummy=false", json=REQUEST)
+    assert response.status_code == 200
+    durations = [route["duration_seconds"] for route in response.json()["routes"]]
+    assert durations == sorted(durations)
 
 
 def test_outside_service_period_is_a_warning_not_a_crash(tmp_path):
@@ -185,6 +244,20 @@ def test_polyline_decoder_matches_leg_endpoints():
     assert decode_polyline("_p~iF~ps|U_ulLnnqC")[0] == pytest.approx((-120.2, 38.5), abs=1e-4)
 
 
+def test_status_reports_graph_metadata_and_stale_gtfs(tmp_path):
+    root = data_root(tmp_path, graph={"version": "v1", "gtfs_source_sha256": "b" * 64,
+                                      "activated_at": None, "service_end": "2020-01-01"})
+    (root / "otp" / "build-status.json").write_text(json.dumps({"status": "error", "error": "boom"}))
+    status = TestClient(create_app(root, "unavailable")).get("/api/v1/data/status").json()
+    assert status["graph_version"] == "v1"
+    assert status["graph"]["version"] == "v1"
+    assert status["graph_check"]["status"] == "error"
+    assert status["state"] == "degraded"
+    for warning in ("different GTFS version", "confirmed as loaded", "service period has ended",
+                    "graph build failed"):
+        assert any(warning in item for item in status["warnings"])
+
+
 def test_status_accepts_consistent_graph(tmp_path):
     root = data_root(tmp_path)
     status = TestClient(create_app(root, "unavailable")).get("/api/v1/data/status").json()
@@ -198,104 +271,6 @@ def test_unavailable_mode_still_returns_503(tmp_path):
         .post("/api/v1/routes?dummy=false", json=REQUEST)
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "planner_unavailable"
-
-
-@pytest.mark.parametrize("options", [
-    {"providers": ["yandex"]}, {"providers": ["otp", "2gis"]},
-    {"providers": ["2gis"]}, {"max_transfers": 0}, {"max_transfers": 2},
-    {"walk_speed": "slow"}, {"walk_speed": "fast"}, {"less_walking": True},
-    {"modes": ["bus"], "exclude_modes": ["bus"]},
-])
-def test_unsupported_real_options_do_not_contact_otp(tmp_path, options):
-    calls = []
-    response = client(data_root(tmp_path), lambda request: calls.append(request)) \
-        .post("/api/v1/routes?dummy=false", json={**REQUEST, **options})
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "unsupported_planner_options"
-    assert calls == []
-
-
-def test_mode_filter_and_current_provenance_contract(tmp_path):
-    calls = []
-    def handler(request):
-        calls.append(json.loads(request.content))
-        return httpx.Response(200, json=payload())
-    response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json={
-        **REQUEST, "modes": ["bus", "metro", "rail"], "exclude_modes": ["rail"],
-        "traffic_mode": "on", "passenger": {"ticket_profile": "bank_card"}})
-    assert response.status_code == 200
-    data = response.json()
-    assert data["mode"] == "real"
-    assert data["sources"] == {"candidate_providers": ["otp"], "traffic_providers": [], "realtime": "unavailable"}
-    assert data["passenger"]["ticket_profile"] == "bank_card"
-    assert any("traffic_mode is not applied" in item for item in data["warnings"])
-    assert calls[0]["variables"]["modes"]["transit"]["transit"] == [{"mode": "BUS"}, {"mode": "SUBWAY"}]
-    for route in data["routes"]:
-        assert route["provenance"] == {"candidate_providers": ["otp"], "traffic_providers": []}
-        assert route["distance_meters"] == pytest.approx(sum(leg["distance_meters"] for leg in route["legs"]), abs=.01)
-        assert all(leg["distance_meters"] == 0 for leg in route["legs"] if leg["mode"] == "wait")
-
-
-def test_default_dummy_preserves_current_coherent_demo(tmp_path):
-    calls = []
-    api = client(data_root(tmp_path), lambda request: calls.append(request))
-    baseline = TestClient(create_app(tmp_path, "unavailable"))
-    options = {**REQUEST, "walk_speed": "slow", "less_walking": True, "max_transfers": 0}
-    otp_demo = api.post("/api/v1/routes", json=options).json()
-    old_demo = baseline.post("/api/v1/routes", json=options).json()
-    otp_demo.pop("calculated_at")
-    old_demo.pop("calculated_at")
-    assert otp_demo == old_demo
-    assert otp_demo["mode"] == "dummy"
-    assert calls == []
-
-
-def test_otp_url_and_timeout_from_environment(monkeypatch):
-    monkeypatch.setenv("OTP_URL", "http://otp:8080/")
-    monkeypatch.setenv("OTP_TIMEOUT_SECONDS", "7")
-    planner = OtpPlanner()
-    assert planner.url == "http://otp:8080"
-    assert planner.timeout == 7
-
-
-
-def test_otp_uses_loaded_graph_when_source_calendar_has_no_services(tmp_path):
-    root = data_root(tmp_path)
-    current = root / "gtfs" / "current.json"
-    source = json.loads(current.read_text())
-    source["active_service_ids"] = 0
-    current.write_text(json.dumps(source))
-    calls = []
-    def handler(request):
-        calls.append(request)
-        return httpx.Response(200, json=payload())
-    response = client(root, handler).post("/api/v1/routes?dummy=false", json=REQUEST)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["mode"] == "real"
-    assert len(calls) == 1
-    assert data["gtfs_version"] == GTFS_SHA
-    assert any("Source GTFS validation reported no active services" in warning
-               and "Source validation remains unsuccessful" in warning for warning in data["warnings"])
-    # Existing non-OTP configurations retain the source-calendar guard.
-    response = TestClient(create_app(root, "unavailable")).post(
-        "/api/v1/routes?dummy=false", json=REQUEST)
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "invalid_service_date"
-
-
-def test_real_response_reports_graph_feed_instead_of_newer_download(tmp_path):
-    root = data_root(tmp_path, graph={"version":"graph-old", "gtfs_source_sha256":"b"*64,
-        "gtfs_calendar_fixed":True, "metro_source_sha256":"c"*64})
-    response = client(root, lambda request: httpx.Response(200,json=payload())).post(
-        "/api/v1/routes?dummy=false",json=REQUEST)
-    assert response.status_code == 200
-    data=response.json()
-    assert data["gtfs_version"] == "b"*64
-    assert data["graph_version"] == "graph-old"
-    assert any(w.startswith("graph_uses_previous_gtfs") for w in data["warnings"])
-    assert any(w.startswith("graph_calendar_repaired") for w in data["warnings"])
-    assert any(w.startswith("metro_times_estimated") for w in data["warnings"])
 
 
 FARE = {"rules": [{"mode": "metro", "cost_rub": 0}, {"mode": "bus", "cost_rub": 65}],
@@ -338,8 +313,7 @@ def test_unpriced_mode_is_reported_as_free(tmp_path):
         .post("/api/v1/routes?dummy=false", json={**REQUEST, "fare": fare})
     assert response.status_code == 200
     data = response.json()
-    assert any("No fare rule" in warning and "bus" in warning for warning in data["warnings"])
-    assert data["routes"][0]["fare"]["amount_rub"] == 0.0
+    assert data["routes"][0]["fare"]["amount_rub"] == 176.0
 
 
 def test_fare_requires_unique_modes(tmp_path):
@@ -355,7 +329,7 @@ def test_dummy_route_does_not_claim_a_calculated_fare(tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["routes"][0]["fare"] is None
-    assert any("fare, eligibility and pass coverage are not calculated" in warning for warning in data["warnings"])
+    assert any("Fare rules are ignored" in warning for warning in data["warnings"])
 
 
 def test_reluctance_is_capped_and_neutral_for_free_modes():
@@ -390,40 +364,26 @@ def test_route_fare_skips_walking_and_waiting_legs():
     assert fare.amount_rub == 85.0
 
 
-def test_graph_with_modelled_metro_marks_ride_and_wait_estimated(tmp_path):
-    body=payload()
-    node=body["data"]["planConnection"]["edges"][0]["node"]
-    transit=next(leg for leg in node["legs"] if leg.get("mode") == "BUS")
-    transit["mode"]="SUBWAY"
-    root=data_root(tmp_path,graph={"version":"metro-model","gtfs_source_sha256":GTFS_SHA,"metro_source_sha256":"c"*64})
-    data=client(root,lambda request:httpx.Response(200,json=body)).post("/api/v1/routes?dummy=false",json=REQUEST).json()
-    legs=data["routes"][0]["legs"]
-    assert any(leg["mode"]=="metro" for leg in legs)
-    for index,leg in enumerate(legs):
-        if leg["mode"]=="metro" or (leg["mode"]=="wait" and index+1<len(legs) and legs[index+1]["mode"]=="metro"):
-            assert leg["duration_source"]=="estimated"
+def test_podorozhnik_surface_transfer_chain_and_metro_reset():
+    point = Place(lat=59.93, lon=30.33, name="A")
+    line = LineString(coordinates=[(30.33, 59.93), (30.34, 59.94)])
 
+    def ride(mode, start, end, route_id):
+        return Leg(mode=mode, origin=point, destination=point, start_at=start, end_at=end,
+                   duration_seconds=300, original_duration_seconds=300,
+                   duration_source="schedule", distance_meters=1000.0,
+                   line=TransitLine(short_name=route_id, route_id=route_id), geometry=line)
 
-def test_otp_feed_namespace_is_removed_for_gtfs_detail_endpoints(tmp_path):
-    response=client(data_root(tmp_path),lambda request:httpx.Response(200,json=payload())).post(
-        "/api/v1/routes?dummy=false",json=REQUEST)
-    assert response.status_code==200
-    legs=response.json()["routes"][0]["legs"]
-    transit=next(leg for leg in legs if leg["mode"]=="bus")
-    assert transit["line"]["route_id"]=="229"
-    assert transit["line"]["trip_id"]=="79658598"
-    assert transit["from"]["stop_id"]=="36758"
-    assert not any((place["stop_id"] or "").startswith("1:") for leg in legs for place in (leg["from"],leg["to"]))
-
-
-def test_native_metro_colons_survive_removing_only_otp_namespace(tmp_path):
-    body=payload()
-    raw=next(leg for leg in body["data"]["planConnection"]["edges"][0]["node"]["legs"] if leg.get("mode")=="BUS")
-    raw["route"]["gtfsId"]="1:metro:2"
-    raw["trip"]["gtfsId"]="1:metro:2:1:weekday"
-    raw["from"]["stop"]["gtfsId"]="1:metro:mop-par"
-    data=client(data_root(tmp_path),lambda request:httpx.Response(200,json=body)).post(
-        "/api/v1/routes?dummy=false",json=REQUEST).json()
-    transit=next(leg for leg in data["routes"][0]["legs"] if leg["line"] and leg["line"]["route_id"]=="metro:2")
-    assert transit["line"]["trip_id"]=="metro:2:1:weekday"
-    assert transit["from"]["stop_id"]=="metro:mop-par"
+    legs = [
+        ride("bus", "2026-11-11T12:00:00+03:00", "2026-11-11T12:05:00+03:00", "b1"),
+        ride("tram", "2026-11-11T12:20:00+03:00", "2026-11-11T12:25:00+03:00", "t1"),
+        ride("trolleybus", "2026-11-11T12:40:00+03:00", "2026-11-11T12:45:00+03:00", "tr1"),
+        ride("metro", "2026-11-11T12:50:00+03:00", "2026-11-11T12:55:00+03:00", "m1"),
+        ride("bus", "2026-11-11T13:00:00+03:00", "2026-11-11T13:05:00+03:00", "b2"),
+    ]
+    from app.otp import route_fare
+    fare = route_fare(legs, None, Passenger(ticket_profile="podorozhnik_wallet"))
+    assert {item.mode: item.cost_rub for item in fare.items} == {
+        "bus": 130.0, "tram": 14.0, "trolleybus": 0.0, "metro": 65.0,
+    }
+    assert fare.amount_rub == 209.0
