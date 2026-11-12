@@ -17,6 +17,7 @@ from .demo_routes import compose as dummy_route
 from .dgis import DgisAddresses, DgisRouter
 from .gtfs_api import create_gtfs_router
 from .vehicles_api import create_vehicles_router
+from .realtime import create_realtime_router
 from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, RoadRouteRequest, RoadRouteResponse, RouteRequest, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
 from .yandex_router import YandexRouter, dummy_road_route
@@ -56,6 +57,7 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     app = FastAPI(title="Пересадочная API", version="0.2.0", description=API_DESCRIPTION)
     app.include_router(create_gtfs_router(root))
     app.include_router(create_vehicles_router(root))
+    app.include_router(create_realtime_router())
     addresses = address_provider or YandexAddresses()
     roads = road_provider or YandexRouter()
     dgis_addresses = dgis_address_provider or DgisAddresses()

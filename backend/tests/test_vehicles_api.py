@@ -71,7 +71,7 @@ def test_empty_demo_snapshot_uses_generation_time(tmp_path, monkeypatch, seconds
     {"bbox": "30,60,31"}, {"bbox": "30,60,31,61,62"},
     {"bbox": "30,60,31,61", "modes": "car"}, {"bbox": "30,60,31,61", "modes": ""},
     {"bbox": "30,60,31,61", "modes": "bus,,tram"},
-    {"bbox": "30,60,31,61", "limit": 0}, {"bbox": "30,60,31,61", "limit": 2001},
+    {"bbox": "30,60,31,61", "limit": 0}, {"bbox": "30,60,31,61", "limit": 20001},
     {"bbox": "30,60,31,61", "dummy": "maybe"},
 ])
 def test_invalid_query_is_validation_error(tmp_path, monkeypatch, params):

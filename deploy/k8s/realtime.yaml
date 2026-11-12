@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realtime
+  namespace: peresadochnaya
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: peresadochnaya-realtime}
+  template:
+    metadata:
+      labels: {app: peresadochnaya-realtime}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: realtime
+          image: ghcr.io/peresadochnaya/peresadochnaya:realtime-REPLACE_WITH_COMMIT_SHA
+          env:
+            - {name: DATA_ROOT, value: /data}
+            - {name: REALTIME_DIR, value: /realtime-data}
+            - {name: GTFS_RT_INTERVAL_SECONDS, value: '5'}
+            - {name: GTFS_RT_TIMEOUT_SECONDS, value: '60'}
+            - name: HTTPS_PROXY
+              valueFrom:
+                secretKeyRef: {name: gtfs-proxy, key: url, optional: true}
+          ports:
+            - {name: http, containerPort: 8001}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: '1', memory: 1Gi}
+          livenessProbe:
+            httpGet: {path: /health/live, port: http}
+            periodSeconds: 15
+          # The last-good feed remains readable after upstream errors/restarts.
+          readinessProbe:
+            httpGet: {path: /health/ready, port: http}
+            periodSeconds: 5
+          volumeMounts:
+            - {name: data, mountPath: /data, readOnly: true}
+            - {name: feed, mountPath: /realtime-data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: transit-data}
+        - name: feed
+          persistentVolumeClaim: {claimName: realtime-feed}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: realtime-feed
+  namespace: peresadochnaya
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: realtime
+  namespace: peresadochnaya
+spec:
+  selector: {app: peresadochnaya-realtime}
+  ports:
+    - {name: http, port: 8001, targetPort: http}

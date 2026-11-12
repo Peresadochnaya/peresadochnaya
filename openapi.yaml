@@ -475,11 +475,16 @@ paths:
   /api/v1/vehicles:
     get:
       summary: Vehicles
-      description: 'dummy=true генерирует демонстрационные машины на общей сети GTFS
+      description: dummy=true генерирует демонстрационные машины на общей сети GTFS
         линии 193 по тому же синтетическому 10-минутному расписанию, что и карточки
         отправлений. timestamp и updated_at — время генерации демо, не реальные GPS-наблюдения.
         Маркеры находятся на последних пройденных остановках своих рейсов. dummy=false
-        пока возвращает 503 realtime_unavailable: GTFS-RT не подключён.'
+        возвращает реальные позиции из последнего успешного GTFS-RT снимка. bbox=minLon,minLat,maxLon,maxLat;
+        фильтры bbox и modes применяются до limit (по умолчанию 10000, максимум 20000),
+        превышение явно помечено vehicles_truncated. heading — направление по часовой
+        стрелке от севера в градусах, null если источник его не передал. timestamp
+        — время наблюдения, updated_at — метка исходного фида. Устаревшие данные помечены
+        stale и gtfs_rt_stale. До первого снимка — 503 realtime_unavailable.
       operationId: vehicles_api_v1_vehicles_get
       parameters:
       - name: bbox
@@ -502,9 +507,9 @@ paths:
         required: false
         schema:
           type: integer
-          maximum: 2000
+          maximum: 20000
           minimum: 1
-          default: 500
+          default: 10000
           title: Limit
       - name: dummy
         in: query
@@ -536,6 +541,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/raw_feed:
+    get:
+      tags:
+      - GTFS-RT
+      summary: Raw Feed
+      description: Last successful GTFS-RT FULL_DATASET protobuf with computed TripUpdates
+        and observed VehiclePositions. No generation is triggered. TripUpdates are
+        emitted only for safely identified trips; route_id-only observations remain
+        VehiclePositions and do not change OTP travel times. Preserved after generator
+        errors; inspect X-Feed-Timestamp and X-Feed-Stale. 503 before the first successful
+        generation.
+      operationId: raw_feed_api_v1_raw_feed_get
+      responses:
+        '200':
+          description: Successful Response
+          headers:
+            X-Feed-Timestamp:
+              description: Original upstream snapshot Unix timestamp
+              schema:
+                type: integer
+            X-Feed-Stale:
+              description: true when the preserved snapshot is older than 90 seconds
+                or over 30 seconds in the future
+              schema:
+                type: string
+                enum:
+                - 'true'
+                - 'false'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /health/live:
     get:
       summary: Live

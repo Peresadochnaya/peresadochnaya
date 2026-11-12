@@ -26,7 +26,11 @@ jobs:
             backend/requirements*.txt
             data/requirements.txt
       - name: Install dependencies
-        run: pip install -r backend/requirements-dev.txt -r data/requirements.txt
+        run: pip install -r backend/requirements-dev.txt -r data/requirements.txt -r realtime/requirements.txt
+      - name: Compile and test realtime
+        run: |
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror realtime/cpp/delay_engine.cpp -o /tmp/delay-engine
+          DELAY_ENGINE_BINARY=/tmp/delay-engine PYTHONPATH=realtime python -m pytest realtime/tests
       - name: Test backend and data
         run: |
           (cd backend && python -m pytest tests)
@@ -55,11 +59,14 @@ jobs:
       packages: write
     outputs:
       image: ${{ steps.name.outputs.image }}
+      realtime_image: ${{ steps.name.outputs.realtime_image }}
     steps:
       - uses: actions/checkout@v4
       - name: Container name
         id: name
-        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "realtime_image=ghcr.io/${GITHUB_REPOSITORY,,}:realtime-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
@@ -76,6 +83,16 @@ jobs:
           tags: ${{ steps.name.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Build realtime service
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: realtime/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.name.outputs.realtime_image }}
+          cache-from: type=gha,scope=realtime
+          cache-to: type=gha,scope=realtime,mode=max
 
   deploy:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -121,8 +138,10 @@ jobs:
       - name: Render immutable image deployment
         env:
           IMAGE: ${{ needs.image.outputs.image }}
+          REALTIME_IMAGE: ${{ needs.image.outputs.realtime_image }}
         run: |
           sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/otp.yaml deploy/k8s/gtfs-cronjob.yaml deploy/k8s/metro-cronjob.yaml deploy/k8s/rail-cronjob.yaml
+          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:realtime-REPLACE_WITH_COMMIT_SHA|$REALTIME_IMAGE|g" deploy/k8s/realtime.yaml
           kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
       - name: Apply and verify rollout
         env:
@@ -131,13 +150,16 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
           test "$DEPLOY_USER" = peresadochnaya
-          ssh -p "${DEPLOY_PORT:-22}" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" 'export KUBECONFIG=/home/peresadochnaya/.kube/config; kubectl --namespace peresadochnaya apply -f - && kubectl --namespace peresadochnaya rollout status deployment/api --timeout=180s && kubectl --namespace peresadochnaya rollout status deployment/otp --timeout=180s' < /tmp/peresadochnaya.yaml
+          ssh -p "${DEPLOY_PORT:-22}" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" 'export KUBECONFIG=/home/peresadochnaya/.kube/config; kubectl --namespace peresadochnaya apply -f - && kubectl --namespace peresadochnaya rollout status deployment/api --timeout=180s && kubectl --namespace peresadochnaya rollout status deployment/realtime --timeout=180s && kubectl --namespace peresadochnaya rollout status deployment/otp --timeout=180s' < /tmp/peresadochnaya.yaml
       - name: Public smoke tests
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL || 'https://peresadochnaya.rjnk.cc' }}
         run: |
           curl --fail --show-error --silent --retry 6 --retry-all-errors --retry-delay 5 "$API_BASE_URL/health/ready"
           curl --fail --show-error --silent "$API_BASE_URL/api/v1/data/status" | python -m json.tool
+          curl --fail --show-error --silent --retry 6 --retry-all-errors --retry-delay 5 "$API_BASE_URL/api/v1/raw_feed" -o /tmp/gtfs-rt-feed.bin
+          test -s /tmp/gtfs-rt-feed.bin
+          curl --fail --show-error --silent "$API_BASE_URL/api/v1/vehicles?dummy=false&bbox=29,59,31,61&limit=1" | python -m json.tool
       - name: Disconnect and remove ephemeral credentials
         if: always()
         run: |

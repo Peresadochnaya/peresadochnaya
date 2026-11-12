@@ -1,5 +1,8 @@
 """Synthetic vehicle markers tied to the shared GTFS demo, never fake live data."""
 import math
+import os
+import httpx
+from . import realtime
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -79,16 +82,24 @@ def create_vehicles_router(root: Path, *, clock: Callable[[], datetime] | None =
     now = clock or (lambda: datetime.now(timezone.utc))
 
     @router.get("/api/v1/vehicles", response_model=VehiclesResponse,
-                description="Synthetic positions tied to the GTFS demo. GTFS-RT is not connected: dummy=false returns 503.",
+                description="Synthetic positions tied to the GTFS demo. dummy=false reads observed positions from the separate GTFS-RT service; bbox and modes filter before limit. heading is observed bearing in degrees clockwise from north, or null. Stale data is explicitly marked; 503 before the first successful generation.",
                 responses={503: {"model": ErrorResponse}})
     def vehicles(
         bbox: str = Query(pattern=r"^-?\d+(\.\d+)?(,-?\d+(\.\d+)?){3}$"),
         modes: str | None = Query(default=None),
-        limit: int = Query(default=500, ge=1, le=2000),
+        limit: int = Query(default=10000, ge=1, le=20000),
         dummy: bool = Query(default=True, description="true: согласованные демо-данные без внешних запросов; false: реальные источники"),
     ):
         west, south, east, north = _bbox(bbox)
         accepted_modes = _modes(modes)
+        if not dummy and os.getenv('REALTIME_URL'):
+            try:
+                result = realtime.request('/api/v1/vehicles', {'bbox': bbox,
+                    'limit': limit, **({'modes': ','.join(sorted(accepted_modes))} if accepted_modes else {})})
+                return VehiclesResponse.model_validate(result.json())
+            except (httpx.HTTPError, ValueError):
+                return JSONResponse(status_code=503, content={"error": {
+                    "code": "realtime_unavailable", "message": "GTFS-RT vehicle positions are not available"}})
         if not dummy:
             return JSONResponse(status_code=503, content={"error": {
                 "code": "realtime_unavailable", "message": "GTFS-RT vehicle positions are not configured",

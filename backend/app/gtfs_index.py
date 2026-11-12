@@ -179,6 +179,14 @@ def warm(root, directory=None):
     root = Path(root)
     directory = Path(directory) if directory is not None else index_directory()
     active, result = set(), []
+    # The loaded OTP graph can use an older static source than current.json.
+    # Its index is also consumed by the realtime generator; keep it pinned.
+    graph_manifest = root / 'otp/current/manifest.json'
+    if graph_manifest.exists():
+        graph = json.loads(graph_manifest.read_text())
+        digest = graph.get('gtfs_source_sha256', '')
+        if len(digest) == 64 and all(c in '0123456789abcdef' for c in digest):
+            active.add(f'v{FORMAT}-{digest}.sqlite3')
     for feed in ('gtfs', 'metro', 'rail'):
         pointer = root / feed / 'current.json'
         if not pointer.exists():
