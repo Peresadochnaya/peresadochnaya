@@ -5,5 +5,7 @@ metadata:
   namespace: peresadochnaya
 data:
   DATA_ROOT: /data
-  PLANNER_MODE: dummy
+  PLANNER_MODE: otp
+  OTP_URL: http://otp:8080
+  OTP_TIMEOUT_SECONDS: "30"
   TZ: Europe/Moscow

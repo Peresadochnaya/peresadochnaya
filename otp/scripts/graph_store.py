@@ -157,15 +157,18 @@ def normalized_config_sha(configs: dict[str, dict]) -> str:
 def graph_version(gtfs_fixed_sha: str, osm_sha: str, config_sha: str,
                   otp_version: str, otp_serialization_version_id: str,
                   metro_sha: str = "") -> str:
-    return sha256_json({
-        "pipeline_version": PIPELINE_VERSION,
+    # Keep existing surface-only graph identities usable by the k3s wrapper.
+    payload = {
+        "pipeline_version": PIPELINE_VERSION if metro_sha else 1,
         "gtfs_fixed_sha256": gtfs_fixed_sha,
-        "metro_sha256": metro_sha,
         "osm_sha256": osm_sha,
         "config_sha256": config_sha,
         "otp_version": otp_version,
         "otp_serialization_version_id": otp_serialization_version_id,
-    })[:16]
+    }
+    if metro_sha:
+        payload["metro_sha256"] = metro_sha
+    return sha256_json(payload)[:16]
 
 
 def resolve_gtfs(gtfs_zip: Path | None, gtfs_store: Path | None) -> tuple[Path, str | None]:

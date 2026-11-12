@@ -8,12 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .api_docs import API_DESCRIPTION, OPERATION_DESCRIPTIONS
-from .data_status import load_status
+from .data_status import load_status, read_object
+from .otp import OtpPlanner
 from . import demo_addresses
 from .demo_routes import compose as dummy_route
 from .dgis import DgisAddresses, DgisRouter
 from .gtfs_api import create_gtfs_router
-from .otp import OtpPlanner
 from .vehicles_api import create_vehicles_router
 from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, RoadRouteRequest, RoadRouteResponse, RouteRequest, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
@@ -150,17 +150,45 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                 candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[demo], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
                                   warnings=["Shared GTFS demo network with a synthetic all-day 10-minute timetable; no live planner or traffic was used",
-                                            "Fare rules are ignored for the synthetic demo route" if request.fare is not None
-                                            else "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
+                                            "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"]
+                                  + (["Fare rules are ignored in demo mode"] if request.fare is not None else []))
         data = load_status(root)
-        if data.manifest and data.manifest.get("active_service_ids") == 0:
+        source_calendar_empty = bool(data.manifest and data.manifest.get("active_service_ids") == 0)
+        if mode != "otp" and source_calendar_empty:
             service_date = str(data.manifest.get("service_date", "")).replace("-", "")
             if request.departure_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y%m%d") == service_date:
                 return error(422, "invalid_service_date", "GTFS has no active services on the requested date")
         if mode != "otp":
             return error(503, "planner_unavailable", "A route planner is not configured")
-        return planner.plan(request, gtfs_version=data.gtfs_version,
-                            graph_version=data.graph_version)
+        # The running graph may predate the latest downloaded feed. Report the
+        # snapshot used to build it, not a newer ZIP that OTP has not loaded.
+        graph_meta = {}
+        try:
+            graph_meta = read_object(root / "otp" / "current.json") or {}
+        except (OSError, ValueError):
+            pass
+        source_sha = graph_meta.get("gtfs_source_sha256")
+        valid_sha = isinstance(source_sha, str) and len(source_sha) == 64 and all(c in "0123456789abcdef" for c in source_sha)
+        planned_gtfs = source_sha if valid_sha else data.gtfs_version
+        response = planner.plan(request, gtfs_version=planned_gtfs,
+                                graph_version=data.graph_version)
+        if planned_gtfs != data.gtfs_version:
+            response.warnings.append("graph_uses_previous_gtfs: the latest downloaded feed has not been loaded into the running graph")
+        if graph_meta.get("gtfs_calendar_fixed"):
+            response.warnings.append("graph_calendar_repaired: invalid source calendar end dates were extended in the graph input copy")
+        if graph_meta.get("metro_source_sha256") or graph_meta.get("metro_sha256"):
+            response.warnings.append("metro_times_estimated: pMetro running times and modelled headways are used, not an exact train timetable")
+            for route in response.routes:
+                for index, leg in enumerate(route.legs):
+                    waiting_for_metro = leg.mode == "wait" and index + 1 < len(route.legs) and route.legs[index + 1].mode == "metro"
+                    if leg.mode == "metro" or waiting_for_metro:
+                        leg.duration_source = "estimated"
+        if source_calendar_empty:
+            response.warnings.append(
+                "Source GTFS validation reported no active services on its validation date; "
+                "date availability is determined by the loaded OTP graph, which may use "
+                "a repaired calendar copy and additional feeds. Source validation remains unsuccessful")
+        return response
 
     # Apply documentation to the generated schema, including lazily included routers.
     generated_openapi = app.openapi

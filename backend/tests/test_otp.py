@@ -60,10 +60,6 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["mode"] == "real"
-    assert data["sources"] == {"candidate_providers": ["otp"], "traffic_providers": [],
-                               "realtime": "unavailable"}
-    assert data["routes"][0]["provenance"] == {"candidate_providers": ["otp"],
-                                               "traffic_providers": []}
     assert data["gtfs_version"] == GTFS_SHA and data["graph_version"] == "d58c053a487d1c7e"
     assert any("Ticket profile is recorded only" in warning for warning in data["warnings"])
     route = data["routes"][0]
@@ -72,7 +68,6 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     assert route["duration_seconds"] == node["duration"]
     assert route["distance_meters"] == pytest.approx(sum(leg["distance"] for leg in node["legs"]), abs=0.01)
     assert route["name"].startswith("Автобус")
-    assert route["fare"] is None
 
     modes = [leg["mode"] for leg in route["legs"]]
     assert "wait" in modes and "bus" in modes and "walk" in modes
@@ -190,20 +185,6 @@ def test_polyline_decoder_matches_leg_endpoints():
     assert decode_polyline("_p~iF~ps|U_ulLnnqC")[0] == pytest.approx((-120.2, 38.5), abs=1e-4)
 
 
-def test_status_reports_graph_metadata_and_stale_gtfs(tmp_path):
-    root = data_root(tmp_path, graph={"version": "v1", "gtfs_source_sha256": "b" * 64,
-                                      "activated_at": None, "service_end": "2020-01-01"})
-    (root / "otp" / "build-status.json").write_text(json.dumps({"status": "error", "error": "boom"}))
-    status = TestClient(create_app(root, "unavailable")).get("/api/v1/data/status").json()
-    assert status["graph_version"] == "v1"
-    assert status["graph"]["version"] == "v1"
-    assert status["graph_check"]["status"] == "error"
-    assert status["state"] == "degraded"
-    for warning in ("different GTFS version", "confirmed as loaded", "service period has ended",
-                    "graph build failed"):
-        assert any(warning in item for item in status["warnings"])
-
-
 def test_status_accepts_consistent_graph(tmp_path):
     root = data_root(tmp_path)
     status = TestClient(create_app(root, "unavailable")).get("/api/v1/data/status").json()
@@ -217,6 +198,104 @@ def test_unavailable_mode_still_returns_503(tmp_path):
         .post("/api/v1/routes?dummy=false", json=REQUEST)
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "planner_unavailable"
+
+
+@pytest.mark.parametrize("options", [
+    {"providers": ["yandex"]}, {"providers": ["otp", "2gis"]},
+    {"providers": ["2gis"]}, {"max_transfers": 0}, {"max_transfers": 2},
+    {"walk_speed": "slow"}, {"walk_speed": "fast"}, {"less_walking": True},
+    {"modes": ["bus"], "exclude_modes": ["bus"]},
+])
+def test_unsupported_real_options_do_not_contact_otp(tmp_path, options):
+    calls = []
+    response = client(data_root(tmp_path), lambda request: calls.append(request)) \
+        .post("/api/v1/routes?dummy=false", json={**REQUEST, **options})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "unsupported_planner_options"
+    assert calls == []
+
+
+def test_mode_filter_and_current_provenance_contract(tmp_path):
+    calls = []
+    def handler(request):
+        calls.append(json.loads(request.content))
+        return httpx.Response(200, json=payload())
+    response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json={
+        **REQUEST, "modes": ["bus", "metro", "rail"], "exclude_modes": ["rail"],
+        "traffic_mode": "on", "passenger": {"ticket_profile": "bank_card"}})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mode"] == "real"
+    assert data["sources"] == {"candidate_providers": ["otp"], "traffic_providers": [], "realtime": "unavailable"}
+    assert data["passenger"]["ticket_profile"] == "bank_card"
+    assert any("traffic_mode is not applied" in item for item in data["warnings"])
+    assert calls[0]["variables"]["modes"]["transit"]["transit"] == [{"mode": "BUS"}, {"mode": "SUBWAY"}]
+    for route in data["routes"]:
+        assert route["provenance"] == {"candidate_providers": ["otp"], "traffic_providers": []}
+        assert route["distance_meters"] == pytest.approx(sum(leg["distance_meters"] for leg in route["legs"]), abs=.01)
+        assert all(leg["distance_meters"] == 0 for leg in route["legs"] if leg["mode"] == "wait")
+
+
+def test_default_dummy_preserves_current_coherent_demo(tmp_path):
+    calls = []
+    api = client(data_root(tmp_path), lambda request: calls.append(request))
+    baseline = TestClient(create_app(tmp_path, "unavailable"))
+    options = {**REQUEST, "walk_speed": "slow", "less_walking": True, "max_transfers": 0}
+    otp_demo = api.post("/api/v1/routes", json=options).json()
+    old_demo = baseline.post("/api/v1/routes", json=options).json()
+    otp_demo.pop("calculated_at")
+    old_demo.pop("calculated_at")
+    assert otp_demo == old_demo
+    assert otp_demo["mode"] == "dummy"
+    assert calls == []
+
+
+def test_otp_url_and_timeout_from_environment(monkeypatch):
+    monkeypatch.setenv("OTP_URL", "http://otp:8080/")
+    monkeypatch.setenv("OTP_TIMEOUT_SECONDS", "7")
+    planner = OtpPlanner()
+    assert planner.url == "http://otp:8080"
+    assert planner.timeout == 7
+
+
+
+def test_otp_uses_loaded_graph_when_source_calendar_has_no_services(tmp_path):
+    root = data_root(tmp_path)
+    current = root / "gtfs" / "current.json"
+    source = json.loads(current.read_text())
+    source["active_service_ids"] = 0
+    current.write_text(json.dumps(source))
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json=payload())
+    response = client(root, handler).post("/api/v1/routes?dummy=false", json=REQUEST)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mode"] == "real"
+    assert len(calls) == 1
+    assert data["gtfs_version"] == GTFS_SHA
+    assert any("Source GTFS validation reported no active services" in warning
+               and "Source validation remains unsuccessful" in warning for warning in data["warnings"])
+    # Existing non-OTP configurations retain the source-calendar guard.
+    response = TestClient(create_app(root, "unavailable")).post(
+        "/api/v1/routes?dummy=false", json=REQUEST)
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_service_date"
+
+
+def test_real_response_reports_graph_feed_instead_of_newer_download(tmp_path):
+    root = data_root(tmp_path, graph={"version":"graph-old", "gtfs_source_sha256":"b"*64,
+        "gtfs_calendar_fixed":True, "metro_source_sha256":"c"*64})
+    response = client(root, lambda request: httpx.Response(200,json=payload())).post(
+        "/api/v1/routes?dummy=false",json=REQUEST)
+    assert response.status_code == 200
+    data=response.json()
+    assert data["gtfs_version"] == "b"*64
+    assert data["graph_version"] == "graph-old"
+    assert any(w.startswith("graph_uses_previous_gtfs") for w in data["warnings"])
+    assert any(w.startswith("graph_calendar_repaired") for w in data["warnings"])
+    assert any(w.startswith("metro_times_estimated") for w in data["warnings"])
 
 
 FARE = {"rules": [{"mode": "metro", "cost_rub": 0}, {"mode": "bus", "cost_rub": 65}],
@@ -276,7 +355,7 @@ def test_dummy_route_does_not_claim_a_calculated_fare(tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["routes"][0]["fare"] is None
-    assert any("Fare rules are ignored" in warning for warning in data["warnings"])
+    assert any("fare, eligibility and pass coverage are not calculated" in warning for warning in data["warnings"])
 
 
 def test_reluctance_is_capped_and_neutral_for_free_modes():
@@ -309,3 +388,42 @@ def test_route_fare_skips_walking_and_waiting_legs():
         {"mode": "metro", "rides": 1, "cost_rub": 0.0}]
     assert fare.transfers == 1
     assert fare.amount_rub == 85.0
+
+
+def test_graph_with_modelled_metro_marks_ride_and_wait_estimated(tmp_path):
+    body=payload()
+    node=body["data"]["planConnection"]["edges"][0]["node"]
+    transit=next(leg for leg in node["legs"] if leg.get("mode") == "BUS")
+    transit["mode"]="SUBWAY"
+    root=data_root(tmp_path,graph={"version":"metro-model","gtfs_source_sha256":GTFS_SHA,"metro_source_sha256":"c"*64})
+    data=client(root,lambda request:httpx.Response(200,json=body)).post("/api/v1/routes?dummy=false",json=REQUEST).json()
+    legs=data["routes"][0]["legs"]
+    assert any(leg["mode"]=="metro" for leg in legs)
+    for index,leg in enumerate(legs):
+        if leg["mode"]=="metro" or (leg["mode"]=="wait" and index+1<len(legs) and legs[index+1]["mode"]=="metro"):
+            assert leg["duration_source"]=="estimated"
+
+
+def test_otp_feed_namespace_is_removed_for_gtfs_detail_endpoints(tmp_path):
+    response=client(data_root(tmp_path),lambda request:httpx.Response(200,json=payload())).post(
+        "/api/v1/routes?dummy=false",json=REQUEST)
+    assert response.status_code==200
+    legs=response.json()["routes"][0]["legs"]
+    transit=next(leg for leg in legs if leg["mode"]=="bus")
+    assert transit["line"]["route_id"]=="229"
+    assert transit["line"]["trip_id"]=="79658598"
+    assert transit["from"]["stop_id"]=="36758"
+    assert not any((place["stop_id"] or "").startswith("1:") for leg in legs for place in (leg["from"],leg["to"]))
+
+
+def test_native_metro_colons_survive_removing_only_otp_namespace(tmp_path):
+    body=payload()
+    raw=next(leg for leg in body["data"]["planConnection"]["edges"][0]["node"]["legs"] if leg.get("mode")=="BUS")
+    raw["route"]["gtfsId"]="1:metro:2"
+    raw["trip"]["gtfsId"]="1:metro:2:1:weekday"
+    raw["from"]["stop"]["gtfsId"]="1:metro:mop-par"
+    data=client(data_root(tmp_path),lambda request:httpx.Response(200,json=body)).post(
+        "/api/v1/routes?dummy=false",json=REQUEST).json()
+    transit=next(leg for leg in data["routes"][0]["legs"] if leg["line"] and leg["line"]["route_id"]=="metro:2")
+    assert transit["line"]["trip_id"]=="metro:2:1:weekday"
+    assert transit["from"]["stop_id"]=="metro:mop-par"

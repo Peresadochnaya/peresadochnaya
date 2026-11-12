@@ -150,6 +150,20 @@ def _time(value: dict | None, fallback: str | None = None) -> datetime:
     raise ValueError("Missing leg time")
 
 
+def _native_gtfs_id(value: str | None) -> str | None:
+    """Remove OTP's feed namespace, preserving colons in the native GTFS ID."""
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise ValueError("Invalid OTP GTFS identifier")
+    namespace, separator, native = value.partition(":")
+    if separator:
+        if not namespace or not native:
+            raise ValueError("Empty OTP feed namespace or GTFS identifier")
+        return native
+    return value
+
+
 def _place(value: dict) -> Place:
     lat, lon = value.get("lat"), value.get("lon")
     if type(lat) not in (int, float) or type(lon) not in (int, float):
@@ -159,7 +173,7 @@ def _place(value: dict) -> Place:
     stop = value.get("stop") or {}
     return Place(lat=lat, lon=lon,
                  name=value.get("name") or "Точка на карте",
-                 stop_id=stop.get("gtfsId"))
+                 stop_id=_native_gtfs_id(stop.get("gtfsId")))
 
 
 def _line(value: list[tuple[float, float]]) -> LineString:
@@ -199,11 +213,11 @@ def _transit_line(leg: dict) -> TransitLine | None:
         return None
     route = leg.get("route") or {}
     trip = leg.get("trip") or {}
-    route_id = route.get("gtfsId")
+    route_id = _native_gtfs_id(route.get("gtfsId"))
     if not route_id:
         raise ValueError("Transit leg without route id")
     return TransitLine(short_name=route.get("shortName") or route.get("longName") or route_id,
-                       route_id=route_id, trip_id=trip.get("gtfsId"))
+                       route_id=route_id, trip_id=_native_gtfs_id(trip.get("gtfsId")))
 
 
 def mode_reluctance(cost_rub: float, value_of_time_rub_per_hour: float) -> float:
@@ -373,10 +387,32 @@ class OtpPlanner:
 
     def plan(self, request: RouteRequest, *, gtfs_version: str | None = None,
              graph_version: str | None = None) -> RoutesResponse:
+        # Reject unsupported options before contacting any planner. The demo path
+        # remains independent and can continue accepting its existing options.
+        if request.providers != ["otp"]:
+            raise ProviderError(422, "unsupported_planner_options",
+                                "Real routing currently supports providers=[otp] only")
+        unsupported = []
+        if request.max_transfers is not None:
+            unsupported.append("max_transfers")
+        if request.walk_speed != "normal":
+            unsupported.append("walk_speed")
+        if request.less_walking:
+            unsupported.append("less_walking")
+        if unsupported:
+            raise ProviderError(422, "unsupported_planner_options",
+                                "OTP adapter does not yet support: " + ", ".join(unsupported))
+        allowed = request.modes if request.modes is not None else list(MODE_FARE.values())
+        excluded = set(request.exclude_modes or [])
+        selected_modes = [mode for mode in TRANSIT_MODES
+                          if MODE_FARE[mode] in allowed and MODE_FARE[mode] not in excluded]
+        if not selected_modes:
+            raise ProviderError(422, "unsupported_planner_options",
+                                "At least one transit mode must remain after exclusions")
         prices = {rule.mode: rule.cost_rub for rule in request.fare.rules} \
             if request.fare is not None else {}
         transit_modes = []
-        for mode in TRANSIT_MODES:
+        for mode in selected_modes:
             preference = {"mode": mode}
             if request.fare is not None:
                 preference["cost"] = {"reluctance": mode_reluctance(
@@ -419,7 +455,11 @@ class OtpPlanner:
             raise ProviderError(502, f"{self.error_prefix}_error",
                                 "Invalid response from route planner") from None
 
-        warnings = [FARE_WARNING if request.fare is not None else TICKET_WARNING]
+        warnings = [FARE_WARNING if request.fare is not None else TICKET_WARNING,
+                    "GTFS-RT is not configured; public transport times come from the loaded GTFS graph",
+                    "Walking uses the OTP router default speed; no per-request walking preference is applied"]
+        if gtfs_version is None or graph_version is None:
+            warnings.append("Graph/GTFS version metadata is incomplete; the loaded graph version is not verified")
         if request.fare is not None:
             warnings.append(FARE_SEARCH_WARNING)
             unpriced = sorted({leg.mode for route in routes for leg in route.legs
