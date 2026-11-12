@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare/publish a graph from immutable surface and approximate metro snapshots."""
+"""Prepare/publish a graph from surface, metro and dated suburban rail GTFS."""
 import argparse
 from contextlib import redirect_stdout
 import hashlib
@@ -17,10 +17,10 @@ OTP_SERIAL = '289'
 OTP_IMAGE_DIGEST = 'sha256:9840beed08759cffac9be01f83e9fad89b8123f8fbce7890a601cc6581c1fa59'
 
 
-def combined_version(surface_version, metro_sha):
+def combined_version(surface_version, metro_sha, rail_sha):
     # Preserve the version formula used for the initial deployed graph.
     return hashlib.sha256(json.dumps({
-        'surface_version': surface_version, 'metro_sha256': metro_sha,
+        'surface_version': surface_version, 'metro_sha256': metro_sha, 'rail_sha256': rail_sha,
         'runtime_image': OTP_IMAGE_DIGEST,
     }, sort_keys=True).encode()).hexdigest()[:16]
 
@@ -33,6 +33,19 @@ def valid_current(root, version):
             and current.get('graph_sha256') == graph.sha256_file(path)
             and (root / 'current').is_symlink()
             and (root / 'current').resolve() == path.parent.resolve())
+
+
+def resolve_rail(processed_dir):
+    """Read the published, dated rail GTFS snapshot and verify its digest."""
+    processed_dir = Path(processed_dir)
+    source = processed_dir / 'feed.zip'
+    pointer = graph.read_json(processed_dir / 'current.json')
+    if not source.is_file():
+        raise SystemExit(f'Rail GTFS feed is missing: {source}')
+    sha = graph.sha256_file(source)
+    if pointer.get('sha256') != sha:
+        raise SystemExit('Rail snapshot digest mismatch')
+    return source, sha
 
 
 def prepare(data_root, config_dir):
@@ -54,13 +67,19 @@ def prepare(data_root, config_dir):
         shutil.copyfile(source, target)
         if graph.sha256_file(target) != sha:
             raise SystemExit('Metro snapshot digest mismatch')
-        version = combined_version(manifest['version'], sha)
-        manifest.update(version=version, metro_source_sha256=sha,
+        rail_source, rail_sha = resolve_rail(data_root / 'processed' / 'rail')
+        rail_target = staging / 'rail.gtfs.zip'
+        shutil.copyfile(rail_source, rail_target)
+        if graph.sha256_file(rail_target) != rail_sha:
+            raise SystemExit('Rail snapshot digest mismatch')
+        version = combined_version(manifest['version'], sha, rail_sha)
+        manifest.update(version=version, metro_source_sha256=sha, rail_source_sha256=rail_sha,
             runtime_image=OTP_IMAGE_DIGEST,
-            gtfs_sources={'surface': manifest['gtfs_source_sha256'], 'metro': sha},
+            gtfs_sources={'surface': manifest['gtfs_source_sha256'], 'metro': sha, 'rail': rail_sha},
             warnings=[
                 'Surface invalid calendar end dates repaired only in graph input copy; not authoritative service availability.',
-                'Metro uses approximate pMetro running times and modelled headways, not exact departures.'])
+                'Metro uses approximate pMetro running times and modelled headways, not exact departures.',
+                'Rail timetable is a dated snapshot; refresh it before its published service period ends.'])
         graph.write_configs(staging, graph.load_configs(config_dir), version)
         graph.atomic_json(staging / 'manifest.prepared.json', manifest)
         # Absolute link works both through /data and a /var/opentripplanner subPath.
