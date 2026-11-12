@@ -1,0 +1,9 @@
+{
+  "source_sha256": "650896ca32327b46647b32fa5403f96d67be65fa215ae66128b6de75b8a96e51",
+  "route_id": "3812",
+  "trip_ids": [
+    "81730566",
+    "81730567"
+  ],
+  "note": "Real SPb stops/routes/trip patterns/shapes; synthetic all-week calendar 2000-2099 and exact 10-minute departure grids, all day in both directions. Not real service availability."
+}

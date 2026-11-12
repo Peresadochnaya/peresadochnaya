@@ -1,0 +1,11 @@
+station_a_id,station_b_id,source_url
+metro:frp-sad,metro:mop-spl,https://metro.spb.ru/map1/files/spb00000.js
+metro:frp-sad,metro:prb-sps,https://metro.spb.ru/map1/files/spb00000.js
+metro:frp-zvn,metro:kiv-psh,https://metro.spb.ru/map1/files/spb00000.js
+metro:kiv-kiz,metro:kra-put,https://metro.spb.ru/map1/files/spb00000.js
+metro:kiv-plv,metro:nev-mkv,https://metro.spb.ru/map1/files/spb00000.js
+metro:kiv-tin,metro:mop-tin,https://metro.spb.ru/map1/files/spb00000.js
+metro:kiv-vld,metro:prb-dst,https://metro.spb.ru/map1/files/spb00000.js
+metro:mop-npr,metro:nev-gdv,https://metro.spb.ru/map1/files/spb00000.js
+metro:mop-spl,metro:prb-sps,https://metro.spb.ru/map1/files/spb00000.js
+metro:nev-pan,metro:prb-pan,https://metro.spb.ru/map1/files/spb00000.js
