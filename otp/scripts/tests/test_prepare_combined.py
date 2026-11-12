@@ -162,3 +162,30 @@ def test_native_surface_only_hash_matches_initial_combined_formula():
         'otp_serialization_version_id': values[4]})[:16]
     assert graph.graph_version(*values) == expected
     assert graph.graph_version(*values, metro_sha='d'*64) != expected
+
+
+def test_rail_changes_version_and_preserves_exact_dates(data):
+    root, config, _, _ = data
+    before = combined.prepare(root, config)['version']
+    rail, sha = publish_feed(root, 'rail', 'exact rail', end='20261118')
+    # Use dated exceptions only, as in the real rail feed.
+    with zipfile.ZipFile(rail, 'w') as archive:
+        archive.writestr('calendar.txt', 'service_id,start_date,end_date\n')
+        archive.writestr('calendar_dates.txt', 'service_id,date,exception_type\nr,20261112,1\nr,20261118,1\n')
+    digest = graph.sha256_file(rail)
+    version = root / 'rail/versions' / digest
+    version.mkdir()
+    target = version / 'feed.zip'
+    target.write_bytes(rail.read_bytes())
+    graph.atomic_json(root / 'rail/current.json', {'sha256': digest})
+    result = combined.prepare(root, config)
+    assert result['version'] != before
+    manifest = graph.read_json(root / 'otp/staging/manifest.prepared.json')
+    assert manifest['gtfs_sources']['rail'] == digest
+    assert manifest['rail_service_start'] == '2026-11-12'
+    assert manifest['rail_service_end'] == '2026-11-18'
+    assert (root / 'otp/staging/rail.gtfs.zip').read_bytes() == target.read_bytes()
+    assert combined.prepare(root, config)['version'] == result['version']
+    target.write_bytes(b'corrupt feed')
+    with pytest.raises(SystemExit, match='digest mismatch'):
+        combined.prepare(root, config)

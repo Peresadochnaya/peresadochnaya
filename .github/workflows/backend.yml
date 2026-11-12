@@ -30,7 +30,7 @@ jobs:
       - name: Test backend and data
         run: |
           (cd backend && python -m pytest tests)
-          python -m pytest data/gtfs/tests data/metro/tests
+          python -m pytest data/gtfs/tests data/metro/tests data/rail/tests
           python -m pytest otp/scripts/tests
       - uses: actions/setup-node@v4
         with:
@@ -122,7 +122,7 @@ jobs:
         env:
           IMAGE: ${{ needs.image.outputs.image }}
         run: |
-          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/otp.yaml deploy/k8s/gtfs-cronjob.yaml deploy/k8s/metro-cronjob.yaml
+          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/otp.yaml deploy/k8s/gtfs-cronjob.yaml deploy/k8s/metro-cronjob.yaml deploy/k8s/rail-cronjob.yaml
           kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
       - name: Apply and verify rollout
         env:

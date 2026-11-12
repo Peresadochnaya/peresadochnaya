@@ -8,7 +8,8 @@ from pydantic import AwareDatetime
 
 from .gtfs_schemas import (GtfsDeparturesResponse, GtfsDirection, GtfsRouteResponse,
     GtfsRoutesResponse, GtfsStopResponse, GtfsStopsResponse, GtfsTripResponse)
-from .gtfs_store import GtfsError, GtfsStore
+from .gtfs_store import GtfsError
+from .gtfs_collection import MultiFeedGtfsStore
 from .schemas import ErrorResponse, ValidationErrorResponse
 
 MODES = {'bus','tram','trolleybus','metro','rail','unknown'}
@@ -36,7 +37,7 @@ def parse_bbox(value):
 
 def create_gtfs_router(root: Path) -> APIRouter:
     router = APIRouter(prefix='/api/v1',tags=['GTFS'])
-    store = GtfsStore(root)
+    store = MultiFeedGtfsStore(root)
     errors={404:{'model':ErrorResponse},422:{'model':ErrorResponse|ValidationErrorResponse},503:{'model':ErrorResponse}}
 
     def execute(dummy, action):

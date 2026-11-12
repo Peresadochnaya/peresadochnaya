@@ -7,4 +7,5 @@ resources:
   - otp.yaml
   - gtfs-cronjob.yaml
   - metro-cronjob.yaml
+  - rail-cronjob.yaml
   - ingress.yaml
