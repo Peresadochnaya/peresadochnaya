@@ -38,15 +38,18 @@ const METRO_LINE_COLORS: Record<number, string> = {
 const getMetroLineNumber = (leg: Leg): number | null => {
   if (leg.mode !== 'metro' || !leg.line) return null;
 
-  for (const value of [leg.line.route_id, leg.line.short_name]) {
-    const match = value.match(/(\d+)/);
-    if (!match) continue;
+  // OTP prefixes gtfsId with the feed namespace, e.g. "1:metro:2",
+  // so the first number in route_id is the feed id, not the line number.
+  const routeIdMatch = leg.line.route_id.match(/metro[:_-](\d+)/i);
+  const shortNameMatch = leg.line.short_name.match(/(\d+)/);
 
-    const line = Number(match[1]);
-    if (line in METRO_LINE_COLORS) return line;
-  }
+  const line = routeIdMatch
+    ? Number(routeIdMatch[1])
+    : shortNameMatch
+      ? Number(shortNameMatch[1])
+      : null;
 
-  return null;
+  return line !== null && line in METRO_LINE_COLORS ? line : null;
 };
 
 const getLegColor = (leg: Leg): string => {

@@ -23,6 +23,12 @@ const formatTime = (isoString: string) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+const formatPrice = (amountRub: number) => {
+  const rounded = Math.round(amountRub * 100) / 100;
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  return `${text} ₽`;
+};
+
 const getModeBadge = (leg: Leg) => {
   switch (leg.mode) {
     case 'walk':
@@ -86,10 +92,18 @@ export const RouteResults: React.FC<RouteResultsProps> = ({
             </div>
 
             {/* Мета-информация */}
-            <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
               <span>Пересадок: {route.transfers}</span>
               <span>•</span>
               <span>{(route.distance_meters / 1000).toFixed(1)} км</span>
+              {route.fare && (
+                <>
+                  <span>•</span>
+                  <span className="font-semibold text-emerald-700">
+                    {formatPrice(route.fare.amount_rub)}
+                  </span>
+                </>
+              )}
             </div>
 
             {/* Визуальная цепочка участков (Legs) */}
