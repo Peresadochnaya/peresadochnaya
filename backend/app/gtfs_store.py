@@ -1,8 +1,7 @@
-"""Read-only, bounded-memory access to immutable ZIP snapshots.
+"""Versioned GTFS reads backed by a shared disk index and in-memory metadata.
 
-A request opens the ZIP before reading tables, so unlinking an old version during
-publication cannot change the snapshot halfway through a response. Large tables
-are streamed; only stops/routes/trip metadata and compact associations are cached.
+Opening the ZIP pins the selected immutable version during publication races.
+SQLite holds all tables; requests query only matching stops, trips and shapes.
 """
 import csv
 import hashlib
@@ -11,6 +10,7 @@ import json
 import re
 import threading
 import zipfile
+import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
@@ -18,6 +18,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import ValidationError
+
+from .gtfs_index import open_index
 
 from .gtfs_schemas import (GtfsDeparture, GtfsRoute, GtfsStop, GtfsStopTime,
                            GtfsTrip, GtfsTripSummary)
@@ -83,7 +85,7 @@ class GtfsStore:
     @contextmanager
     def open(self, dummy=False):
         # Bound concurrent streaming-query working sets under the API pod's
-        # 512MiB limit; never retain full stop_times/shapes tables.
+        # resource limit; SQLite serves only the selected stop/trip/shape rows.
         with self._requests:
             with self._open_snapshot(dummy) as snapshot:
                 yield snapshot
@@ -109,40 +111,31 @@ class GtfsStore:
                     except FileNotFoundError:
                         if attempt == 2: raise
                 key = version
-            with stream, zipfile.ZipFile(stream) as archive:
-                snapshot = Snapshot(self, archive, key, version, dummy)
+            with stream, zipfile.ZipFile(stream) as archive, open_index(archive, key) as disk:
+                snapshot = Snapshot(self, archive, key, version, dummy, disk)
                 yield snapshot
         except GtfsError:
             raise
         except (OSError, ValueError, KeyError, TypeError, csv.Error, UnicodeError,
-                zipfile.BadZipFile, ValidationError, ZoneInfoNotFoundError, OverflowError):
+                zipfile.BadZipFile, sqlite3.Error, ValidationError, ZoneInfoNotFoundError, OverflowError):
             raise GtfsError(503, 'gtfs_unavailable', 'GTFS snapshot is missing or invalid') from None
         finally:
             if stream is not None and not stream.closed: stream.close()
 
 
 class Snapshot:
-    def __init__(self, store, archive, key, version, dummy):
+    def __init__(self, store, archive, key, version, dummy, disk):
         self.store, self.archive, self.key = store, archive, key
         self.version, self.dummy = version, dummy
+        self.disk = disk
 
     @property
     def metadata(self):
         return dict(mode='dummy' if self.dummy else 'gtfs', gtfs_version=self.version,
                     warnings=[DEMO_WARNING] if self.dummy else [])
 
-    def rows(self, name, required=True):
-        try:
-            member = self.archive.getinfo(name)
-        except KeyError:
-            if required: raise ValueError('Missing GTFS table')
-            return
-        # Never extract archive paths; known root-level names only.
-        if member.file_size > 1024 * 1024 * 1024:
-            raise ValueError('GTFS table is too large')
-        with self.archive.open(member) as raw:
-            with io.TextIOWrapper(raw, encoding='utf-8-sig') as text:
-                yield from csv.DictReader(text)
+    def rows(self, name, required=True, filters=None):
+        yield from self.disk.rows(name, required=required, filters=filters)
 
     @property
     def index(self):
@@ -205,18 +198,17 @@ class Snapshot:
         with self.store._lock:
             if self.index.stop_routes is None:
                 result = {}
-                for row in self.rows('stop_times.txt'):
-                    trip = self.trips[row['trip_id']]
-                    if row['stop_id'] not in self.stops: raise ValueError('Unknown stop')
-                    result.setdefault(row['stop_id'], set()).add(trip.route_id)
+                for stop_id, route_id in self.disk.stop_routes():
+                    if stop_id not in self.stops: raise ValueError('Unknown stop')
+                    if route_id not in self.routes: raise ValueError('Unknown route')
+                    result.setdefault(stop_id, set()).add(route_id)
                 self.index.stop_routes = result
             return self.index.stop_routes
 
     def trip(self, trip_id):
         summary = self.get_trip(trip_id)
         times = []
-        for row in self.rows('stop_times.txt'):
-            if row['trip_id'] != trip_id: continue
+        for row in self.rows('stop_times.txt', filters={'trip_id': trip_id}):
             for field in ('arrival_time', 'departure_time'):
                 if row.get(field): seconds(row[field])
             times.append(GtfsStopTime(stop=self.stops[row['stop_id']], stop_sequence=int(row['stop_sequence']),
@@ -228,7 +220,7 @@ class Snapshot:
         if len({t.stop_sequence for t in times}) != len(times): raise ValueError('Duplicate stop sequence')
         shape = []
         if summary.shape_id:
-            for row in self.rows('shapes.txt', required=False):
+            for row in self.rows('shapes.txt', required=False, filters={'shape_id': summary.shape_id}):
                 if row['shape_id'] == summary.shape_id:
                     shape.append((int(row['shape_pt_sequence']), float(row['shape_pt_lon']), float(row['shape_pt_lat'])))
         shape.sort()
@@ -269,32 +261,23 @@ class Snapshot:
                     coverage.add(day)
                     if row[('monday','tuesday','wednesday','thursday','friday','saturday','sunday')[day.weekday()]] == '1':
                         active[day].add(row['service_id'])
-        for row in self.rows('calendar_dates.txt', required=False):
-            day = datetime.strptime(row['date'],'%Y%m%d').date()
-            if day not in active: continue
-            coverage.add(day)
-            if row['exception_type'] == '1': active[day].add(row['service_id'])
-            elif row['exception_type'] == '2': active[day].discard(row['service_id'])
-            else: raise ValueError('Invalid service exception')
+        for day in days:
+            for row in self.rows('calendar_dates.txt', required=False, filters={'date': day.strftime('%Y%m%d')}):
+                coverage.add(day)
+                if row['exception_type'] == '1': active[day].add(row['service_id'])
+                elif row['exception_type'] == '2': active[day].discard(row['service_id'])
+                else: raise ValueError('Invalid service exception')
         return active, coverage, repaired
 
     def departures(self, stop_id, start, lookahead_minutes, limit):
         self.get_stop(stop_id)
         try: end = start + timedelta(minutes=lookahead_minutes)
         except OverflowError: raise GtfsError(422, 'invalid_departure_time', 'Departure window exceeds supported datetime range') from None
-        selected, first = [], {}
-        # Compact first-stop metadata is needed for frequency offsets. Do not
-        # retain the entire 190MB stop_times table in memory.
-        for row in self.rows('stop_times.txt'):
-            trip_id = row['trip_id']
-            sequence = int(row['stop_sequence'])
-            if trip_id not in first or sequence < first[trip_id][0]: first[trip_id] = sequence, row.get('departure_time')
-            if row['stop_id'] == stop_id and row.get('pickup_type') != '1' and row.get('departure_time'):
-                selected.append(row)
+        selected = [row for row in self.disk.departures(stop_id)
+                    if row.get('pickup_type') != '1' and row.get('departure_time')]
         frequencies = {}
-        wanted = {r['trip_id'] for r in selected}
-        for row in self.rows('frequencies.txt', required=False):
-            if row['trip_id'] in wanted: frequencies.setdefault(row['trip_id'],[]).append(row)
+        for row in self.disk.frequencies(stop_id):
+            frequencies.setdefault(row['trip_id'], []).append(row)
         events, days = [], set()
         for row in selected:
             trip = self.trips[row['trip_id']]
@@ -305,7 +288,7 @@ class Snapshot:
             offset = seconds(row['departure_time'])
             intervals = frequencies.get(trip.trip_id)
             if intervals:
-                base = seconds(first[trip.trip_id][1])
+                base = seconds(row['first_departure'])
                 for f in intervals:
                     begin, finish = seconds(f['start_time']), seconds(f['end_time'])
                     headway = int(f['headway_secs'])

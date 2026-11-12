@@ -6,7 +6,8 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
   selector:
     matchLabels: {app: peresadochnaya-api}
   template:
@@ -20,6 +21,21 @@ spec:
         runAsGroup: 10001
         fsGroup: 10001
         fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: gtfs-index
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, -m, app.gtfs_index]
+          args: [--data-root, /data, --index-dir, /data/gtfs-index]
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: '2', memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: tmp, mountPath: /tmp}
       containers:
         - name: api
           image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
@@ -48,8 +64,8 @@ spec:
             readOnlyRootFilesystem: true
             capabilities: {drop: [ALL]}
           resources:
-            requests: {cpu: 100m, memory: 128Mi}
-            limits: {cpu: '1', memory: 512Mi}
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: '2', memory: 2Gi}
           startupProbe:
             httpGet: {path: /health/live, port: http}
             failureThreshold: 30
@@ -62,6 +78,7 @@ spec:
             periodSeconds: 5
           volumeMounts:
             - {name: data, mountPath: /data, readOnly: true}
+            - {name: data, mountPath: /data/gtfs-index, subPath: gtfs-index}
             - {name: tmp, mountPath: /tmp}
       volumes:
         - name: data

@@ -5,6 +5,8 @@ metadata:
   namespace: peresadochnaya
 data:
   DATA_ROOT: /data
+  GTFS_INDEX_DIR: /data/gtfs-index
+  GTFS_PRELOAD: "true"
   PLANNER_MODE: otp
   OTP_URL: http://otp:8080
   OTP_TIMEOUT_SECONDS: "30"
