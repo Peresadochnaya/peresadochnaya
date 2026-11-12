@@ -13,6 +13,7 @@ from . import demo_addresses
 from .demo_routes import compose as dummy_route
 from .dgis import DgisAddresses, DgisRouter
 from .gtfs_api import create_gtfs_router
+from .otp import OtpPlanner
 from .vehicles_api import create_vehicles_router
 from .schemas import DataStatus, ErrorResponse, GeoProvider, GeocodedPlace, GeocodeResponse, RoadRouteRequest, RoadRouteResponse, RouteRequest, RoutesResponse, RoutesResponseSources, Suggestion, SuggestResponse, ValidationErrorResponse, TicketProfileInfo
 from .yandex import ProviderError, YandexAddresses
@@ -44,11 +45,12 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                address_provider: YandexAddresses | None = None,
                road_provider: YandexRouter | None = None,
                dgis_address_provider: DgisAddresses | None = None,
-               dgis_road_provider: DgisRouter | None = None) -> FastAPI:
+               dgis_road_provider: DgisRouter | None = None,
+               transit_planner: OtpPlanner | None = None) -> FastAPI:
     root = data_root or Path(os.getenv("DATA_ROOT", "/data"))
     mode = planner_mode or os.getenv("PLANNER_MODE", "unavailable")
-    if mode not in ("dummy", "unavailable"):
-        raise ValueError("PLANNER_MODE must be dummy or unavailable until planner integration is implemented")
+    if mode not in ("dummy", "unavailable", "otp"):
+        raise ValueError("PLANNER_MODE must be dummy, unavailable or otp")
     app = FastAPI(title="Пересадочная API", version="0.2.0", description=API_DESCRIPTION)
     app.include_router(create_gtfs_router(root))
     app.include_router(create_vehicles_router(root))
@@ -56,6 +58,7 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     roads = road_provider or YandexRouter()
     dgis_addresses = dgis_address_provider or DgisAddresses()
     dgis_roads = dgis_road_provider or DgisRouter()
+    planner = transit_planner or OtpPlanner()
 
     @app.exception_handler(ProviderError)
     async def provider_error_handler(request, exc):
@@ -147,13 +150,17 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                 candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[demo], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
                                   warnings=["Shared GTFS demo network with a synthetic all-day 10-minute timetable; no live planner or traffic was used",
-                                            "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
+                                            "Fare rules are ignored for the synthetic demo route" if request.fare is not None
+                                            else "Ticket profile is recorded only; fare, eligibility and pass coverage are not calculated"])
         data = load_status(root)
         if data.manifest and data.manifest.get("active_service_ids") == 0:
             service_date = str(data.manifest.get("service_date", "")).replace("-", "")
             if request.departure_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y%m%d") == service_date:
                 return error(422, "invalid_service_date", "GTFS has no active services on the requested date")
-        return error(503, "planner_unavailable", "A route planner is not configured")
+        if mode != "otp":
+            return error(503, "planner_unavailable", "A route planner is not configured")
+        return planner.plan(request, gtfs_version=data.gtfs_version,
+                            graph_version=data.graph_version)
 
     # Apply documentation to the generated schema, including lazily included routers.
     generated_openapi = app.openapi

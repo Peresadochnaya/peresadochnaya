@@ -1,0 +1,175 @@
+{
+ "data": {
+  "planConnection": {
+   "routingErrors": [],
+   "edges": [
+    {
+     "node": {
+      "start": "2026-11-11T12:00:00+03:00",
+      "end": "2026-11-11T12:53:00+03:00",
+      "duration": 3180,
+      "numberOfTransfers": 1,
+      "legs": [
+       {
+        "mode": "WALK",
+        "transitLeg": false,
+        "distance": 117.66,
+        "start": {
+         "scheduledTime": "2026-11-11T12:00:00+03:00",
+         "estimated": null
+        },
+        "end": {
+         "scheduledTime": "2026-11-11T12:01:34+03:00",
+         "estimated": null
+        },
+        "from": {
+         "name": "Origin",
+         "lat": 59.9343,
+         "lon": 30.3351,
+         "stop": null
+        },
+        "to": {
+         "name": "СТ. МЕТРО \"ГОСТИНЫЙ ДВОР\"",
+         "lat": 59.934194,
+         "lon": 30.336918,
+         "stop": {
+          "gtfsId": "1:36758",
+          "name": "СТ. МЕТРО \"ГОСТИНЫЙ ДВОР\""
+         }
+        },
+        "route": null,
+        "trip": null,
+        "legGeometry": {
+         "points": "k|xlJaycxDWMFkAFaA@QLaBHqA@S@@",
+         "length": 9
+        }
+       },
+       {
+        "mode": "BUS",
+        "transitLeg": true,
+        "distance": 3721.0,
+        "start": {
+         "scheduledTime": "2026-11-11T12:09:40+03:00",
+         "estimated": null
+        },
+        "end": {
+         "scheduledTime": "2026-11-11T12:25:40+03:00",
+         "estimated": null
+        },
+        "from": {
+         "name": "СТ. МЕТРО \"ГОСТИНЫЙ ДВОР\"",
+         "lat": 59.934194,
+         "lon": 30.336918,
+         "stop": {
+          "gtfsId": "1:36758",
+          "name": "СТ. МЕТРО \"ГОСТИНЫЙ ДВОР\""
+         }
+        },
+        "to": {
+         "name": "8-9-Я ЛИНИИ В.О.",
+         "lat": 59.936217,
+         "lon": 30.283443,
+         "stop": {
+          "gtfsId": "1:4981",
+          "name": "8-9-Я ЛИНИИ В.О."
+         }
+        },
+        "route": {
+         "gtfsId": "1:229",
+         "shortName": "24",
+         "longName": "ХАСАНСКАЯ УЛ. - СТ. МЕТРО \"ВАСИЛЕОСТРОВСКАЯ\"",
+         "mode": "BUS"
+        },
+        "trip": {
+         "gtfsId": "1:79658598"
+        },
+        "legGeometry": {
+         "points": "u{xlJuddxDNFCb@KvAYxEAF?DSdDUjDMvBUhDIxAYhE[|E[dFARMELDG`AUpDEl@Cf@El@CXC`@[|Eg@jIUnDGx@A\\IbAIEHDCb@GdAWzDATIbBAPATe@fIG|@WpEOlCOjCKbBOfCMELFS`DAVADADADABADABABCBA@C@C@A@C?C?AA_@IqBg@GAI?I@I@IDGFIHEHy@vAmAvB[h@AG@FaAbBGLiApB]l@m@hAILcJlOEDGDGBEBEDEHCFALAP?VBXBVDNFJFJp@r@RTHLNTDHBHM`@HUxAdDTf@Pf@Tx@`AxD^|AH^VpAx@rD`@nBH^A@@Ab@tBh@fCFZ^pBBNDVjCpN^nBBZAz@FnACnARUdBvJhC|MLh@F^t@nIDl@VtCb@|DHj@~@hHa@f@e@h@",
+         "length": 149
+        }
+       },
+       {
+        "mode": "BUS",
+        "transitLeg": true,
+        "distance": 2101.0,
+        "start": {
+         "scheduledTime": "2026-11-11T12:40:48+03:00",
+         "estimated": null
+        },
+        "end": {
+         "scheduledTime": "2026-11-11T12:49:48+03:00",
+         "estimated": null
+        },
+        "from": {
+         "name": "8-9-Я ЛИНИИ В.О.",
+         "lat": 59.936217,
+         "lon": 30.283443,
+         "stop": {
+          "gtfsId": "1:4981",
+          "name": "8-9-Я ЛИНИИ В.О."
+         }
+        },
+        "to": {
+         "name": "18-19-Я ЛИНИИ В.О.",
+         "lat": 59.943212,
+         "lon": 30.260682,
+         "stop": {
+          "gtfsId": "1:19781",
+          "name": "18-19-Я ЛИНИИ В.О."
+         }
+        },
+        "route": {
+         "gtfsId": "1:446",
+         "shortName": "100",
+         "longName": "НАЛИЧНАЯ УЛ. - БАЛТИЙСКИЙ ВОКЗАЛ",
+         "mode": "BUS"
+        },
+        "trip": {
+         "gtfsId": "1:80274618"
+        },
+        "legGeometry": {
+         "points": "ihylJovywD?TWZQTQRIJiArAuBfCIJwAfBg@l@e@j@MNMNIJi@n@ABm@r@KL??AC@Bk@p@cAnAg@j@}AlBi@n@u@|@e@j@s@|@s@x@Y^y@`AiArAUXWZqA|Ae@j@c@j@UVIa@F`@o@x@aBnBk@r@{@bA{@dAiAtAwClDSVKNL^H`@P`ABHe@h@d@i@d@hCx@fEHd@Jb@zBvLJd@Jf@Jn@MNLOBJ`BpILp@Hf@DN|@vE`AhFJh@Ln@RbAON",
+         "length": 78
+        }
+       },
+       {
+        "mode": "WALK",
+        "transitLeg": false,
+        "distance": 239.47,
+        "start": {
+         "scheduledTime": "2026-11-11T12:49:48+03:00",
+         "estimated": null
+        },
+        "end": {
+         "scheduledTime": "2026-11-11T12:53:00+03:00",
+         "estimated": null
+        },
+        "from": {
+         "name": "18-19-Я ЛИНИИ В.О.",
+         "lat": 59.943212,
+         "lon": 30.260682,
+         "stop": {
+          "gtfsId": "1:19781",
+          "name": "18-19-Я ЛИНИИ В.О."
+         }
+        },
+        "to": {
+         "name": "Destination",
+         "lat": 59.9447,
+         "lon": 30.2583,
+         "stop": null
+        },
+        "route": null,
+        "trip": null,
+        "legGeometry": {
+         "points": "atzlJghuwDBCSaAAIEFm@t@m@r@?HaCtCkAxA@HLj@",
+         "length": 12
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}
