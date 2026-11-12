@@ -1,0 +1,36 @@
+# Manual verification after a graph rebuild; not a periodic workload.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: otp-verify-
+  namespace: peresadochnaya
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 120
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: verify
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, /app/otp/scripts/graph_store.py, verify]
+          args: [--data-dir, /data/otp, --url, 'http://otp:8080']
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: '1', memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: transit-data}

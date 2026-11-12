@@ -67,11 +67,18 @@ def prepare(data_root, config_dir):
         shutil.copyfile(source, target)
         if graph.sha256_file(target) != sha:
             raise SystemExit('Metro snapshot digest mismatch')
-        rail_source, rail_sha = resolve_rail(data_root / 'processed' / 'rail')
+        if (data_root / 'rail/current.json').exists():
+            rail_source, rail_sha = graph.resolve_gtfs(None, data_root / 'rail')
+        else:
+            # Retain the flat snapshot layout supported by the upstream OTP module.
+            rail_source, rail_sha = resolve_rail(data_root / 'processed' / 'rail')
         rail_target = staging / 'rail.gtfs.zip'
         shutil.copyfile(rail_source, rail_target)
         if graph.sha256_file(rail_target) != rail_sha:
             raise SystemExit('Rail snapshot digest mismatch')
+        rail_range = graph.service_range(rail_target)
+        if not rail_range:
+            raise SystemExit('Rail snapshot has no service dates')
         version = combined_version(manifest['version'], sha, rail_sha)
         manifest.update(version=version, metro_source_sha256=sha, rail_source_sha256=rail_sha,
             runtime_image=OTP_IMAGE_DIGEST,
@@ -80,6 +87,8 @@ def prepare(data_root, config_dir):
                 'Surface invalid calendar end dates repaired only in graph input copy; not authoritative service availability.',
                 'Metro uses approximate pMetro running times and modelled headways, not exact departures.',
                 'Rail timetable is a dated snapshot; refresh it before its published service period ends.'])
+        manifest.update(rail_service_start=rail_range['gtfs_service_start'],
+                        rail_service_end=rail_range['gtfs_service_end'])
         graph.write_configs(staging, graph.load_configs(config_dir), version)
         graph.atomic_json(staging / 'manifest.prepared.json', manifest)
         # Absolute link works both through /data and a /var/opentripplanner subPath.
@@ -115,8 +124,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['prepare', 'publish'])
     parser.add_argument('--data-root', type=Path, default=Path('/data'))
+    parser.add_argument('--rail-bundle', type=Path, default=Path(__file__).resolve().parents[2] / 'data/processed/rail')
     parser.add_argument('--config-dir', type=Path, default=Path(__file__).resolve().parents[1] / 'config')
     args = parser.parse_args()
+    if args.action == 'prepare' and (args.rail_bundle / 'feed.zip').is_file():
+        from seed_rail import seed
+        seed(args.rail_bundle, args.data_root / 'rail')
     result = prepare(args.data_root, args.config_dir) if args.action == 'prepare' else publish(args.data_root)
     print(json.dumps(result, sort_keys=True))
 

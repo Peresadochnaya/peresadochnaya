@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt -r data-requirements.txt
 COPY backend/app ./app
 COPY data/gtfs ./data/gtfs
 COPY data/metro ./data/metro
+COPY data/rail ./data/rail
+COPY data/processed/rail ./data/processed/rail
 COPY otp/scripts ./otp/scripts
 COPY otp/config ./otp/config
 COPY --from=frontend-build /frontend/dist ./frontend/dist

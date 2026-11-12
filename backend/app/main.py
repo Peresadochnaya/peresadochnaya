@@ -185,6 +185,10 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                     waiting_for_metro = leg.mode == "wait" and index + 1 < len(route.legs) and route.legs[index + 1].mode == "metro"
                     if leg.mode == "metro" or waiting_for_metro:
                         leg.duration_source = "estimated"
+        if graph_meta.get('rail_source_sha256'):
+            response.warnings.append(
+                f"rail_schedule_limited: suburban schedules cover {graph_meta.get('rail_service_start')} "
+                f"through {graph_meta.get('rail_service_end')}; later dates are not extrapolated")
         if source_calendar_empty:
             response.warnings.append(
                 "Source GTFS validation reported no active services on its validation date; "

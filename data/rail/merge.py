@@ -7,7 +7,7 @@ import json
 import zipfile
 from collections import defaultdict
 
-from refresh import FIELDS, write_tables
+from .refresh import FIELDS, write_tables
 
 
 def read_rows(archive, name):

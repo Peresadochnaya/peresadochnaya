@@ -26,6 +26,9 @@ elif args[0] == 'apply':
     text = Path(args[2]).read_text()
     assert 'REPLACE_WITH_COMMIT_SHA' not in text
     assert 'ghcr.io/peresadochnaya/peresadochnaya:test-sha' in text
+elif args[0] == 'create':
+    assert 'REPLACE_WITH_COMMIT_SHA' not in Path(args[2]).read_text()
+    print('otp-verify-test', end='')
 elif args[0] == 'wait' and os.environ['PUBLISH_STATUS'] == 'failed':
     sys.exit(1)
 elif args[0] == 'logs':
@@ -51,6 +54,7 @@ def test_operator_restarts_only_after_successful_changed_publish(tmp_path, statu
     assert (result.returncode == 0) == exit_ok, result.stdout + result.stderr
     calls = [json.loads(line)[2:] for line in trace.read_text().splitlines()]
     assert any(c[:2] == ['rollout', 'restart'] for c in calls) == restart
+    assert any(c[0] == 'create' for c in calls) == exit_ok
     assert any(c[:2] == ['delete', 'job'] for c in calls) == (previous == 'completed')
     if previous in ('active', 'foreign'):
         assert not any(c[0] == 'apply' for c in calls)

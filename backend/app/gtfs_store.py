@@ -71,8 +71,11 @@ class Index:
 
 
 class GtfsStore:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, feed: str = 'gtfs'):
+        if feed not in ('gtfs', 'rail'):
+            raise ValueError('Unknown GTFS feed')
         self.root = Path(root)
+        self.feed = feed
         self._cache = {}  # One current metadata index per real/demo mode.
         self._lock = threading.RLock()
         self._requests = threading.BoundedSemaphore(2)
@@ -96,12 +99,12 @@ class GtfsStore:
             else:
                 # Retry only local publication races, never remote/API requests.
                 for attempt in range(3):
-                    pointer = json.loads((self.root / 'gtfs' / 'current.json').read_text())
+                    pointer = json.loads((self.root / self.feed / 'current.json').read_text())
                     version = pointer['sha256']
                     if not isinstance(version, str) or not re.fullmatch(r'[a-f0-9]{64}', version):
                         raise ValueError('Invalid version pointer')
                     try:
-                        stream = (self.root / 'gtfs' / 'versions' / version / 'feed.zip').open('rb')
+                        stream = (self.root / self.feed / 'versions' / version / 'feed.zip').open('rb')
                         break
                     except FileNotFoundError:
                         if attempt == 2: raise

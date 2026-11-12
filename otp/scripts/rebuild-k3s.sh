@@ -62,3 +62,15 @@ if [ "$STATUS" = updated ]; then
 else
   echo 'Graph unchanged; OTP restart skipped'
 fi
+
+# Confirm the running server loaded current, then record activation metadata.
+python3 - "$SCRIPT_DIR/../../deploy/k8s/otp-verify-job.yaml" "$IMAGE" "$NAMESPACE" "$TASK_TMP/verify.yaml" <<'PYVERIFY'
+from pathlib import Path
+import sys
+source, image, namespace, output = sys.argv[1:]
+text = Path(source).read_text().replace('ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA', image)
+Path(output).write_text(text.replace('namespace: peresadochnaya', 'namespace: ' + namespace))
+PYVERIFY
+VERIFY_JOB="$(kubectl -n "$NAMESPACE" create -f "$TASK_TMP/verify.yaml" -o jsonpath='{.metadata.name}')"
+kubectl -n "$NAMESPACE" wait --for=condition=complete "job/$VERIFY_JOB" --timeout=150s
+kubectl -n "$NAMESPACE" logs "job/$VERIFY_JOB"
