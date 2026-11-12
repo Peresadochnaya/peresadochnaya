@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Point, Route, GtfsStop, LegMode } from '../types/api';
+import { Point, Route, GtfsStop, Leg, LegMode } from '../types/api';
 
 declare const ymaps: any;
 
@@ -21,6 +21,35 @@ const MODE_COLORS: Record<LegMode, string> = {
   metro: '#CA8A04',
   rail: '#9333EA',
   wait: '#CBD5E1'
+};
+
+// Официальные цвета линий метро Санкт-Петербурга (как в data/metro/feed.py).
+const METRO_LINE_COLORS: Record<number, string> = {
+  1: '#D6083B',
+  2: '#0078C9',
+  3: '#009A49',
+  4: '#EA7125',
+  5: '#702785',
+  6: '#A86B32'
+};
+
+const getMetroLineNumber = (leg: Leg): number | null => {
+  if (leg.mode !== 'metro' || !leg.line) return null;
+
+  for (const value of [leg.line.route_id, leg.line.short_name]) {
+    const match = value.match(/(\d+)/);
+    if (!match) continue;
+
+    const line = Number(match[1]);
+    if (line in METRO_LINE_COLORS) return line;
+  }
+
+  return null;
+};
+
+const getLegColor = (leg: Leg): string => {
+  const metroLine = getMetroLineNumber(leg);
+  return metroLine ? METRO_LINE_COLORS[metroLine] : MODE_COLORS[leg.mode] || '#2563EB';
 };
 
 export const YandexMap: React.FC<YandexMapProps> = ({
@@ -207,7 +236,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
         route.legs.forEach((leg) => {
           if (!leg.geometry?.coordinates?.length) return;
           const legCoords = leg.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
-          const color = MODE_COLORS[leg.mode] || '#2563EB';
+          const color = getLegColor(leg);
 
           const legPolyline = new ymaps.Polyline(legCoords, {
             hintContent: leg.line?.short_name ? `${leg.mode}: ${leg.line.short_name}` : leg.mode
