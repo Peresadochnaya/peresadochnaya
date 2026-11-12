@@ -1,0 +1,315 @@
+{
+  "recorded_at": "2026-11-12T16:45:26Z",
+  "scope": "Read-only inspection of deployed immutable GTFS and active OTP graph; no paid provider calls.",
+  "surface_gtfs": {
+    "sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+    "stop_times": {
+      "rows": 3553379,
+      "shape_dist_traveled_populated_rows": 3553379,
+      "fields": [
+        "trip_id",
+        "arrival_time",
+        "departure_time",
+        "stop_id",
+        "stop_sequence",
+        "shape_id",
+        "shape_dist_traveled"
+      ],
+      "nonincreasing_sequences_within_consecutive_trip_groups": 0
+    },
+    "shapes": {
+      "rows": 896979,
+      "shape_dist_traveled_populated_rows": 896979,
+      "fields": [
+        "shape_id",
+        "shape_pt_lat",
+        "shape_pt_lon",
+        "shape_pt_sequence",
+        "shape_dist_traveled"
+      ]
+    },
+    "directed_consecutive_stop_pairs": 11230
+  },
+  "geometry_variant_sample": {
+    "selection": "First 50 directed consecutive stop pairs encountered in stop_times with different full-trip shape_id values. Up to three shapes retained per selected pair; first two compared.",
+    "selected_pair_count": 50,
+    "needed_shapes_loaded": 28,
+    "method": [
+      "Read trips metadata and consecutive stop_times rows grouped by trip_id; use increasing stop_sequence.",
+      "For a pair, retain full shape_id plus from/to shape_dist_traveled; different full shape_id is only a candidate for comparison.",
+      "Read only needed shapes and order by shape_pt_sequence.",
+      "Clip each shape between the stop_times distance values by linear interpolation in shape_dist_traveled; omit zero-distance shape segments.",
+      "For approximate metre measurements project longitude by 55660 and latitude by 111320; this is a local approximation near latitude 60 degrees.",
+      "Compare maximum bidirectional vertex-to-polyline distance for the two clipped geometries; also calculate clipped lengths and endpoint gaps.",
+      "Skip comparisons with fewer than two clipped coordinates; the number skipped was not logged."
+    ],
+    "largest_reported_separation_metres_rounded": 26,
+    "reported_largest_examples": [
+      {
+        "from_stop_id": "1932",
+        "to_stop_id": "2353",
+        "names": [
+          "ПР. ЭНЕРГЕТИКОВ, 72",
+          "УЛ. СТАСОВОЙ"
+        ],
+        "shape_ids": [
+          "track-220664",
+          "track-221611"
+        ],
+        "route_names": [
+          "136",
+          "137"
+        ],
+        "trip_ids": [
+          "83077159",
+          "83481874"
+        ],
+        "distance_intervals": [
+          [
+            7.47,
+            8.02
+          ],
+          [
+            12.27,
+            12.86
+          ]
+        ],
+        "clipped_points": [
+          10,
+          10
+        ],
+        "approx_path_lengths_metres": [
+          547,
+          590
+        ],
+        "approx_max_separation_metres": 26,
+        "approx_endpoint_gaps_metres": [
+          0,
+          0
+        ]
+      },
+      {
+        "from_stop_id": "1894",
+        "to_stop_id": "1780",
+        "names": [
+          "ПИСКАРЁВСКИЙ ПР., 56",
+          "ПИСКАРЁВСКИЙ ПР., 50"
+        ],
+        "shape_ids": [
+          "track-220664",
+          "track-223206"
+        ],
+        "route_names": [
+          "136",
+          "102"
+        ],
+        "trip_ids": [
+          "83077159",
+          "83944134"
+        ],
+        "distance_intervals": [
+          [
+            1.63,
+            2.15
+          ],
+          [
+            10.37,
+            10.9
+          ]
+        ],
+        "clipped_points": [
+          13,
+          12
+        ],
+        "approx_path_lengths_metres": [
+          514,
+          526
+        ],
+        "approx_max_separation_metres": 9,
+        "approx_endpoint_gaps_metres": [
+          0,
+          9
+        ]
+      },
+      {
+        "from_stop_id": "1780",
+        "to_stop_id": "36858",
+        "names": [
+          "ПИСКАРЁВСКИЙ ПР., 50",
+          "Ж.-Д. СТ. ПИСКАРЁВКА"
+        ],
+        "shape_ids": [
+          "track-220664",
+          "track-223206"
+        ],
+        "route_names": [
+          "136",
+          "102"
+        ],
+        "trip_ids": [
+          "83077159",
+          "83944134"
+        ],
+        "distance_intervals": [
+          [
+            2.15,
+            2.75
+          ],
+          [
+            10.9,
+            11.49
+          ]
+        ],
+        "clipped_points": [
+          12,
+          11
+        ],
+        "approx_path_lengths_metres": [
+          592,
+          583
+        ],
+        "approx_max_separation_metres": 9,
+        "approx_endpoint_gaps_metres": [
+          0,
+          9
+        ]
+      }
+    ],
+    "conclusion": "No convincing example of different physical roads between the same stop pair was established in this limited sample. Do not mandate a multigraph based only on differing full shape_ids.",
+    "limitations": [
+      "Not an exhaustive or random sample.",
+      "Rounding of shape_dist_traveled and geometric data can cause small discrepancies.",
+      "No manual map validation was performed.",
+      "All individual comparisons were not retained; largest results and aggregate printed statistics are recorded here."
+    ]
+  },
+  "active_graph_retention": {
+    "version": "a8ec4b10f85dd4ce",
+    "current_target": "/data/otp/versions/a8ec4b10f85dd4ce",
+    "entries": [
+      "otp-config.json",
+      "build-config.json",
+      "rail.gtfs.zip",
+      "graph.obj",
+      "manifest.json",
+      "router-config.json",
+      "spb-lo.osm.pbf"
+    ],
+    "osm_entry": {
+      "symlink": true,
+      "target": "/data/otp/osm/spb-lo.osm.pbf",
+      "target_exists": true
+    },
+    "graph_bytes": 277993960,
+    "rail_gtfs_zip_bytes": 751058,
+    "surface_source_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+    "surface_fixed_sha256": "4108b5a0752b91765fe9c283d7fb75ac48d1190a61853a43a0dac95964498cd6",
+    "surface_calendar_fixed": true,
+    "metro_source_sha256": "b56670d6b7ed8b1152806e01a2e49fa1f954187db727df3ab37f1130fc760451",
+    "latest_metro_sha256_at_inspection": "059798809e285aa6b2e5542426dbc7c23b225a40a10bc66cfe2e26613dbce8af",
+    "feed_gtfs_zip_in_graph_directory": false,
+    "metro_gtfs_zip_in_graph_directory": false,
+    "graph_surface_snapshot_in_gtfs_store": {
+      "directory_exists": true,
+      "entries": [
+        "tables",
+        "feed.zip",
+        "manifest.json"
+      ]
+    },
+    "graph_metro_snapshot_in_metro_store": {
+      "directory_exists": false
+    },
+    "interpretation": "Inputs are not guaranteed to remain available with the graph. Surface snapshot currently matches latest and remains available; original metro snapshot is already absent from the store. Retention observations are a point-in-time state, not immutable metadata."
+  },
+  "probe_pair_adjacency_check": {
+    "from_stop_id": "2916",
+    "to_stop_id": "2063",
+    "forward_consecutive_in_gtfs": null,
+    "reverse_consecutive_in_gtfs": null,
+    "status": "not_known",
+    "reason": "The temporary remote full-scan dictionary was not retained. No extra scan of 3553379 stop_times rows was performed for this check. Nearest-neighbour probe selection is not evidence of GTFS adjacency."
+  },
+  "minimal_model_proposal": {
+    "key": [
+      "feed_id",
+      "from_stop_id",
+      "to_stop_id"
+    ],
+    "attributes": [
+      "geometry",
+      "geometry_version",
+      "compatibility_status"
+    ],
+    "ambiguity_policy": "If incompatible between-stop trajectories are actually found, do not combine observations; record ambiguity and discuss whether explicit geometry variants are required.",
+    "status": "proposal_not_user_approved"
+  },
+  "surface_frequencies": {
+    "surface_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+    "present": true,
+    "rows": 109576,
+    "unique_trip_ids": 109576,
+    "exact_times_counts": {
+      "0": 109576
+    },
+    "headway_seconds_counts_top10": [
+      [
+        "900",
+        844
+      ],
+      [
+        "540",
+        665
+      ],
+      [
+        "780",
+        628
+      ],
+      [
+        "1080",
+        582
+      ],
+      [
+        "732",
+        516
+      ],
+      [
+        "786",
+        484
+      ],
+      [
+        "660",
+        481
+      ],
+      [
+        "892",
+        478
+      ],
+      [
+        "714",
+        477
+      ],
+      [
+        "708",
+        469
+      ]
+    ],
+    "rows_by_route_type": {
+      "3": 94099,
+      "0": 15477
+    },
+    "example": {
+      "trip_id": "81730608",
+      "start_time": "06:00:00",
+      "end_time": "10:00:00",
+      "headway_secs": "1020",
+      "exact_times": "0",
+      "route_id": "3812",
+      "route_name": "193",
+      "route_type": "3"
+    },
+    "interpretation": "All frequency records declare headway-based service without an exact timetable (exact_times=0). The same trip_id in such a record is a frequency service template, not evidence of one specific physical departure. Do not describe a next bus inferred only from this data as an exact scheduled departure.",
+    "limits": "This inspection did not inspect all stop_times again, calculate the total trip count, or prove the cause of OTP repeated alternatives. Read only frequencies.txt plus trips/routes metadata.",
+    "gtfs_reference": "https://gtfs.org/documentation/schedule/reference/#frequenciestxt"
+  }
+}

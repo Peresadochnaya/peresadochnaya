@@ -1,0 +1,856 @@
+{
+  "schema_version": 1,
+  "retrieved_at": "2026-11-12",
+  "inventory_updated_at": "2025-04-14",
+  "inventory_sha256": "efc9968cf0ad42139ccbe061c839cffe0b72c737b909ddce288f407ecda1ff8b",
+  "coverage_note": "Complete bus/trolleybus-containing rows of official inventory; not proof of exhaustive current 2026 coverage.",
+  "corridors": [
+    {
+      "id": "spb-official-003",
+      "street": "Белоостровская ул.",
+      "from": "Студенческая ул.",
+      "to": "Земледельческая ул.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.6,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 3,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-004",
+      "street": "Библиотечный пер.",
+      "from": "Ул. Шкапина",
+      "to": "Библиотечный пер., 4",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.1,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 4,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-005",
+      "street": "Большая Зеленина ул.",
+      "from": "Наб. Адмирала Лазарева",
+      "to": "Корпуская ул.",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 5,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-007",
+      "street": "Большая Пушкарская ул.",
+      "from": "На всем протяжении",
+      "to": null,
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 7,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-009",
+      "street": "Большой пр. П. С.",
+      "from": "Каменноостровский пр.",
+      "to": "Наб. р. Карповки",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.3,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 9,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-010",
+      "street": "Большой пр. П. С.",
+      "from": "Пр. Добролюбова",
+      "to": "Каменноостровский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.9,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 10,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-012",
+      "street": "Вознесенский пр.",
+      "from": "Садовая ул.",
+      "to": "Наб. р. Мойки",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.0,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 12,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-016",
+      "street": "Гороховая ул.",
+      "from": "Малая Морская ул.",
+      "to": "Наб. р. Фонтанки",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 16,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-022",
+      "street": "Загородный пр.",
+      "from": "Владимирская пл.",
+      "to": "Звенигородская ул.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.9,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 22,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-026",
+      "street": "Заневский пр., пр. Косыгина",
+      "from": "Ул. Стахановцев",
+      "to": "Пр. Косыгина",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 5.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 26,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-029",
+      "street": "Кантемировская ул., пр. Маршала Блюхера, пр. Энергетиков",
+      "from": "Аптекарская наб.",
+      "to": "Партизанская ул.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 20.2,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 29,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-038",
+      "street": "Ленинский пр.",
+      "from": "Пр. Героев",
+      "to": "Московский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 17.0,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 38,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-043",
+      "street": "Лиговский пр.",
+      "from": "Ул. Жуковского",
+      "to": "Пл. Восстания",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 43,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-044",
+      "street": "Лиговский пр.",
+      "from": "Расстанная ул.",
+      "to": "Кузнечный пер.",
+      "modes": [
+        "Автобус",
+        "трамвай",
+        "троллейбус"
+      ],
+      "movement_raw": "По центру проезжей части - физически обособлено",
+      "direction": "unknown",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 4.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 44,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-045",
+      "street": "Малая Морская ул.",
+      "from": "Исаакиевская пл.",
+      "to": "Невский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 45,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-052",
+      "street": "Народная ул.",
+      "from": "Дальневосточный пр.",
+      "to": "Пр. Большевиков",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.8,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 52,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-053",
+      "street": "Невский пр.",
+      "from": "Пл. Восстания",
+      "to": "Наб. р. Мойки",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 4.7,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 53,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-054",
+      "street": "Невский пр.",
+      "from": "Полтавская ул.",
+      "to": "Пл. Восстания",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 1.2,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 54,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-057",
+      "street": "Пионерская ул.",
+      "from": "Петергофская ул.",
+      "to": "Наб. Адмирала Лазарева",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.2,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 57,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-060",
+      "street": "Полтавская ул.",
+      "from": "Конная ул.",
+      "to": "Невский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.1,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 60,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-064",
+      "street": "Пр. Косыгина",
+      "from": "Перед перекрестком с ул. Передовиков",
+      "to": null,
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 64,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-070",
+      "street": "Пр. Медиков",
+      "from": "На всем протяжении",
+      "to": null,
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 2.2,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 70,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-079",
+      "street": "Пр. Славы",
+      "from": "Белградская ул.",
+      "to": "Софийская ул.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 5.6,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 79,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-085",
+      "street": "Пулковское шоссе",
+      "from": "Ул. Галстяна",
+      "to": "5-й Предпортовый проезд",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 5.1,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 85,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-086",
+      "street": "Пулковское шоссе",
+      "from": "Внуковская ул.",
+      "to": "Дорога в аэропорт Пулково",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.8,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 86,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-088",
+      "street": "Расстанная ул.",
+      "from": "Днепропетровская ул.",
+      "to": "Лиговский пр.",
+      "modes": [
+        "Автобус",
+        "трамвай"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 88,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-092",
+      "street": "Северный пр.",
+      "from": "Гражданский пр.",
+      "to": "Ул. Софьи Ковалевской",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стройнее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.5,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 92,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-098",
+      "street": "Суворовский пр.",
+      "from": "2-я Советская ул.",
+      "to": "Невский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.2,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 98,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-111",
+      "street": "Ул. Егорова",
+      "from": "1-я Красноармейская ул.",
+      "to": "2-я Красноармейская ул.",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.1,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 111,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-112",
+      "street": "Ул. Зенитчиков",
+      "from": "Перед перекрестком с пр. Стачек",
+      "to": null,
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стройнее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.1,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 112,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-125",
+      "street": "Ул. Решетникова",
+      "from": "Герцогский пер.",
+      "to": "Московский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.3,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 125,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-130",
+      "street": "Ул. Типанова",
+      "from": "Ул. Ленсовета",
+      "to": "Московский пр.",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "1-стороннее по ходу движения",
+      "direction": "with_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 130,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    },
+    {
+      "id": "spb-official-131",
+      "street": "Ул. Типанова",
+      "from": "Ул. Ленсовета",
+      "to": "Пр. Космонавтов",
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": "2-стороннее",
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 2.4,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 131,
+      "notes": [
+        "No operating hours or opening date in inventory."
+      ]
+    },
+    {
+      "id": "spb-official-135",
+      "street": "Шоссе Подбельского",
+      "from": "Сетевая ул.",
+      "to": "Новодеревенская ул.",
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": "1-стороннее против основного движения",
+      "direction": "against_traffic",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "status": "listed_existing_2025-04-14",
+      "length_km": 0.8,
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+      "source_date": "2025-04-14",
+      "source_row": 135,
+      "notes": [
+        "No operating hours or opening date in inventory. Endpoint table order does not establish travel direction."
+      ]
+    }
+  ],
+  "supplemental_corridors": [
+    {
+      "modes": [
+        "Автобус",
+        "троллейбус"
+      ],
+      "movement_raw": null,
+      "direction": "both",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": "2025-10-06",
+      "length_km": null,
+      "source_row": null,
+      "id": "spb-addition-komendantsky-2025",
+      "street": "Комендантский проспект",
+      "from": "Комендантская площадь",
+      "to": "Арцеуловская аллея",
+      "status": "opened_official_announcement",
+      "source_url": "https://www.gov.spb.ru/gov/otrasl/c_transport/news/305789/",
+      "source_date": "2025-10-03",
+      "supplementary_source_urls": [
+        "https://t.me/s/topspb_tv?before=54353",
+        "https://www.fontanka.ru/2026/01/30/76241377/"
+      ],
+      "notes": [
+        "Opening date from official announcement. Extents and both-direction design from city TV report of transport committee; both-direction operation also retrospectively described by Fontanka quoting committee, 2026-01-30."
+      ]
+    },
+    {
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": null,
+      "direction": "unknown",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": null,
+      "length_km": null,
+      "source_row": null,
+      "id": "spb-addition-kolomyazhsky-2026",
+      "street": "Коломяжский проспект",
+      "from": null,
+      "to": null,
+      "status": "reported_built_extent_unresolved",
+      "source_url": "https://spbdnevnik.ru/news/2026-09-09/na-kolomyazhskom-prospekte-v-peterburge-obshchestvennyy-transport-poluchil-prioritetnyy-proezd",
+      "source_date": "2026-09-09",
+      "notes": [
+        "City newspaper relays transport committee: bus lane built near upgraded signals at Marka Gallaya and Korolyova. Does not state lane endpoints or travel direction. Do not map full planned corridor as built."
+      ]
+    },
+    {
+      "modes": [
+        "Автобус"
+      ],
+      "movement_raw": null,
+      "direction": "unknown",
+      "direction_endpoint_order_confirmed": false,
+      "hours": null,
+      "opening_date": "2025-09-01",
+      "length_km": null,
+      "source_row": null,
+      "id": "spb-addition-krasnogo-tekstilshchika-2025",
+      "street": "улица Красного Текстильщика",
+      "from": null,
+      "to": null,
+      "status": "secondary_report_needs_primary_extent_confirmation",
+      "source_url": "https://gazeta.spb.ru/2647187-protyazhennost-vydelennyh-polos-v-peterburge-za-god-vyrosla-na-75-kilometrov/",
+      "source_date": "2025-12-29",
+      "notes": [
+        "Secondary report identifies lane supporting bus 55; exact endpoints and direction unresolved. Not established by official inventory."
+      ]
+    }
+  ]
+}

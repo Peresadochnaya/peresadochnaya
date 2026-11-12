@@ -1,0 +1,512 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "source": "official_inventory_boundary_resolved",
+    "note": "One official corridor resolved. Geometry from OSM; dedicated-lane assertion and contraflow direction from official inventory, not invented OSM tags. Pulkovo unresolved: named boundary does not cross highway.",
+    "corridor_count": 1,
+    "directed_way_count": 6
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.308106,
+            59.9339456
+          ],
+          [
+            30.3084263,
+            59.9340561
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 655104072,
+        "osm_version": 15,
+        "osm_object_timestamp": "2025-01-18 16:01:30+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "parking:both:restriction": "no_stopping",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.3084263,
+            59.9340561
+          ],
+          [
+            30.3088142,
+            59.9341956
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 1334244478,
+        "osm_version": 3,
+        "osm_object_timestamp": "2025-10-23 21:47:02+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "smoothness": "good",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.3088142,
+            59.9341956
+          ],
+          [
+            30.3090005,
+            59.9342627
+          ],
+          [
+            30.3092686,
+            59.93436
+          ],
+          [
+            30.3097983,
+            59.9345524
+          ],
+          [
+            30.3100953,
+            59.9346603
+          ],
+          [
+            30.3103463,
+            59.9347514
+          ],
+          [
+            30.3104446,
+            59.9347872
+          ],
+          [
+            30.3106217,
+            59.9348514
+          ],
+          [
+            30.3108054,
+            59.9349181
+          ],
+          [
+            30.310947,
+            59.9349696
+          ],
+          [
+            30.3114584,
+            59.9351553
+          ],
+          [
+            30.3117297,
+            59.9352538
+          ],
+          [
+            30.3118606,
+            59.9353013
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 415624712,
+        "osm_version": 22,
+        "osm_object_timestamp": "2025-09-19 21:50:04+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "smoothness": "good",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.3118606,
+            59.9353013
+          ],
+          [
+            30.3120437,
+            59.9353678
+          ],
+          [
+            30.3120939,
+            59.9353861
+          ],
+          [
+            30.312729,
+            59.9356167
+          ],
+          [
+            30.3132652,
+            59.9358102
+          ],
+          [
+            30.3134272,
+            59.9358702
+          ],
+          [
+            30.3137337,
+            59.9359816
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 148617407,
+        "osm_version": 47,
+        "osm_object_timestamp": "2025-10-23 21:47:09+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "smoothness": "good",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.3137337,
+            59.9359816
+          ],
+          [
+            30.3138213,
+            59.9360134
+          ],
+          [
+            30.3139395,
+            59.9360563
+          ],
+          [
+            30.3140655,
+            59.9361021
+          ],
+          [
+            30.3147858,
+            59.9363567
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 1090840283,
+        "osm_version": 12,
+        "osm_object_timestamp": "2025-10-23 21:47:13+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "smoothness": "good",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            30.3147858,
+            59.9363567
+          ],
+          [
+            30.3148265,
+            59.9363733
+          ],
+          [
+            30.3148628,
+            59.9363967
+          ],
+          [
+            30.3148983,
+            59.936428
+          ],
+          [
+            30.3150234,
+            59.9365967
+          ],
+          [
+            30.3150559,
+            59.9366265
+          ],
+          [
+            30.3150975,
+            59.9366469
+          ],
+          [
+            30.3151542,
+            59.9366657
+          ]
+        ]
+      },
+      "properties": {
+        "osm_way_id": 850486218,
+        "osm_version": 14,
+        "osm_object_timestamp": "2026-01-21 17:16:04+00:00",
+        "direction": -1,
+        "source": "https://www.gov.spb.ru/gov/otrasl/c_transport/vydelennye-polosy-dlya-obshestvennogo-transporta/",
+        "date": "2025-04-14",
+        "source_kind": "official_inventory",
+        "official_corridor_id": "spb-official-045",
+        "tags": {
+          "foot": "no",
+          "highway": "tertiary",
+          "lanes": "2",
+          "lit": "yes",
+          "maxspeed": "RU:urban",
+          "name": "Малая Морская улица",
+          "oneway": "yes",
+          "sidewalk:left": "no",
+          "sidewalk:right": "separate",
+          "smoothness": "good",
+          "surface": "asphalt",
+          "trolley_wire": "yes",
+          "wikidata": "Q3449016",
+          "wikipedia": "ru:Малая Морская улица"
+        },
+        "boundary_provenance": {
+          "method": "unique_main_tertiary_named_street_path_between_exact_OSM_boundary_intersections",
+          "from": {
+            "name": "Исаакиевская площадь",
+            "osm_node_id": 2277495091,
+            "coordinates": [
+              30.308106,
+              59.9339456
+            ]
+          },
+          "to": {
+            "name": "Невский проспект",
+            "osm_node_id": 1633724391,
+            "coordinates": [
+              30.3151542,
+              59.9366657
+            ]
+          },
+          "direction_proof": "Official inventory states contrary to primary flow. Every main-tertiary selected OSM way is oneway=yes; geometry reversed. Parallel residential street excluded.",
+          "path_count": 1,
+          "directed_corridor_length_m": 499.6802211374036,
+          "official_approximate_length_m": 500,
+          "inventory_updated_at": "2025-04-14",
+          "osm_snapshot_sha256": "see road-status.json osm_sha256; geometry from local spb-lo.osm.pbf"
+        }
+      }
+    }
+  ],
+  "osm_sha256": "b48acafefa27b2895af7a76761ecf55d07702aa7a348bf24f242f15591b5796b"
+}

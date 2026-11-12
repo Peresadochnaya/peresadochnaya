@@ -1,0 +1,114 @@
+{
+  "CallScheduledTime": {
+    "data": {
+      "__type": {
+        "name": "CallScheduledTime",
+        "inputFields": null,
+        "possibleTypes": [
+          {
+            "name": "ArrivalDepartureTime",
+            "fields": [
+              {
+                "name": "arrival",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "OffsetDateTime",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "departure",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "OffsetDateTime",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "timePoint",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Boolean"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "TimeWindow",
+            "fields": [
+              {
+                "name": "end",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "OffsetDateTime"
+                  }
+                }
+              },
+              {
+                "name": "start",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "OffsetDateTime"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "TransitFilterSelectInput": {
+    "data": {
+      "__type": {
+        "name": "TransitFilterSelectInput",
+        "inputFields": [
+          {
+            "name": "agencies",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null
+              }
+            }
+          },
+          {
+            "name": "routes",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null
+              }
+            }
+          }
+        ],
+        "possibleTypes": null
+      }
+    }
+  },
+  "initial_errors": null,
+  "tail": {
+    "origin_stop_id": "2:39321",
+    "earliest_departure": "2026-11-12T17:43:47+03:00",
+    "maximum_transfers": 2,
+    "exclude_real_time": true,
+    "seconds": 0.244,
+    "errors": null,
+    "routing_errors": [],
+    "itineraries": 1
+  }
+}

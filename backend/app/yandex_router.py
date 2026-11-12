@@ -118,6 +118,13 @@ class YandexRouter(YandexClient):
         key = self.cache_key(request)
         self.cache[key] = (response, datetime.now(timezone.utc).timestamp())
 
+    def estimate_observations(self,points,timeout_seconds=8):
+        if timeout_seconds<=0: raise ProviderError(504,'router_provider_timeout','Search deadline reached')
+        if not 2<=len(points)<=50: raise ValueError('Yandex requires 2 to 50 ordered points')
+        coordinates=[(p.lon,p.lat) if hasattr(p,'lon') else p for p in points]
+        data=self._get(ROUTER_URL,'YANDEX_ROUTER_API_KEY',{'waypoints':'|'.join(f'{lat},{lon}' for lon,lat in coordinates),'mode':'driving'},timeout_seconds=min(8,timeout_seconds))
+        return parse_observations(data,datetime.now(timezone.utc))
+
     def estimate(self, request: RoadRouteRequest) -> RoadRouteResponse:
         cached = self.cache_get(request)
         if cached is not None:
@@ -141,3 +148,23 @@ def dummy_road_route(request: RoadRouteRequest) -> RoadRouteResponse:
         route=RoadRoute(distance_meters=round(distance, 2), duration_seconds=round(distance / 10, 2),
                         geometry={"type": "LineString", "coordinates": [(a.lon, a.lat), (b.lon, b.lat)]}),
         warnings=["Synthetic straight line at a fixed speed; no real road or traffic data; no external API was called", DRIVING_WARNING])
+
+
+def parse_observations(data, received_at):
+    """Each observation owns a whole step's duration, never one polyline point."""
+    from .traffic_data import RoadObservation
+    import time
+    stamp=received_at.timestamp() if isinstance(received_at,datetime) else float(received_at)
+    try:
+        if data['traffic_type']!='realtime':
+            raise ValueError('Only realtime traffic is usable')
+        result=[]
+        for leg_index,leg in enumerate(data['route']['legs']):
+            if leg['status']!='OK': continue
+            for step_index,step in enumerate(leg['steps']):
+                if step['mode']!='driving': raise ValueError('Expected driving')
+                line=tuple((p[1],p[0]) for p in step['polyline']['points'])
+                result.append(RoadObservation(f'yandex:{stamp}:{leg_index}:{step_index}','yandex',line,step['length'],step['duration'],stamp,part_index=leg_index*100000+step_index))
+        return result
+    except (KeyError,TypeError,AttributeError,ValueError,IndexError,OverflowError):
+        raise ProviderError(502,'router_provider_error','Invalid realtime observation from Yandex provider') from None

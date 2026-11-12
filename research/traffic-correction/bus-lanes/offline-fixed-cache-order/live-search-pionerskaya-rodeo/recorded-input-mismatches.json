@@ -1,0 +1,106 @@
+[
+  {
+    "reason": "recorded_tail_input_mismatch",
+    "request_number": 2,
+    "recorded_variables": {
+      "origin": {
+        "location": {
+          "stopLocation": {
+            "stopLocationId": "2:4607"
+          }
+        }
+      },
+      "destination": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.033718,
+            "longitude": 30.367549
+          }
+        }
+      },
+      "dateTime": {
+        "earliestDeparture": "2026-11-12T22:10:51+03:00"
+      },
+      "first": 3,
+      "preferences": {
+        "street": {
+          "walk": {
+            "speed": 1.3,
+            "reluctance": 4.0
+          }
+        },
+        "transit": {
+          "transfer": {}
+        }
+      },
+      "modes": {
+        "transit": {
+          "access": [
+            "WALK"
+          ],
+          "egress": [
+            "WALK"
+          ],
+          "transfer": [
+            "WALK"
+          ],
+          "transit": [
+            {
+              "mode": "BUS"
+            }
+          ]
+        }
+      }
+    },
+    "replayed_variables": {
+      "origin": {
+        "location": {
+          "stopLocation": {
+            "stopLocationId": "2:4607"
+          }
+        }
+      },
+      "destination": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.033718,
+            "longitude": 30.367549
+          }
+        }
+      },
+      "dateTime": {
+        "earliestDeparture": "2026-11-12T22:11:07+03:00"
+      },
+      "first": 3,
+      "preferences": {
+        "street": {
+          "walk": {
+            "speed": 1.3,
+            "reluctance": 4.0
+          }
+        },
+        "transit": {
+          "transfer": {}
+        }
+      },
+      "modes": {
+        "transit": {
+          "access": [
+            "WALK"
+          ],
+          "egress": [
+            "WALK"
+          ],
+          "transfer": [
+            "WALK"
+          ],
+          "transit": [
+            {
+              "mode": "BUS"
+            }
+          ]
+        }
+      }
+    }
+  }
+]

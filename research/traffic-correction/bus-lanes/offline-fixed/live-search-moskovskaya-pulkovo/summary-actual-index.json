@@ -1,0 +1,135 @@
+{
+  "case": "live-search-moskovskaya-pulkovo",
+  "status": "succeeded",
+  "network_calls": 0,
+  "paid_calls": 0,
+  "elapsed_seconds": 3.2208028480090434,
+  "otp_recordings_consumed": 1,
+  "otp_recordings_available": 1,
+  "profile_version": "osm-and-official-bus-lanes-v2",
+  "profile_sha256": "d1f6009112060e76e02cd51727e5bf88e0049cd637482ab5cec6faa594d40580",
+  "profile_summary": {
+    "osm_directed_ways": 433,
+    "official_directed_fragments": 6,
+    "gtfs_patterns": 1084,
+    "directed_edges": 674,
+    "dedicated_m": 524701.1471627988,
+    "geometry_variants": 1699,
+    "coverage_unit": "sum of directed GTFS geometry variant metres, not physical city lane length"
+  },
+  "gtfs_source_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "observations_received_at": "2026-11-12T18:41:46.658288+00:00",
+  "pipeline_status": "complete",
+  "returned_routes": 3,
+  "excluded_count": 0,
+  "routes": [
+    {
+      "id": "otp:17f91423a0636d0a",
+      "name": "Автобус 39Э",
+      "duration_seconds": 1569,
+      "original_duration_seconds": 1551,
+      "added_delay_seconds": 18,
+      "quality": "sufficient",
+      "coverage_ratio": 0.9840635945243952,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 397,
+          "original_duration_seconds": 397
+        },
+        {
+          "mode": "bus",
+          "line": "39Э",
+          "duration_seconds": 1098,
+          "original_duration_seconds": 1080
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 74,
+          "original_duration_seconds": 74
+        }
+      ]
+    },
+    {
+      "id": "otp:fe9bc5f180ff41a6",
+      "name": "Автобус 39",
+      "duration_seconds": 2307,
+      "original_duration_seconds": 2302,
+      "added_delay_seconds": 5,
+      "quality": "sufficient",
+      "coverage_ratio": 0.9580019239718108,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 397,
+          "original_duration_seconds": 397
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 391,
+          "original_duration_seconds": 391
+        },
+        {
+          "mode": "bus",
+          "line": "39",
+          "duration_seconds": 1445,
+          "original_duration_seconds": 1440
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 74,
+          "original_duration_seconds": 74
+        }
+      ]
+    },
+    {
+      "id": "otp:9c8bfcf844e4a7c6",
+      "name": "Автобус 150 → Автобус 82Э",
+      "duration_seconds": 1906,
+      "original_duration_seconds": 1882,
+      "added_delay_seconds": 24,
+      "quality": "sufficient",
+      "coverage_ratio": 0.9619273813002136,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 428,
+          "original_duration_seconds": 428
+        },
+        {
+          "mode": "bus",
+          "line": "150",
+          "duration_seconds": 600,
+          "original_duration_seconds": 600
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 360,
+          "original_duration_seconds": 360
+        },
+        {
+          "mode": "bus",
+          "line": "82Э",
+          "duration_seconds": 444,
+          "original_duration_seconds": 420
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 74,
+          "original_duration_seconds": 74
+        }
+      ]
+    }
+  ]
+}

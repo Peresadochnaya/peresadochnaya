@@ -1,0 +1,47 @@
+{
+  "points": [
+    {
+      "kind": "user_point",
+      "id": "A",
+      "name": "Пионерская",
+      "lat": 60.0029,
+      "lon": 30.2963
+    },
+    {
+      "kind": "user_point",
+      "id": "B",
+      "name": "ТРК Родео Драйв, пр. Культуры, 1",
+      "lat": 60.033718,
+      "lon": 30.367549
+    }
+  ],
+  "files": [
+    "otp.json",
+    "otp-normalized.json",
+    "2gis.json",
+    "yandex.json"
+  ],
+  "budget": {
+    "otp_max_calls": 1,
+    "2gis_max_paid_calls": 1,
+    "yandex_max_paid_calls": 1
+  },
+  "endpoint_source": {
+    "B": "https://tkrodeo.ru/kontakty/ schema.org GeoCoordinates lat60.033718 lon30.367549",
+    "A": "Pionerskaya station point 60.0029,30.2963"
+  },
+  "warning": "Current car times do not by themselves establish a free-flow baseline or a measured congestion delay.",
+  "selection_limitation": "No BUS/TROLLEYBUS candidate was returned by OTP (only TRAM55). The implemented fallback selected stops within1200m of straight A-B corridor, not tram geometry.",
+  "actual_calls": {
+    "otp": 1,
+    "2gis_paid": 1,
+    "yandex_paid": 1
+  },
+  "success": {
+    "otp_http_status": 200,
+    "2gis_http_status": 200,
+    "yandex_http_status": 200,
+    "2gis_status": "OK",
+    "yandex_traffic_type": "realtime"
+  }
+}

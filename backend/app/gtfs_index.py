@@ -201,6 +201,16 @@ def warm(root, directory=None):
         active.add(f'v{FORMAT}-{digest}.sqlite3')
         result.append({'feed': feed, 'sha256': digest, 'seconds': round(time.monotonic()-started, 3),
                        'index_bytes': (directory / f'v{FORMAT}-{digest}.sqlite3').stat().st_size})
+    # An active OTP graph may deliberately use an older source than latest.
+    # Keep its existing index for the complete graph lifetime.
+    try:
+        graph = json.loads((root / 'otp' / 'current.json').read_text())
+        for field in ('gtfs_source_sha256', 'metro_source_sha256', 'rail_source_sha256'):
+            digest = graph.get(field)
+            if isinstance(digest, str) and len(digest) == 64 and all(c in '0123456789abcdef' for c in digest):
+                active.add(f'v{FORMAT}-{digest}.sqlite3')
+    except (OSError, ValueError, TypeError):
+        pass
     # Open readonly connections retain their inode; allow a grace period for
     # requests that already opened an old ZIP but have not opened its index yet.
     if directory.exists():

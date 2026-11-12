@@ -1,0 +1,30 @@
+{
+  "points": [
+    {
+      "lat": 59.931453,
+      "lon": 30.358743
+    },
+    {
+      "lat": 59.94876,
+      "lon": 30.39536
+    }
+  ],
+  "passenger": {
+    "ticket_profile": "bank_card",
+    "uncovered_payment": "bank_card"
+  },
+  "departure_at": "2026-11-12T21:38:47.414911+03:00",
+  "traffic_mode": "on",
+  "max_results": 3,
+  "providers": [
+    "otp"
+  ],
+  "modes": [
+    "bus"
+  ],
+  "exclude_modes": null,
+  "max_transfers": null,
+  "walk_speed": "normal",
+  "less_walking": false,
+  "fare": null
+}

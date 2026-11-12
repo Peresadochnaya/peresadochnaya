@@ -1,0 +1,415 @@
+{
+  "method": "A then B, then 48 bus/trolleybus-served GTFS stops within1200m of union of OTP surface paths; physical separation65m; nearest-neighbour traversal from B",
+  "endpoint": "https://api.routing.yandex.net/v2/route",
+  "body": null,
+  "params": {
+    "waypoints": "60.0029,30.2963|60.033718,30.367549|60.035656,30.367518|60.036314,30.367721|60.036458,30.365517|60.035547,30.36579|60.035163,30.371785|60.034482,30.373428|60.033726,30.378777|60.028109,30.373147|60.029858,30.366694|60.029508,30.364904|60.031565,30.36443|60.031944,30.365898|60.032313,30.363643|60.031679,30.354738|60.031208,30.34527|60.037252,30.359821|60.037872,30.359641|60.025624,30.366455|60.016804,30.337663|60.018185,30.335027|60.018776,30.334674|60.020847,30.330927|60.023186,30.327897|60.020893,30.321601|60.020531,30.320609|60.017713,30.322285|60.01656,30.322118|60.017999,30.317414|60.017998,30.316109|60.018485,30.31426|60.01689,30.312376|60.016391,30.310263|60.013567,30.323382|60.011199,30.32478|60.012153,30.334935|60.001593,30.310091|60.001963,30.307025|60.00262,30.29934|60.002457,30.297697|60.003733,30.297997|60.000615,30.296623|60.000047,30.298555|59.998253,30.299949|59.999746,30.290686|60.004218,30.289934|60.008884,30.295591|60.009607,30.294451|60.009922,30.295814",
+    "mode": "driving"
+  },
+  "max_http_calls": 1,
+  "gtfs_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "points": [
+    {
+      "kind": "user_point",
+      "id": "A",
+      "name": "Пионерская",
+      "lat": 60.0029,
+      "lon": 30.2963
+    },
+    {
+      "kind": "user_point",
+      "id": "B",
+      "name": "ТРК Родео Драйв, пр. Культуры, 1",
+      "lat": 60.033718,
+      "lon": 30.367549
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "3039",
+      "name": "ПР. КУЛЬТУРЫ ПО ПР. ЛУНАЧАРСКОГО",
+      "lat": 60.035656,
+      "lon": 30.367518,
+      "distance_to_reference_corridor_meters": 215.5
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "25045",
+      "name": "ПР. КУЛЬТУРЫ, УГОЛ ПР. ЛУНАЧАРСКОГО",
+      "lat": 60.036314,
+      "lon": 30.367721,
+      "distance_to_reference_corridor_meters": 288.82
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "1849",
+      "name": "ПР. КУЛЬТУРЫ ПО ПР. ЛУНАЧАРСКОГО",
+      "lat": 60.036458,
+      "lon": 30.365517,
+      "distance_to_reference_corridor_meters": 324.92
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15545",
+      "name": "Пр. Культуры, угол пр. Луначарского",
+      "lat": 60.035547,
+      "lon": 30.36579,
+      "distance_to_reference_corridor_meters": 225.64
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "31007",
+      "name": "ПР. ЛУНАЧАРСКОГО, 78",
+      "lat": 60.035163,
+      "lon": 30.371785,
+      "distance_to_reference_corridor_meters": 284.98
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "31193",
+      "name": "ПР. ЛУНАЧАРСКОГО, 78",
+      "lat": 60.034482,
+      "lon": 30.373428,
+      "distance_to_reference_corridor_meters": 337.53
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "2203",
+      "name": "ПР. ЛУНАЧАРСКОГО, УГОЛ УЛ. ДЕМЬЯНА БЕДНОГО",
+      "lat": 60.033726,
+      "lon": 30.378777,
+      "distance_to_reference_corridor_meters": 623.87
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "32020",
+      "name": "УЛ. АКАДЕМИКА БАЙКОВА, Д.9",
+      "lat": 60.028109,
+      "lon": 30.373147,
+      "distance_to_reference_corridor_meters": 675.14
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "36428",
+      "name": "ТИХОРЕЦКИЙ ПР.",
+      "lat": 60.029858,
+      "lon": 30.366694,
+      "distance_to_reference_corridor_meters": 293.43
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "4585",
+      "name": "УЛ. АКАДЕМИКА БАЙКОВА",
+      "lat": 60.029508,
+      "lon": 30.364904,
+      "distance_to_reference_corridor_meters": 257.76
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "17575",
+      "name": "ТИХОРЕЦКИЙ ПР.",
+      "lat": 60.031565,
+      "lon": 30.36443,
+      "distance_to_reference_corridor_meters": 67.59
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "35348",
+      "name": "ТИХОРЕЦКИЙ ПР.",
+      "lat": 60.031944,
+      "lon": 30.365898,
+      "distance_to_reference_corridor_meters": 89.11
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "25306",
+      "name": "СЕВЕРНЫЙ ПР., УГОЛ ТИХОРЕЦКОГО ПР.",
+      "lat": 60.032313,
+      "lon": 30.363643,
+      "distance_to_reference_corridor_meters": 23.92
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "3873",
+      "name": "УЛ. САНТЬЯГО-ДЕ-КУБА",
+      "lat": 60.031679,
+      "lon": 30.354738,
+      "distance_to_reference_corridor_meters": 294.45
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "3198",
+      "name": "СЕВЕРНЫЙ ПР.",
+      "lat": 60.031208,
+      "lon": 30.34527,
+      "distance_to_reference_corridor_meters": 599.15
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15542",
+      "name": "Ул. Руднева",
+      "lat": 60.037252,
+      "lon": 30.359821,
+      "distance_to_reference_corridor_meters": 578.14
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "35837",
+      "name": "УЛ. РУДНЕВА",
+      "lat": 60.037872,
+      "lon": 30.359641,
+      "distance_to_reference_corridor_meters": 636.81
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "3225",
+      "name": "ПАРК \"СОСНОВКА\"",
+      "lat": 60.025624,
+      "lon": 30.366455,
+      "distance_to_reference_corridor_meters": 640.7
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15099",
+      "name": "Пр. Тореза, 82",
+      "lat": 60.016804,
+      "lon": 30.337663,
+      "distance_to_reference_corridor_meters": 335.21
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "34692",
+      "name": "ПР. ТОРЕЗА, 96, ПО ТРЕБОВАНИЮ",
+      "lat": 60.018185,
+      "lon": 30.335027,
+      "distance_to_reference_corridor_meters": 123.25
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "34693",
+      "name": "ПР. ТОРЕЗА, 96, ПО ТРЕБОВАНИЮ",
+      "lat": 60.018776,
+      "lon": 30.334674,
+      "distance_to_reference_corridor_meters": 60.72
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15009",
+      "name": "Рашетова ул.",
+      "lat": 60.020847,
+      "lon": 30.330927,
+      "distance_to_reference_corridor_meters": 249.65
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "29570",
+      "name": "РАШЕТОВА УЛ.",
+      "lat": 60.023186,
+      "lon": 30.327897,
+      "distance_to_reference_corridor_meters": 556.48
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "36511",
+      "name": "РАШЕТОВА УЛ., 3",
+      "lat": 60.020893,
+      "lon": 30.321601,
+      "distance_to_reference_corridor_meters": 592.66
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "4545",
+      "name": "РАШЕТОВА УЛ.",
+      "lat": 60.020531,
+      "lon": 30.320609,
+      "distance_to_reference_corridor_meters": 598.3
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "22475",
+      "name": "ЕЛЕЦКАЯ УЛ.",
+      "lat": 60.017713,
+      "lon": 30.322285,
+      "distance_to_reference_corridor_meters": 300.43
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "22480",
+      "name": "ЕНОТАЕВСКАЯ УЛ.",
+      "lat": 60.01656,
+      "lon": 30.322118,
+      "distance_to_reference_corridor_meters": 209.57
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "26489",
+      "name": "СТ. МЕТРО \"УДЕЛЬНАЯ\"",
+      "lat": 60.017999,
+      "lon": 30.317414,
+      "distance_to_reference_corridor_meters": 501.61
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "14828",
+      "name": "СТ. МЕТРО \"УДЕЛЬНАЯ\"",
+      "lat": 60.017998,
+      "lon": 30.316109,
+      "distance_to_reference_corridor_meters": 548.98
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "22698",
+      "name": "СТ. МЕТРО \"УДЕЛЬНАЯ\"",
+      "lat": 60.018485,
+      "lon": 30.31426,
+      "distance_to_reference_corridor_meters": 657.17
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "2734",
+      "name": "Ж.-Д. СТАНЦИЯ УДЕЛЬНАЯ",
+      "lat": 60.01689,
+      "lon": 30.312376,
+      "distance_to_reference_corridor_meters": 591.58
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "22484",
+      "name": "Ж.-Д. СТАНЦИЯ УДЕЛЬНАЯ",
+      "lat": 60.016391,
+      "lon": 30.310263,
+      "distance_to_reference_corridor_meters": 626.47
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "2717",
+      "name": "ДРЕЗДЕНСКАЯ УЛ.",
+      "lat": 60.013567,
+      "lon": 30.323382,
+      "distance_to_reference_corridor_meters": 88.03
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "1674",
+      "name": "МАНЧЕСТЕРСКАЯ УЛ.",
+      "lat": 60.011199,
+      "lon": 30.32478,
+      "distance_to_reference_corridor_meters": 337.95
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "36096",
+      "name": "МАНЧЕСТЕРСКАЯ УЛ., Д. 14",
+      "lat": 60.012153,
+      "lon": 30.334935,
+      "distance_to_reference_corridor_meters": 627.03
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15813",
+      "name": "Удельный парк",
+      "lat": 60.001593,
+      "lon": 30.310091,
+      "distance_to_reference_corridor_meters": 611.39
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15783",
+      "name": "Удельный парк",
+      "lat": 60.001963,
+      "lon": 30.307025,
+      "distance_to_reference_corridor_meters": 468.79
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "2088",
+      "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+      "lat": 60.00262,
+      "lon": 30.29934,
+      "distance_to_reference_corridor_meters": 134.09
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "19212",
+      "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+      "lat": 60.002457,
+      "lon": 30.297697,
+      "distance_to_reference_corridor_meters": 88.05
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "4502",
+      "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+      "lat": 60.003733,
+      "lon": 30.297997,
+      "distance_to_reference_corridor_meters": 8.32
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15784",
+      "name": "Богатырский пр., ст. метро «Пионерская»",
+      "lat": 60.000615,
+      "lon": 30.296623,
+      "distance_to_reference_corridor_meters": 254.71
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15307",
+      "name": "Богатырский пр.",
+      "lat": 60.000047,
+      "lon": 30.298555,
+      "distance_to_reference_corridor_meters": 341.09
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "19198",
+      "name": "АЭРОДРОМНАЯ УЛ.",
+      "lat": 59.998253,
+      "lon": 30.299949,
+      "distance_to_reference_corridor_meters": 555.08
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15320",
+      "name": "Театр \"За Чёрной речкой\"",
+      "lat": 59.999746,
+      "lon": 30.290686,
+      "distance_to_reference_corridor_meters": 469.36
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "3021",
+      "name": "ПР. ИСПЫТАТЕЛЕЙ, УНИВЕРСАМ",
+      "lat": 60.004218,
+      "lon": 30.289934,
+      "distance_to_reference_corridor_meters": 382.88
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "15302",
+      "name": "Коломяжский пр.",
+      "lat": 60.008884,
+      "lon": 30.295591,
+      "distance_to_reference_corridor_meters": 528.88
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "1837",
+      "name": "ПР. КОРОЛЕВА, УГ. КОЛОМЯЖСКОГО ПР.",
+      "lat": 60.009607,
+      "lon": 30.294451,
+      "distance_to_reference_corridor_meters": 631.12
+    },
+    {
+      "kind": "gtfs_stop",
+      "id": "1835",
+      "name": "ПР. КОРОЛЕВА",
+      "lat": 60.009922,
+      "lon": 30.295814,
+      "distance_to_reference_corridor_meters": 608.03
+    }
+  ],
+  "pool_count": 202,
+  "results_omitted": true,
+  "future_departure_omitted": true,
+  "actual_selection_reference": "No BUS/TROLLEYBUS candidate was returned by OTP (only TRAM55). The implemented fallback selected stops within1200m of straight A-B corridor, not tram geometry."
+}

@@ -1,0 +1,22 @@
+{
+  "generated_on": "2026-11-12",
+  "network_calls_during_render": 0,
+  "osm_background_highway_classes": [
+    "primary",
+    "secondary",
+    "tertiary",
+    "trunk",
+    "motorway"
+  ],
+  "projection": "Local equirectangular for display: x=(lon-30.3)*55.8km; y=(lat-59.9)*111.2km. Protected slicing uses application geodesic length, not display projection.",
+  "display_selection": "First returned bus/trolleybus route per search; not a map of every alternative.",
+  "input_sha256": {
+    "backend/app/fixtures/traffic/osm-bus-lanes.geojson": "41b6a7364144d6ce824d060b2d5a160d22d2deda7d3e57fde51c19255c9d4378",
+    "backend/app/fixtures/traffic/road-status.json": "d1f6009112060e76e02cd51727e5bf88e0049cd637482ab5cec6faa594d40580",
+    "research/traffic-correction/bus-lanes/live-search/response-corrected-full.json": "d9952055aebfe5f11f59c5ff4004a3eea80889ccf08e69466be8294f8b11f8f7",
+    "research/traffic-correction/bus-lanes/live-search-pionerskaya-rodeo/response-corrected-full.json": "5bd2cf9af540566d667ca866139846bc82d472d7c54e88eaa6b494161a9e5f75",
+    "research/traffic-correction/bus-lanes/live-search-moskovskaya-pulkovo/response-corrected-full.json": "d0bd28ee6cf950a892df31d30b2470ffabee11e9cfa4acb84ef0bd409006365b",
+    "backend/app/fixtures/traffic/official-resolved-lanes.geojson": "885159cb9c10cf30ed1801193755d9d67d62c8f1a1e96452f9bbd242fc155a3b"
+  },
+  "profile_note": "Live route data captured before official supplement:672edges1695variants. Final coverage overlay includes6officialMalaya fragments;finalprofile674edges1699variants."
+}

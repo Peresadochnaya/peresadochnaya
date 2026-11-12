@@ -1,0 +1,62 @@
+{
+  "status": "succeeded",
+  "elapsed_seconds": 3.2254496940004174,
+  "otp_http_calls": 1,
+  "paid_attempts": 1,
+  "2gis_calls": 0,
+  "route_count": 2,
+  "routes": [
+    {
+      "id": "otp:b83fad303be31df5",
+      "duration_seconds": 2824,
+      "debug": {
+        "evaluation_group": "not_applicable",
+        "tail_replanning_status": "not_needed",
+        "original_otp_route_id": "otp:b83fad303be31df5",
+        "original_rank": 2,
+        "final_rank": 1,
+        "original_duration_seconds": 2824,
+        "corrected_duration_seconds": 2824,
+        "added_delay_seconds": 0,
+        "coverage": {
+          "eligible_distance_meters": 0.0,
+          "matched_distance_meters": 0.0,
+          "usable_distance_meters": 0.0,
+          "usable_coverage_ratio": null,
+          "uncovered_distance_meters": 0.0,
+          "coverage_ratio": null
+        },
+        "transfer_status": "not_applicable",
+        "transfers": [],
+        "ranking_reason": "quality group, arrival, transfers, walking distance",
+        "warnings": []
+      }
+    },
+    {
+      "id": "otp:464f278af01926de",
+      "duration_seconds": 2087,
+      "debug": {
+        "evaluation_group": "incomplete",
+        "tail_replanning_status": "not_needed",
+        "original_otp_route_id": "otp:464f278af01926de",
+        "original_rank": 1,
+        "final_rank": 2,
+        "original_duration_seconds": 2029,
+        "corrected_duration_seconds": 2087,
+        "added_delay_seconds": 58,
+        "coverage": {
+          "eligible_distance_meters": 3179.4882367557034,
+          "matched_distance_meters": 2272.593250198406,
+          "usable_distance_meters": 2272.593250198406,
+          "usable_coverage_ratio": 0.7147669942371991,
+          "uncovered_distance_meters": 906.8949865572972,
+          "coverage_ratio": 0.7147669942371991
+        },
+        "transfer_status": "not_applicable",
+        "transfers": [],
+        "ranking_reason": "quality group, arrival, transfers, walking distance",
+        "warnings": []
+      }
+    }
+  ]
+}
