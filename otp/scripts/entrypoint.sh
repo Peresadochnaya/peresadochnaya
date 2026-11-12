@@ -2,18 +2,21 @@
 # ============================================================================
 # Entrypoint для контейнера OpenTripPlanner
 # ============================================================================
-# Оборачивает /docker-entrypoint.sh официального образа:
+# Запускает OTP той же командой, что и /docker-entrypoint.sh официального
+# образа, но с базовым каталогом из OTP_HOMEDIR:
 #   java $JAVA_OPTS -cp @/app/jib-classpath-file @/app/jib-main-class-file \
-#        /var/opentripplanner/ $@
+#        "$OTP_HOMEDIR/" $@
 #
 # Режимы (первый аргумент или OTP_MODE):
-#   build — собрать graph.obj из OSM/GTFS в /var/opentripplanner и завершиться
+#   build — собрать graph.obj из OSM/GTFS в OTP_HOMEDIR и завершиться
 #   serve — загрузить graph.obj и запустить сервер маршрутизации
 #
 # Версия графа — отдельный самодостаточный каталог (graph.obj + три JSON).
-# В режиме serve монтируется как /var/opentripplanner только для чтения,
-# поэтому автоматическая сборка при отсутствии графа не выполняется:
-# сначала запустите scripts/build-graph.sh.
+# В режиме serve в OTP_HOMEDIR лежит только активная версия (обычно через
+# симлинк data/current), каталог смонтирован для чтения, поэтому автоматическая
+# сборка при отсутствии графа не выполняется: сначала scripts/build-graph.sh.
+# Симлинк разрешается внутри контейнера, а не при монтировании: Docker Desktop
+# запоминает цель симлинка на момент создания контейнера.
 #
 # --abortOnUnknownConfig обязателен: опечатка в конфиге должна ломать запуск,
 # а не тихо игнорироваться (как было с routingDefaults.maxWalkDistance).
@@ -25,9 +28,20 @@
 set -euo pipefail
 
 WORKDIR="${OTP_HOMEDIR:-/var/opentripplanner}"
-CONFIG_SRC="${OTP_CONFIG_DIR:-/otp/config}"
 MODE="${1:-${OTP_MODE:-serve}}"
 PORT="${OTP_PORT:-8080}"
+
+# ----------------------------------------------------------------------------
+# Запуск OTP с явным базовым каталогом.
+# Официальный /docker-entrypoint.sh жёстко подставляет /var/opentripplanner/,
+# поэтому путь передаём сами. Это нужно, когда активная версия графа выбрана
+# симлинком: Docker Desktop резолвит симлинк при монтировании один раз и потом
+# отдаёт старую цель, а путь, разрешённый внутри контейнера, всегда актуален.
+# ----------------------------------------------------------------------------
+run_otp() {
+  # shellcheck disable=SC2086  # JAVA_OPTS должен разбиваться на аргументы
+  exec java ${JAVA_OPTS} -cp @/app/jib-classpath-file @/app/jib-main-class-file "${WORKDIR}/" "$@"
+}
 
 log() { printf '[otp-entrypoint] %s\n' "$*"; }
 
@@ -42,26 +56,15 @@ fi
 # Конфиги из образа нужны только для разовой сборки без подготовленного
 # staging. Подготовленный staging всегда содержит свои конфиги с версией.
 # ----------------------------------------------------------------------------
-sync_config() {
-  [ -d "${CONFIG_SRC}" ] || return 0
-  for f in "${CONFIG_SRC}"/*.json; do
-    [ -e "$f" ] || continue
-    base="$(basename "$f")"
-    if [ -f "${WORKDIR}/${base}" ]; then
-      log "конфиг уже на месте, не трогаю: ${base}"
-    else
-      cp "$f" "${WORKDIR}/${base}"
-      log "конфиг установлен из образа: ${base}"
-    fi
-  done
-}
-
 check_inputs() {
-  local osm gtfs
+  local osm gtfs metro
   osm="$(find "${WORKDIR}" -maxdepth 1 -name '*.osm.pbf' 2>/dev/null | head -1 || true)"
-  gtfs="$(find "${WORKDIR}" -maxdepth 1 \( -iname '*gtfs*.zip' -o -name 'feed.zip' \) 2>/dev/null | head -1 || true)"
-  [ -n "${osm}" ]  && log "OSM:  $(basename "${osm}")"
-  [ -n "${gtfs}" ] && log "GTFS: $(basename "${gtfs}")"
+  # OTP находит фиды по шаблону (?i)gtfs в имени файла, а не по содержимому.
+  gtfs="$(find "${WORKDIR}" -maxdepth 1 -iname '*gtfs*.zip' 2>/dev/null | head -1 || true)"
+  metro="$(find "${WORKDIR}" -maxdepth 1 -name 'metro.gtfs.zip' 2>/dev/null | head -1 || true)"
+  [ -n "${osm}" ]   && log "OSM:   $(basename "${osm}")"
+  [ -n "${gtfs}" ]  && log "GTFS:  $(basename "${gtfs}")"
+  [ -n "${metro}" ] && log "Метро: $(basename "${metro}")"
   if [ -z "${gtfs}" ]; then
     log "ERROR: в ${WORKDIR} нет GTFS ZIP — расписание не попадёт в граф."
     exit 1
@@ -93,7 +96,7 @@ check_graph_version() {
     log "WARN: в manifest.json нет otp_serialization_version_id, проверка пропущена"
     return 0
   fi
-  actual="$(/docker-entrypoint.sh --version 2>/dev/null \
+  actual="$(run_otp --version 2>/dev/null \
     | sed -n 's/.*ser\.ver\.id:[[:space:]]*\([0-9][0-9]*\).*/\1/p' | head -1 || true)"
   if [ -z "${actual}" ]; then
     log "WARN: не удалось определить ser.ver.id образа, проверка совместимости пропущена"
@@ -110,7 +113,7 @@ check_graph_version() {
 
 build_graph() {
   log "=== сборка графа (несколько минут) ==="
-  /docker-entrypoint.sh --build --save --abortOnUnknownConfig
+  run_otp --build --save --abortOnUnknownConfig
   if [ -f "${WORKDIR}/graph.obj" ]; then
     log "граф сохранён: $(du -h "${WORKDIR}/graph.obj" | cut -f1)"
   else
@@ -133,13 +136,12 @@ serve_graph() {
   # --load подразумевает --serve.
   # ВАЖНО: у флага --port синтаксис только через пробел ("--port 8080").
   # Запись "--port=8080" OTP принимает как позиционный аргумент-директорию.
-  exec /docker-entrypoint.sh --load --port "${PORT}" --abortOnUnknownConfig
+  run_otp --load --port "${PORT}" --abortOnUnknownConfig
 }
 
 case "${MODE}" in
   build)
     mkdir -p "${WORKDIR}"
-    sync_config
     check_inputs
     build_graph
     ;;

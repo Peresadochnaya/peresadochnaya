@@ -1,5 +1,6 @@
 FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV DATA_ROOT=/data
 WORKDIR /app
 COPY backend/requirements.txt ./requirements.txt
 COPY data/requirements.txt ./data-requirements.txt

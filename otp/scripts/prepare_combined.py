@@ -43,7 +43,7 @@ def prepare(data_root, config_dir):
     args = SimpleNamespace(data_dir=root, config_dir=config_dir,
         osm_pbf=root / 'osm/spb-lo.osm.pbf', gtfs_zip=None,
         gtfs_store=data_root / 'gtfs', otp_version=OTP_VERSION,
-        otp_serialization_version_id=OTP_SERIAL, force=True, metro_zip=None, metro_store=None)
+        otp_serialization_version_id=OTP_SERIAL, force=True, metro_zip=None, metro_store=None, no_metro=True)
     with redirect_stdout(io.StringIO()):
         graph.prepare(args)
     staging = root / 'staging'
