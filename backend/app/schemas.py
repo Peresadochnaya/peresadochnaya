@@ -95,11 +95,11 @@ class RouteRequest(Model):
     passenger: Passenger = Field(default_factory=Passenger)
     departure_at: AwareDatetime
     traffic_mode: Literal["off", "on"] = "off"
-    max_results: int = Field(default=5, ge=1, le=10)
+    max_results: int = Field(default=5, ge=1, le=10, description="Maximum number of routes, including walking")
     providers: list[Literal["otp", "yandex", "2gis"]] = Field(default_factory=lambda: ["otp"], min_length=1, max_length=3,
         description="Enabled candidate planners; MVP uses OTP only. Does not turn on live requests without dummy=false.")
-    modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, min_length=1, max_length=5,
-        description="Allowed public transport modes; null means all. Walking access remains possible.")
+    modes: list[Literal["walk", "bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, min_length=1, max_length=6,
+        description="Allowed transit modes; null means all transit. [walk] requests walking only. Walking competes equally with transit; an empty search triggers a dedicated walking search.")
     exclude_modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, max_length=5)
     max_transfers: int | None = Field(default=None, ge=0, le=5)
     walk_speed: Literal["slow", "normal", "fast"] = Field(default="normal", description="Walking speed preset for the future OTP adapter")

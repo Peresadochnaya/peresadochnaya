@@ -13,6 +13,7 @@ export const App: React.FC = () => {
   const [labelB, setLabelB] = useState('');
 
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
 
@@ -54,6 +55,7 @@ export const App: React.FC = () => {
       setLabelB('');
     }
     setRoutes([]);
+    setHasSearched(false);
   };
 
   const handleSelectPlace = (type: 'A' | 'B', point: Point, label: string) => {
@@ -84,12 +86,13 @@ export const App: React.FC = () => {
     if (!pointA || !pointB) return;
 
     setIsLoadingRoutes(true);
+    setHasSearched(false);
     try {
       const res = await api.planRoute({
         points: [pointA, pointB],
         departure_at: new Date().toISOString(),
         traffic_mode: 'off',
-        modes: filters.modes.length ? filters.modes : null,
+        modes: filters.modes.length ? filters.modes : ['walk'],
         less_walking: filters.lessWalking,
         passenger: {
           ticket_profile: filters.ticketProfile,
@@ -100,6 +103,7 @@ export const App: React.FC = () => {
       }, dummyConfig.routes);
 
       setRoutes(res.routes || []);
+      setHasSearched(true);
       setSelectedRouteIndex(0);
     } catch (err) {
       console.error('Route planning error', err);
@@ -116,6 +120,7 @@ export const App: React.FC = () => {
     setLabelA('');
     setLabelB('');
     setRoutes([]);
+    setHasSearched(false);
     setSelectedRouteIndex(0);
   };
 
@@ -147,6 +152,12 @@ export const App: React.FC = () => {
           onUpdateDummyConfig={setDummyConfig}
           onClearPoints={handleClearPoints}
         />
+
+        {hasSearched && !isLoadingRoutes && routes.length === 0 && (
+          <div role="status" className="bg-white p-4 rounded-xl shadow border border-slate-100 text-sm text-slate-600">
+            Маршруты не найдены. Попробуйте изменить точки или виды транспорта.
+          </div>
+        )}
 
         <RouteResults
           routes={routes}

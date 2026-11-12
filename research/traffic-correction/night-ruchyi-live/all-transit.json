@@ -1,0 +1,83 @@
+{
+  "label": "all-transit",
+  "request": {
+    "query": "query($origin:PlanLabeledLocationInput!,$destination:PlanLabeledLocationInput!,$dateTime:PlanDateTimeInput!,$modes:PlanModesInput,$preferences:PlanPreferencesInput){planConnection(origin:$origin,destination:$destination,dateTime:$dateTime,modes:$modes,preferences:$preferences,first:1){routingErrors{code description inputField} edges{node{start end duration walkDistance legs{mode distance legGeometry{points length}}}}}}",
+    "variables": {
+      "origin": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.00303371629959,
+            "longitude": 30.29806865775501
+          }
+        }
+      },
+      "destination": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.00222602933025,
+            "longitude": 30.437336450251067
+          }
+        }
+      },
+      "dateTime": {
+        "earliestDeparture": "2026-11-13T03:00:00+03:00"
+      },
+      "modes": {
+        "transit": {
+          "access": [
+            "WALK"
+          ],
+          "egress": [
+            "WALK"
+          ],
+          "transfer": [
+            "WALK"
+          ],
+          "transit": [
+            {
+              "mode": "BUS"
+            },
+            {
+              "mode": "TRAM"
+            },
+            {
+              "mode": "TROLLEYBUS"
+            },
+            {
+              "mode": "SUBWAY"
+            },
+            {
+              "mode": "RAIL"
+            }
+          ]
+        }
+      },
+      "preferences": {
+        "street": {
+          "walk": {
+            "speed": 1.3,
+            "reluctance": 4.0
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "http_status": 200,
+    "elapsed_seconds": 0.333704624325037,
+    "body": {
+      "data": {
+        "planConnection": {
+          "routingErrors": [
+            {
+              "code": "NO_TRANSIT_CONNECTION_IN_SEARCH_WINDOW",
+              "description": "No trip found. There may be no transit service within the maximum specified distance or at the specified time, or your start or end point might not be safely accessible.",
+              "inputField": "DATE_TIME"
+            }
+          ],
+          "edges": []
+        }
+      }
+    }
+  }
+}

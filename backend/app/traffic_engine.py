@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 
 from . import schemas as s
 from .otp import SURFACE_MODES, _line, _route_name, _wait_leg, route_fare, TRAFFIC_WARNING
+from .route_selection import is_walking_route
 from .traffic_runtime import run_bounded
 from .traffic_data import CorrectionResult
 from .yandex import ProviderError
@@ -111,7 +112,7 @@ class TrafficEngine:
             try:
                 result = run_bounded(lambda: _invoke(self.planner.plan, req, gtfs_version=gtfs_version,
                     graph_version=graph_version, timeout_seconds=remaining, origin_stop_id=origin_stop_id,
-                    exclude_realtime_updates=True),
+                    exclude_realtime_updates=True, ensure_walking=purpose == 'initial_candidates' and not optional),
                     min(deadline-.05,self.clock()+remaining),self.clock)
             except Exception as exc:
                 calls.append(s.ProviderCallDebug(provider='otp', purpose=purpose, status='failed',
@@ -127,6 +128,28 @@ class TrafficEngine:
             raise ProviderError(504,'planner_timeout','Route planner exceeded the search deadline') from None
         candidates = list(response.routes)
         enabled = set(request.modes or ['bus','tram','trolleybus','metro','rail'])-set(request.exclude_modes or [])
+        enabled.discard('walk')
+        if not enabled:
+            # Walking has no road-traffic correction; do not load or collect
+            # car observations (including billable providers) for this request.
+            for rank, route in enumerate(response.routes, 1):
+                for leg in route.legs:
+                    leg.debug = s.LegDebug(traffic_status='not_applicable',
+                        original_start_at=leg.start_at, original_end_at=leg.end_at)
+                route.debug = s.RouteDebug(evaluation_group='not_applicable',
+                    tail_replanning_status='not_needed', original_otp_route_id=route.id,
+                    original_rank=rank, final_rank=rank,
+                    original_duration_seconds=route.duration_seconds,
+                    corrected_duration_seconds=route.duration_seconds, added_delay_seconds=0,
+                    coverage=coverage(0, 0), transfer_status='not_applicable',
+                    ranking_reason='walking route; road correction not applicable')
+            response.debug = s.RoutesDebug(pipeline_status='complete', trace_id=uuid.uuid4().hex,
+                algorithm_version=ALGORITHM_VERSION, provider_calls=calls,
+                candidate_count=len(candidates), returned_count=len(response.routes), excluded_count=0,
+                time_budget_seconds=SEARCH_SECONDS, deadline_reached=self.clock()>=deadline-.05,
+                otp_replanning_count=0, baseline_gtfs_version=gtfs_version,
+                graph_version=graph_version, coverage=coverage(0, 0))
+            return response
         # OTP may omit a useful mode before postfiltering. Keep every user's
         # preference while requesting that mode independently.
         for mode in sorted(enabled):
@@ -148,7 +171,7 @@ class TrafficEngine:
         observations = []
         if self.collector is not None and self.clock() < deadline:
             try:
-                observations, collected = _invoke(self.collector, candidates, graph, deadline, request=request)
+                observations, collected = _invoke(self.collector, [r for r in candidates if not is_walking_route(r)], graph, deadline, request=request)
                 calls.extend(collected)
             except Exception as exc:
                 graph_warning = 'collection_unavailable:' + type(exc).__name__
@@ -164,6 +187,24 @@ class TrafficEngine:
                     reason=reason, original_route=original, original_rank=rank, tail_replanning_status='failed'))
             else:
                 corrected.append(route)
+        if not corrected and candidates and self.clock() < deadline-.05:
+            # A valid scheduled search can lose every candidate to unreachable
+            # boardings. Ask the planner for a real walking path within the
+            # same deadline rather than fabricating a replacement itinerary.
+            try:
+                fallback = otp(request.model_copy(update={'modes':['walk'], 'exclude_modes':[]}),
+                    purpose='initial_candidates')
+                for candidate in fallback.routes:
+                    if not is_walking_route(candidate):
+                        continue
+                    original = candidate.model_copy(deep=True)
+                    candidates.append(candidate)
+                    originals.append(original)
+                    route, _, _ = self._correct(candidate.model_copy(deep=True), original,
+                        request, graph, [], deadline, otp, len(candidates))
+                    corrected.append(route)
+            except Exception:
+                pass
         corrected, duplicate_exclusions=collapse_replanned_duplicates(corrected,originals)
         excluded.extend(duplicate_exclusions)
         corrected.sort(key=lambda r: (r.debug.evaluation_group == 'incomplete',
@@ -203,6 +244,17 @@ class TrafficEngine:
         return s.TransitServiceDebug(service_kind='unknown', wait_model='unknown')
 
     def _correct(self, route, original, request, graph, observations, deadline, otp, rank):
+        if is_walking_route(route):
+            for leg in route.legs:
+                leg.debug = s.LegDebug(traffic_status='not_applicable',
+                    original_start_at=leg.start_at, original_end_at=leg.end_at)
+            route.debug = s.RouteDebug(evaluation_group='not_applicable',
+                tail_replanning_status='not_needed', original_otp_route_id=original.id,
+                original_rank=rank, original_duration_seconds=original.duration_seconds,
+                corrected_duration_seconds=route.duration_seconds, added_delay_seconds=0,
+                coverage=coverage(0, 0), transfer_status='not_applicable',
+                ranking_reason='walking route; road correction not applicable')
+            return route, 0, None
         from .traffic_geometry import correct_segment
         result_legs, events, seen = [], [], set()
         handled = set()

@@ -1,0 +1,59 @@
+{
+  "label": "pionerskaya-pulkovo",
+  "request": {
+    "query": "query($origin:PlanLabeledLocationInput!,$destination:PlanLabeledLocationInput!,$dateTime:PlanDateTimeInput!,$modes:PlanModesInput,$preferences:PlanPreferencesInput){planConnection(origin:$origin,destination:$destination,dateTime:$dateTime,modes:$modes,preferences:$preferences,first:1){routingErrors{code description inputField} edges{node{start end duration walkDistance legs{mode distance legGeometry{points length}}}}}}",
+    "variables": {
+      "origin": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.0029,
+            "longitude": 30.2963
+          }
+        }
+      },
+      "destination": {
+        "location": {
+          "coordinate": {
+            "latitude": 59.7999,
+            "longitude": 30.273
+          }
+        }
+      },
+      "dateTime": {
+        "earliestDeparture": "2026-11-13T03:00:00+03:00"
+      },
+      "modes": {
+        "direct": [
+          "WALK"
+        ],
+        "directOnly": true
+      },
+      "preferences": {
+        "street": {
+          "walk": {
+            "speed": 1.3,
+            "reluctance": 4.0
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "http_status": 200,
+    "elapsed_seconds": 0.0850911233574152,
+    "body": {
+      "data": {
+        "planConnection": {
+          "routingErrors": [
+            {
+              "code": "NO_DIRECT_MODE_CONNECTION",
+              "description": "No route found for the requested direct mode. The origin and destination may be too far apart or not connected by the requested mode of transport.",
+              "inputField": null
+            }
+          ],
+          "edges": []
+        }
+      }
+    }
+  }
+}
