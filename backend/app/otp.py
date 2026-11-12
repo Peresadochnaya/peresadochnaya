@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 import httpx
 from pydantic import ValidationError
 
-from .schemas import (FareItem, FarePreferences, Leg, LineString, Place, Route, RouteFare,
+from .schemas import (FareItem, FarePreferences, Leg, LineString, Passenger, Place, Route, RouteFare,
                       RouteProvenance, RouteRequest, RoutesResponse, RoutesResponseSources,
                       TransitLine)
 from .yandex import ProviderError
@@ -24,9 +24,10 @@ DEFAULT_TIMEOUT = 20.0
 # street search stays walking-only; bicycles, cars and taxis are not planned.
 PLAN_QUERY = """
 query Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,
-           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput) {
+           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,
+           $preferences: PlanPreferencesInput) {
   planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,
-                 first: $first, modes: $modes) {
+                 first: $first, modes: $modes, preferences: $preferences) {
     routingErrors { code description inputField }
     edges {
       node {
@@ -69,6 +70,9 @@ MODE_FARE = {
     "SUBWAY": "metro",
     "RAIL": "rail",
 }
+
+WALK_SPEED_METERS_PER_SECOND = {"slow": 0.9, "normal": 1.3, "fast": 1.7}
+REQUEST_MODE = {value: key for key, value in MODE_FARE.items()}
 
 MODE_MAP = {
     "WALK": "walk",
@@ -219,22 +223,56 @@ def mode_reluctance(cost_rub: float, value_of_time_rub_per_hour: float) -> float
     return round(min(MAX_RELUCTANCE, 1.0 + penalty_seconds / TYPICAL_LEG_SECONDS), 3)
 
 
-def route_fare(legs: list[Leg], preferences: FarePreferences) -> RouteFare:
-    """Charge one fare per transit boarding plus a fixed transfer fee."""
-    prices = {rule.mode: rule.cost_rub for rule in preferences.rules}
+SURFACE_MODES = {"bus", "tram", "trolleybus"}
+CITY_2026_BANK = {"bus": 88.0, "tram": 88.0, "trolleybus": 88.0, "metro": 95.0, "rail": 65.0}
+CITY_2026_PODOROZHNIK = {mode: 65.0 for mode in CITY_2026_BANK}
+PASS_COVERAGE = {
+    "unlimited_surface": SURFACE_MODES,
+    "unlimited_metro": {"metro"},
+    "unlimited_all": SURFACE_MODES | {"metro"},
+}
+
+
+def route_fare(legs: list[Leg], preferences: FarePreferences | None,
+               passenger: Passenger | None = None) -> RouteFare:
+    """Calculate the 2026 St Petersburg passenger fare after OTP has planned.
+
+    Explicit ``fare`` rules override a profile's base prices.  They do not
+    disable an unlimited pass or the Podorozhnik 60-minute surface transfer.
+    """
+    passenger = passenger or Passenger()
+    custom_prices = {rule.mode: rule.cost_rub for rule in preferences.rules} if preferences else {}
+    payment = passenger.uncovered_payment if passenger.ticket_profile.startswith("unlimited_") else passenger.ticket_profile
+    base = CITY_2026_PODOROZHNIK if payment == "podorozhnik_wallet" else CITY_2026_BANK
+    coverage = PASS_COVERAGE.get(passenger.ticket_profile, set())
+    costs: dict[str, float] = {}
     rides: dict[str, int] = {}
-    for leg in legs:
-        if leg.line is None:
-            continue
+    transfer_start: datetime | None = None
+    surface_rides = 0
+    transit_legs = [leg for leg in legs if leg.line is not None]
+    for leg in transit_legs:
         rides[leg.mode] = rides.get(leg.mode, 0) + 1
-    items = [FareItem(mode=mode, rides=count,
-                      cost_rub=round(prices.get(mode, 0.0) * count, 2))
+        if leg.mode in custom_prices:
+            cost = custom_prices[leg.mode]
+        elif leg.mode in coverage:
+            cost = 0.0
+        elif payment == "podorozhnik_wallet" and leg.mode in SURFACE_MODES:
+            if transfer_start is None or (leg.start_at - transfer_start).total_seconds() > 3600:
+                transfer_start, surface_rides = leg.start_at, 0
+            cost = (65.0, 14.0, 0.0)[min(surface_rides, 2)]
+            surface_rides += 1
+        else:
+            cost = base[leg.mode]
+            # Metro and rail terminate a Podorozhnik surface transfer chain.
+            if leg.mode not in SURFACE_MODES:
+                transfer_start, surface_rides = None, 0
+        costs[leg.mode] = round(costs.get(leg.mode, 0.0) + cost, 2)
+    items = [FareItem(mode=mode, rides=count, cost_rub=costs.get(mode, 0.0))
              for mode, count in sorted(rides.items())]
-    transfers = max(0, sum(rides.values()) - 1)
-    amount = round(sum(item.cost_rub for item in items)
-                   + transfers * preferences.transfer_cost_rub, 2)
-    return RouteFare(amount_rub=amount, items=items, transfers=transfers,
-                     transfer_cost_rub=preferences.transfer_cost_rub)
+    transfers = max(0, len(transit_legs) - 1)
+    transfer_cost = preferences.transfer_cost_rub if preferences else 0.0
+    return RouteFare(amount_rub=round(sum(costs.values()) + transfers * transfer_cost, 2),
+                     items=items, transfers=transfers, transfer_cost_rub=transfer_cost)
 
 
 def _wait_leg(start: datetime, end: datetime, place: Place) -> Leg | None:
@@ -266,7 +304,7 @@ def _route_id(legs: list[Leg], start: datetime) -> str:
     return "otp:" + hashlib.sha1(payload.encode()).hexdigest()[:16]
 
 
-def _itinerary(node: dict, fare: FarePreferences | None = None) -> tuple[Route, bool]:
+def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -> tuple[Route, bool]:
     raw_legs = node.get("legs")
     if not isinstance(raw_legs, list) or not raw_legs:
         raise ValueError("Itinerary without legs")
@@ -327,7 +365,7 @@ def _itinerary(node: dict, fare: FarePreferences | None = None) -> tuple[Route, 
                   geometry=_line(coordinates), start_at=start_at, end_at=end_at,
                   duration_seconds=duration_seconds, transfers=transfers, legs=legs,
                   provenance=RouteProvenance(candidate_providers=["otp"], traffic_providers=[]),
-                  fare=route_fare(legs, fare) if fare is not None else None)
+                  fare=route_fare(legs, fare, passenger))
     return route, has_transit
 
 
@@ -375,13 +413,34 @@ class OtpPlanner:
              graph_version: str | None = None) -> RoutesResponse:
         prices = {rule.mode: rule.cost_rub for rule in request.fare.rules} \
             if request.fare is not None else {}
+        enabled_modes = set(request.modes or REQUEST_MODE)
+        enabled_modes -= set(request.exclude_modes or [])
         transit_modes = []
         for mode in TRANSIT_MODES:
+            public_mode = MODE_FARE[mode]
+            if public_mode not in enabled_modes:
+                continue
             preference = {"mode": mode}
             if request.fare is not None:
                 preference["cost"] = {"reluctance": mode_reluctance(
-                    prices.get(MODE_FARE[mode], 0.0), request.fare.value_of_time_rub_per_hour)}
+                    prices.get(public_mode, 0.0), request.fare.value_of_time_rub_per_hour)}
             transit_modes.append(preference)
+
+        preferences = {
+            "street": {"walk": {"speed": WALK_SPEED_METERS_PER_SECOND[request.walk_speed],
+                                "reluctance": 6.0 if request.less_walking else 4.0}},
+            "transit": {"transfer": (
+                {"maximumTransfers": request.max_transfers}
+                if request.max_transfers is not None else {}
+            )},
+        }
+
+        # No allowed transit modes is an intentional walking-only request, not
+        # a malformed public-transport search.
+        modes = ({"direct": ["WALK"], "directOnly": True}
+                 if not enabled_modes else
+                 {"transit": {"access": ["WALK"], "egress": ["WALK"],
+                              "transfer": ["WALK"], "transit": transit_modes}})
 
         payload = {
             "query": PLAN_QUERY,
@@ -392,9 +451,8 @@ class OtpPlanner:
                     "latitude": request.points[1].lat, "longitude": request.points[1].lon}}},
                 "dateTime": {"earliestDeparture": request.departure_at.isoformat()},
                 "first": request.max_results,
-                "modes": {"transit": {"access": ["WALK"], "egress": ["WALK"],
-                                      "transfer": ["WALK"],
-                                      "transit": transit_modes}},
+                "preferences": preferences,
+                "modes": modes,
             },
         }
         body = self._post(payload)
@@ -412,14 +470,18 @@ class OtpPlanner:
                 node = (edge or {}).get("node")
                 if not isinstance(node, dict):
                     raise ValueError("Invalid itinerary node")
-                route, transit = _itinerary(node, request.fare)
+                route, transit = _itinerary(node, request.fare, request.passenger)
                 routes.append(route)
                 has_transit = has_transit or transit
+            # OTP ranks by generalized cost; the public API promises the
+            # simpler, stable presentation order: fastest route first.
+            routes.sort(key=lambda route: (route.duration_seconds, route.transfers, route.id))
         except (KeyError, TypeError, AttributeError, ValueError, ValidationError):
             raise ProviderError(502, f"{self.error_prefix}_error",
                                 "Invalid response from route planner") from None
 
-        warnings = [FARE_WARNING if request.fare is not None else TICKET_WARNING]
+        warnings = [FARE_WARNING if request.fare is not None else
+                    "Fare is calculated from the selected 2026 ticket profile"]
         if request.fare is not None:
             warnings.append(FARE_SEARCH_WARNING)
             unpriced = sorted({leg.mode for route in routes for leg in route.legs
