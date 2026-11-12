@@ -4,6 +4,7 @@ import { YandexMap } from './YandexMap';
 import { LegMode, Point, Route } from '../types/api';
 
 type MapClickHandler = (event: { get: (key: string) => number[] }) => void;
+type PolylineClickHandler = (event: { stopPropagation: () => void }) => void;
 type PolylineCall = {
   coordinates: [number, number][];
   options: { strokeColor?: string; strokeOpacity?: number };
@@ -11,6 +12,7 @@ type PolylineCall = {
 
 let clickHandlers: MapClickHandler[] = [];
 let polylineCalls: PolylineCall[] = [];
+let polylineClickHandlers: { color?: string; handler: PolylineClickHandler }[] = [];
 
 const createFakeYmaps = ({ zoom = 12 }: { zoom?: number } = {}) => {
   const map = {
@@ -42,6 +44,15 @@ const createFakeYmaps = ({ zoom = 12 }: { zoom?: number } = {}) => {
         options: PolylineCall['options']
       ) => {
         polylineCalls.push({ coordinates, options });
+        return {
+          events: {
+            add: vi.fn((event: string, handler: PolylineClickHandler) => {
+              if (event === 'click') {
+                polylineClickHandlers.push({ color: options.strokeColor, handler });
+              }
+            }),
+          },
+        };
       }
     ),
     control: {
@@ -56,6 +67,7 @@ const baseProps = {
   onPointChange: vi.fn(),
   routes: [] as Route[],
   selectedRouteIndex: 0,
+  onSelectRoute: vi.fn(),
   onSelectStop: vi.fn(),
   dummyMode: true,
   dummyStops: true,
@@ -98,8 +110,10 @@ const createMetroRoute = (line: number): Route => ({
 beforeEach(() => {
   clickHandlers = [];
   polylineCalls = [];
+  polylineClickHandlers = [];
   (globalThis as unknown as { ymaps: unknown }).ymaps = createFakeYmaps();
   baseProps.onPointChange.mockClear();
+  baseProps.onSelectRoute.mockClear();
   baseProps.loadStops.mockClear();
 });
 
@@ -160,8 +174,9 @@ describe('YandexMap stops', () => {
 describe('YandexMap transport colors', () => {
   const cases: { mode: LegMode; color: string }[] = [
     { mode: 'walk', color: '#7C3AED' },
-    { mode: 'bus', color: '#16A34A' },
-    { mode: 'trolleybus', color: '#2563EB' },
+    { mode: 'bus', color: '#65A30D' },
+    { mode: 'trolleybus', color: '#06B6D4' },
+    { mode: 'tram', color: '#DB2777' },
     { mode: 'rail', color: '#374151' },
   ];
 
@@ -177,8 +192,33 @@ describe('YandexMap transport colors', () => {
   });
 });
 
+describe('YandexMap route selection', () => {
+  it('selects an unselected route when its line is clicked', () => {
+    render(
+      <YandexMap
+        {...baseProps}
+        pointA={null}
+        pointB={null}
+        routes={[createMetroRoute(1), createMetroRoute(2)]}
+        selectedRouteIndex={0}
+      />
+    );
+
+    const greyLine = polylineClickHandlers.find((item) => item.color === '#94A3B8');
+    expect(greyLine).toBeDefined();
+
+    const stopPropagation = vi.fn();
+    act(() => {
+      greyLine!.handler({ stopPropagation });
+    });
+
+    expect(stopPropagation).toHaveBeenCalledTimes(1);
+    expect(baseProps.onSelectRoute).toHaveBeenCalledWith(1);
+  });
+});
+
 describe('YandexMap overlapping routes', () => {
-  it('offsets coincident route lines so both are visible', () => {
+  it('keeps coincident routes in place and draws the selected route on top', () => {
     const first = createMetroRoute(1);
     const second = { ...createMetroRoute(1), id: 'route-2' };
 
@@ -192,16 +232,24 @@ describe('YandexMap overlapping routes', () => {
       />
     );
 
-    const firstPoints = new Set(
-      polylineCalls.map((call) => `${call.coordinates[0][0]},${call.coordinates[0][1]}`)
-    );
-    expect(polylineCalls.length).toBeGreaterThanOrEqual(2);
-    expect(firstPoints.size).toBeGreaterThan(1);
+    const latest = polylineCalls.slice(-2);
+    expect(latest).toHaveLength(2);
+
+    // Невыбранный маршрут: серый и слегка прозрачный
+    expect(latest[0].options.strokeColor).toBe('#94A3B8');
+    expect(latest[0].options.strokeOpacity).toBe(0.55);
+
+    // Выбранный маршрут: цветной, непрозрачный и нарисован последним
+    expect(latest[1].options.strokeColor).toBe('#D6083B');
+    expect(latest[1].options.strokeOpacity).toBe(1);
+
+    // Геометрия не смещается
+    expect(latest[0].coordinates).toEqual(latest[1].coordinates);
   });
 });
 
 describe('YandexMap metro line colors', () => {
-  it('draws both selected and unselected route lines without transparency', () => {
+  it('keeps the selected route opaque and makes other routes slightly transparent', () => {
     render(
       <YandexMap
         {...baseProps}
@@ -213,9 +261,16 @@ describe('YandexMap metro line colors', () => {
     );
 
     expect(polylineCalls.length).toBeGreaterThan(0);
-    for (const call of polylineCalls) {
-      expect(call.options.strokeOpacity).toBe(1);
-    }
+    expect(
+      polylineCalls.some(
+        (call) => call.options.strokeColor === '#0078C9' && call.options.strokeOpacity === 1
+      )
+    ).toBe(true);
+    expect(
+      polylineCalls.some(
+        (call) => call.options.strokeColor === '#94A3B8' && call.options.strokeOpacity === 0.55
+      )
+    ).toBe(true);
   });
 
   it.each([

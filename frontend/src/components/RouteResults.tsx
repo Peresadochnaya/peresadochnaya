@@ -105,24 +105,38 @@ export const RouteResults: React.FC<RouteResultsProps> = ({
             {/* Подробный список остановок перегона при выбранном маршруте */}
             {isSelected && (
               <div className="mt-3 pt-3 border-t border-slate-200 flex flex-col gap-2 text-xs">
-                {route.legs.map((leg, lIdx) => (
-                  <div key={lIdx} className="flex gap-2">
-                    <div className="w-1.5 bg-slate-300 rounded-full" />
-                    <div className="flex-1">
-                      <div className="flex justify-between gap-2 font-medium text-slate-700">
-                        <span className="min-w-0 truncate">{leg.from.name || 'Точка отправления'}</span>
-                        <span className="shrink-0">{formatTime(leg.start_at)}</span>
+                {route.legs.map((leg, lIdx) => {
+                  if (leg.mode === 'wait') {
+                    return (
+                      <div key={lIdx} className="flex gap-2">
+                        <div className="w-1.5 bg-amber-300 rounded-full" />
+                        <div className="flex-1 flex justify-between gap-2 font-medium text-amber-700">
+                          <span>Ожидание</span>
+                          <span className="shrink-0">{formatTime(leg.start_at)}</span>
+                        </div>
                       </div>
-                      <div className="text-slate-500 my-0.5">
-                        {leg.line ? `${leg.mode}: ${leg.line.short_name}` : leg.mode} ({formatDuration(leg.duration_seconds)})
-                      </div>
-                      <div className="flex justify-between gap-2 font-medium text-slate-700">
-                        <span className="min-w-0 truncate">{leg.to.name || 'Точка прибытия'}</span>
-                        <span className="shrink-0">{formatTime(leg.end_at)}</span>
+                    );
+                  }
+
+                  return (
+                    <div key={lIdx} className="flex gap-2">
+                      <div className="w-1.5 bg-slate-300 rounded-full" />
+                      <div className="flex-1">
+                        <div className="flex justify-between gap-2 font-medium text-slate-700">
+                          <span className="min-w-0 truncate">{leg.from.name || 'Точка отправления'}</span>
+                          <span className="shrink-0">{formatTime(leg.start_at)}</span>
+                        </div>
+                        <div className="text-slate-500 my-0.5">
+                          {leg.line ? `${leg.mode}: ${leg.line.short_name}` : leg.mode} ({formatDuration(leg.duration_seconds)})
+                        </div>
+                        <div className="flex justify-between gap-2 font-medium text-slate-700">
+                          <span className="min-w-0 truncate">{leg.to.name || 'Точка прибытия'}</span>
+                          <span className="shrink-0">{formatTime(leg.end_at)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

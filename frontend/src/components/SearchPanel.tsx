@@ -17,8 +17,7 @@ interface SearchPanelProps {
   }) => void;
   dummyConfig: DummyConfig;
   onUpdateDummyConfig: (newConfig: DummyConfig) => void;
-  hasRoutes: boolean;
-  onClearRoute: () => void;
+  onClearPoints: () => void;
 }
 
 const MODES: { id: TransportMode; label: string }[] = [
@@ -40,8 +39,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   onSearch,
   dummyConfig,
   onUpdateDummyConfig,
-  hasRoutes,
-  onClearRoute
+  onClearPoints
 }) => {
   const [inputA, setInputA] = useState(labelA);
   const [inputB, setInputB] = useState(labelB);
@@ -126,6 +124,14 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       setSuggestionsB([]);
     }
     onClearPoint(type);
+  };
+
+  const handleClearPoints = () => {
+    setInputA('');
+    setInputB('');
+    setSuggestionsA([]);
+    setSuggestionsB([]);
+    onClearPoints();
   };
 
   const toggleAllDummy = (enabled: boolean) => {
@@ -275,16 +281,26 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           )}
         </div>
 
-        {/* Кнопка смены мест точек */}
+        {/* Кнопки управления точками */}
         {!isCompact && (
-          <button
-            type="button"
-            onClick={onSwapPoints}
-            title="Поменять местами"
-            className="self-end mr-3 text-slate-400 hover:text-slate-700 text-xs flex items-center gap-1"
-          >
-            ⇅ Поменять местами
-          </button>
+          <div className="self-end mr-3 flex items-center gap-3 text-xs">
+            <button
+              type="button"
+              onClick={handleClearPoints}
+              title="Очистить точки А и Б"
+              className="text-slate-400 hover:text-rose-600 flex items-center gap-1"
+            >
+              ✕ Очистить точки
+            </button>
+            <button
+              type="button"
+              onClick={onSwapPoints}
+              title="Поменять местами"
+              className="text-slate-400 hover:text-slate-700 flex items-center gap-1"
+            >
+              ⇅ Поменять местами
+            </button>
+          </div>
         )}
 
         {/* Точка Б */}
@@ -399,24 +415,14 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       </div>
       )}
 
-      {hasRoutes ? (
-        <button
-          type="button"
-          onClick={onClearRoute}
-          className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-medium py-2 rounded-lg transition"
-        >
-          Очистить маршрут
-        </button>
-      ) : (
-        <button
-          type="button"
-          disabled={!pointA || !pointB}
-          onClick={() => onSearch({ modes: selectedModes, lessWalking, ticketProfile })}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-2 rounded-lg transition"
-        >
-          {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}
-        </button>
-      )}
+      <button
+        type="button"
+        disabled={!pointA || !pointB}
+        onClick={() => onSearch({ modes: selectedModes, lessWalking, ticketProfile })}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-2 rounded-lg transition"
+      >
+        {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}
+      </button>
     </div>
   );
 };

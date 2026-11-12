@@ -109,8 +109,12 @@ export const App: React.FC = () => {
     }
   };
 
-  // Очистка найденных маршрутов, точки А и Б остаются
-  const handleClearRoute = () => {
+  // Очистка обеих точек и найденных маршрутов
+  const handleClearPoints = () => {
+    setPointA(null);
+    setPointB(null);
+    setLabelA('');
+    setLabelB('');
     setRoutes([]);
     setSelectedRouteIndex(0);
   };
@@ -141,8 +145,7 @@ export const App: React.FC = () => {
           onSearch={handleSearch}
           dummyConfig={dummyConfig}
           onUpdateDummyConfig={setDummyConfig}
-          hasRoutes={routes.length > 0}
-          onClearRoute={handleClearRoute}
+          onClearPoints={handleClearPoints}
         />
 
         <RouteResults
@@ -168,6 +171,7 @@ export const App: React.FC = () => {
           onPointChange={handlePointChange}
           routes={routes}
           selectedRouteIndex={selectedRouteIndex}
+          onSelectRoute={setSelectedRouteIndex}
           onSelectStop={setSelectedStop}
           loadStops={handleLoadStops}
           dummyStops={dummyConfig.stops}
