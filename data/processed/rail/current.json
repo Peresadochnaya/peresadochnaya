@@ -1,0 +1,12 @@
+{
+  "sha256": "c30ed038cdb6b26f4dee5255cbb71e0a93a36281961e393a79951f78033710b9",
+  "checked_at": "2026-11-12T16:43:18.259959+03:00",
+  "routes": 839,
+  "stops": 414,
+  "invalid_calendar_rows": 0,
+  "active_service_ids": 1,
+  "latest_exception_date": "20261118",
+  "service_date": "20261112",
+  "warning": null,
+  "usable": true
+}

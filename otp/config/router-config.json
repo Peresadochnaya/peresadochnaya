@@ -11,7 +11,9 @@
     "transferSlack": "PT2M",
     "accessEgress": {
       "maxDuration": "PT30M"
+    },
+    "itineraryFilters": {
+      "removeItinerariesWithSameRoutesAndStops": true
     }
   }
 }
-
