@@ -71,7 +71,6 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   const markerBRef = useRef<any>(null);
   const routesCollectionRef = useRef<any>(null);
   const stopsCollectionRef = useRef<any>(null);
-  const [mapZoom, setMapZoom] = useState(13);
 
   // Ссылки на актуальные точки для событий клика
   const pointAState = useRef(pointA);
@@ -296,7 +295,6 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       });
       routesCollectionRef.current.add(polyline);
     });
-  }, [routes, selectedRouteIndex, mapZoom]);
 
     // Выбранный маршрут рисуем последним и выше остальных:
     // там, где линии совпадают, видна только его цветная линия.
