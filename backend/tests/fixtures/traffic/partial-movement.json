@@ -1,0 +1,9 @@
+{
+  "description": "Approved D31 independent numerical example; no real traffic data",
+  "geometry": [[30.0, 60.0], [30.02, 60.0]],
+  "observation_geometry": [[30.0, 60.0], [30.01, 60.0]],
+  "original_movement_seconds": 480,
+  "observation_seconds": 360,
+  "expected_added_seconds": 120,
+  "expected_corrected_movement_seconds": 600
+}

@@ -1,0 +1,84 @@
+{
+  "case": "live-search",
+  "status": "succeeded",
+  "network_calls": 0,
+  "paid_calls": 0,
+  "elapsed_seconds": 0.1244491410034243,
+  "otp_recordings_consumed": 1,
+  "otp_requests_attempted": 1,
+  "recorded_tail_input_mismatch": false,
+  "replay_limitation": null,
+  "otp_recordings_available": 1,
+  "profile_version": "osm-and-official-bus-lanes-v2",
+  "profile_sha256": "d1f6009112060e76e02cd51727e5bf88e0049cd637482ab5cec6faa594d40580",
+  "profile_summary": {
+    "osm_directed_ways": 433,
+    "official_directed_fragments": 6,
+    "gtfs_patterns": 1084,
+    "directed_edges": 674,
+    "dedicated_m": 524701.1471627988,
+    "geometry_variants": 1699,
+    "coverage_unit": "sum of directed GTFS geometry variant metres, not physical city lane length"
+  },
+  "gtfs_source_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "observations_received_at": "2026-11-12T18:38:50.488115+00:00",
+  "pipeline_status": "complete",
+  "returned_routes": 2,
+  "excluded_count": 0,
+  "routes": [
+    {
+      "id": "otp:464f278af01926de",
+      "name": "Автобус 74",
+      "duration_seconds": 2087,
+      "original_duration_seconds": 2029,
+      "added_delay_seconds": 58,
+      "quality": "sufficient",
+      "coverage_ratio": 0.8541485160645433,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 391,
+          "original_duration_seconds": 391
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 565,
+          "original_duration_seconds": 565
+        },
+        {
+          "mode": "bus",
+          "line": "74",
+          "duration_seconds": 778,
+          "original_duration_seconds": 720
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 353,
+          "original_duration_seconds": 353
+        }
+      ]
+    },
+    {
+      "id": "otp:b83fad303be31df5",
+      "name": "Пешеходный маршрут",
+      "duration_seconds": 2824,
+      "original_duration_seconds": 2824,
+      "added_delay_seconds": 0,
+      "quality": "not_applicable",
+      "coverage_ratio": null,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 2824,
+          "original_duration_seconds": 2824
+        }
+      ]
+    }
+  ]
+}

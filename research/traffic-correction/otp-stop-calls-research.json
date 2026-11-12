@@ -1,0 +1,47 @@
+{
+  "errors": [
+    {
+      "message": "Exception while fetching data (/planConnection/edges[0]/node/legs[1]/stopCalls) : Cannot find times for Trip{2:84486404 93} on service date 2026-11-12",
+      "locations": [
+        {
+          "line": 14,
+          "column": 16
+        }
+      ],
+      "path": [
+        "planConnection",
+        "edges",
+        0,
+        "node",
+        "legs",
+        1,
+        "stopCalls"
+      ],
+      "extensions": {
+        "classification": "DataFetchingException"
+      }
+    },
+    {
+      "message": "Exception while fetching data (/planConnection/edges[0]/node/legs[2]/stopCalls) : Cannot find times for Trip{2:81713851 177} on service date 2026-11-12",
+      "locations": [
+        {
+          "line": 14,
+          "column": 16
+        }
+      ],
+      "path": [
+        "planConnection",
+        "edges",
+        0,
+        "node",
+        "legs",
+        2,
+        "stopCalls"
+      ],
+      "extensions": {
+        "classification": "DataFetchingException"
+      }
+    }
+  ],
+  "legs": []
+}

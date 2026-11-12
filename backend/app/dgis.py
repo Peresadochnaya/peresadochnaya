@@ -38,18 +38,18 @@ class DgisClient:
         raise ProviderError(status, f"{self.error_prefix}_{suffix}", message) from None
 
     def _request(self, method: str, url: str, *, params: dict | None = None,
-                 body: dict | None = None, catalog: bool = False) -> dict:
+                 body: dict | None = None, catalog: bool = False, timeout_seconds: float = 8) -> dict:
         key = os.getenv("DGIS_API_KEY", "").strip()
         if not key:
             self.fail(503, "unavailable", "2GIS provider key is not configured")
         try:
-            kwargs = {"params": {**(params or {}), "key": key}, "timeout": 8, "follow_redirects": False}
+            kwargs = {"params": {**(params or {}), "key": key}, "timeout": timeout_seconds, "follow_redirects": False}
             if body is not None:
                 kwargs["json"] = body
             if self.client is not None:
                 response = self.client.request(method, url, **kwargs)
             else:
-                with httpx.Client(trust_env=False, follow_redirects=False, timeout=8) as client:
+                with httpx.Client(trust_env=False, follow_redirects=False, timeout=timeout_seconds) as client:
                     response = client.request(method, url, **kwargs)
             if response.status_code == 429:
                 self.fail(503, "quota", "2GIS quota or rate limit reached")
@@ -251,7 +251,39 @@ def parse_road_route(data: dict, request: RoadRouteRequest, now: datetime) -> Ro
 class DgisRouter(DgisClient):
     error_prefix = "dgis_router_provider"
 
+    def estimate_observations(self,points,timeout_seconds=8):
+        if timeout_seconds<=0: raise ProviderError(504,'dgis_router_provider_timeout','Search deadline reached')
+        if len(points)<2: raise ValueError('2GIS requires at least two points')
+        coordinates=[(p.lon,p.lat) if hasattr(p,'lon') else p for p in points]
+        body={'points':[{'type':'stop','lon':lon,'lat':lat} for lon,lat in coordinates],'transport':'driving','route_mode':'fastest','traffic_mode':'jam','output':'detailed','locale':'ru','alternative':3}
+        data=self._request('POST',ROUTER_URL,body=body,timeout_seconds=min(8,timeout_seconds))
+        return parse_observations(data,datetime.now(timezone.utc))
+
     def estimate(self, request: RoadRouteRequest) -> RoadRouteResponse:
         body = driving_body(request, datetime.now(timezone.utc))
         data = self._request("POST", ROUTER_URL, body=body)
         return parse_road_route(data, request, datetime.now(timezone.utc))
+
+
+def parse_observations(data,received_at):
+    """Retain every alternative and whole outcoming_path times exactly once."""
+    from .traffic_data import RoadObservation
+    stamp=received_at.timestamp() if isinstance(received_at,datetime) else float(received_at)
+    try:
+        if data['status'] in ('ROUTE_NOT_FOUND','ROUTE_DOES_NOT_EXISTS','ATTRACT_FAIL','POINT_EXCLUDED'): return []
+        if data['status']!='OK' or data['type']!='result': raise ValueError('Failed result')
+        observations=[]
+        for alternative,item in enumerate(data['result']):
+            if item.get('type','carrouting')!='carrouting': raise ValueError('Expected driving result')
+            for index,maneuver in enumerate(item['maneuvers']):
+                path=maneuver.get('outcoming_path')
+                if path is None: continue
+                line=[]
+                for part in path['geometry']:
+                    points=_wkt_line(part['selection'])
+                    if line and line[-1]!=points[0]: raise ValueError('Disconnected geometry')
+                    line.extend(points[1:] if line else points)
+                observations.append(RoadObservation(f'2gis:{stamp}:{alternative}:{index}','2gis',tuple(line),path['distance'],path['duration'],stamp,alternative_index=alternative,part_index=index))
+        return observations
+    except (KeyError,TypeError,AttributeError,ValueError,IndexError,OverflowError):
+        raise ProviderError(502,'dgis_router_provider_error','Invalid realtime observation from 2GIS provider') from None

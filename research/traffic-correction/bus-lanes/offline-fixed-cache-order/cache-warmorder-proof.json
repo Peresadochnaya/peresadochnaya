@@ -1,0 +1,417 @@
+{
+  "case": "pionerskaya-rodeo",
+  "network_calls": 0,
+  "paid_calls": 0,
+  "selected_occurrences": 31,
+  "trip_cache_before_bfs": 3,
+  "trip_cache_after_bfs": 14,
+  "recorded_local_provider_invocations": 1,
+  "exact_result_equality": true,
+  "measurement_sha256": "44be5ee742dfe28cb5203b401db87d1563c214c4325a244b9020507cd093c937",
+  "profile_sha256": "d1f6009112060e76e02cd51727e5bf88e0049cd637482ab5cec6faa594d40580",
+  "details": [
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        16,
+        17
+      ],
+      "ambiguous": false,
+      "covered_m": 614.3727417494168,
+      "applicable_m": 635.2489544624088,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        17,
+        18
+      ],
+      "ambiguous": false,
+      "covered_m": 1165.8598241725201,
+      "applicable_m": 1192.5791977409774,
+      "added_seconds": 15.755402531590907
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        18,
+        19
+      ],
+      "ambiguous": false,
+      "covered_m": 217.5227439409061,
+      "applicable_m": 232.76984384449443,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        19,
+        20
+      ],
+      "ambiguous": false,
+      "covered_m": 554.991952335874,
+      "applicable_m": 572.8714546460225,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        20,
+        21
+      ],
+      "ambiguous": false,
+      "covered_m": 498.88321348063016,
+      "applicable_m": 514.512104989562,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        21,
+        22
+      ],
+      "ambiguous": false,
+      "covered_m": 463.83153396737697,
+      "applicable_m": 479.21717476420565,
+      "added_seconds": 6.5999694727801845
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        22,
+        23
+      ],
+      "ambiguous": false,
+      "covered_m": 382.0144222998503,
+      "applicable_m": 396.72886422378184,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        23,
+        24
+      ],
+      "ambiguous": false,
+      "covered_m": 622.4607869072169,
+      "applicable_m": 634.9195634109411,
+      "added_seconds": 0.03131988733349077
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        16,
+        17
+      ],
+      "ambiguous": false,
+      "covered_m": 614.3727417494168,
+      "applicable_m": 635.2489544624088,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        17,
+        18
+      ],
+      "ambiguous": false,
+      "covered_m": 1165.8598241725201,
+      "applicable_m": 1192.5791977409774,
+      "added_seconds": 15.755402531590907
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        18,
+        19
+      ],
+      "ambiguous": false,
+      "covered_m": 217.5227439409061,
+      "applicable_m": 232.76984384449443,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        19,
+        20
+      ],
+      "ambiguous": false,
+      "covered_m": 554.991952335874,
+      "applicable_m": 572.8714546460225,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        20,
+        21
+      ],
+      "ambiguous": false,
+      "covered_m": 498.88321348063016,
+      "applicable_m": 514.512104989562,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        21,
+        22
+      ],
+      "ambiguous": false,
+      "covered_m": 463.83153396737697,
+      "applicable_m": 479.21717476420565,
+      "added_seconds": 6.5999694727801845
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        22,
+        23
+      ],
+      "ambiguous": false,
+      "covered_m": 382.0144222998503,
+      "applicable_m": 396.72886422378184,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "83527645",
+        null,
+        23,
+        24
+      ],
+      "ambiguous": false,
+      "covered_m": 622.4607869072169,
+      "applicable_m": 634.9195634109411,
+      "added_seconds": 0.03131988733349077
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84079709",
+        null,
+        23,
+        24
+      ],
+      "ambiguous": false,
+      "covered_m": 230.02669634697904,
+      "applicable_m": 240.89812574422555,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84079709",
+        null,
+        24,
+        25
+      ],
+      "ambiguous": false,
+      "covered_m": 390.9096164071241,
+      "applicable_m": 398.747082307157,
+      "added_seconds": 0.013358212605629347
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84079709",
+        null,
+        25,
+        26
+      ],
+      "ambiguous": false,
+      "covered_m": 297.0660297692971,
+      "applicable_m": 311.791044228301,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84079709",
+        null,
+        26,
+        27
+      ],
+      "ambiguous": false,
+      "covered_m": 416.18111181658634,
+      "applicable_m": 426.4141198418236,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84079709",
+        null,
+        27,
+        28
+      ],
+      "ambiguous": false,
+      "covered_m": 409.9176899003668,
+      "applicable_m": 417.72496416994665,
+      "added_seconds": 2.622127055713675
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        12,
+        13
+      ],
+      "ambiguous": false,
+      "covered_m": 603.2700798606312,
+      "applicable_m": 620.7834109383118,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        13,
+        14
+      ],
+      "ambiguous": false,
+      "covered_m": 1173.3286424645773,
+      "applicable_m": 1186.1306950201395,
+      "added_seconds": 0.11494085327915848
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        14,
+        15
+      ],
+      "ambiguous": false,
+      "covered_m": 226.20576354827568,
+      "applicable_m": 237.42166971947088,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        15,
+        16
+      ],
+      "ambiguous": false,
+      "covered_m": 537.0276780537195,
+      "applicable_m": 542.4530752675763,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        16,
+        17
+      ],
+      "ambiguous": false,
+      "covered_m": 513.6875928766601,
+      "applicable_m": 525.4706095275761,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        17,
+        18
+      ],
+      "ambiguous": false,
+      "covered_m": 461.6705769288354,
+      "applicable_m": 467.947923741811,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        18,
+        19
+      ],
+      "ambiguous": false,
+      "covered_m": 381.5321070215394,
+      "applicable_m": 388.747762298377,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        19,
+        20
+      ],
+      "ambiguous": false,
+      "covered_m": 671.5696109531928,
+      "applicable_m": 688.1684285774021,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        20,
+        21
+      ],
+      "ambiguous": false,
+      "covered_m": 579.5920403523702,
+      "applicable_m": 587.8023730191436,
+      "added_seconds": 0
+    },
+    {
+      "occurrence": [
+        "gtfs",
+        "84094763",
+        null,
+        21,
+        22
+      ],
+      "ambiguous": false,
+      "covered_m": 402.73278413319224,
+      "applicable_m": 406.9590743422677,
+      "added_seconds": 0
+    }
+  ]
+}

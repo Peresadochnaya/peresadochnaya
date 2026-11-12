@@ -1,0 +1,242 @@
+{
+  "recorded_at": "2026-11-12T17:11:59.615566+00:00",
+  "source": "research/traffic-correction/otp-alternative-filter-review.json",
+  "new_api_calls": 0,
+  "paid_provider_calls": 0,
+  "timezone": "Europe/Moscow (UTC+03:00)",
+  "service_date": "2026-11-12",
+  "frequency_warning": "All stage timestamps are modelled OTP timestamps; exact_times=0 in the inspected surface feed, not confirmed physical vehicle departures.",
+  "routes": [
+    {
+      "title": "Автобусы 93 → 177",
+      "source_label": "baseline_default_filters",
+      "user_earliest_departure": "2026-11-12T17:00:00+03:00",
+      "route_start": "2026-11-12T17:00:00+03:00",
+      "route_end": "2026-11-12T18:18:45+03:00",
+      "initial_gap_seconds": 0,
+      "totals": {
+        "walk_seconds": 628,
+        "wait_seconds": 1157,
+        "ride_seconds": 2940,
+        "walk_metres": 698.17,
+        "ride_metres": 12725.0,
+        "total_metres": 13423.17,
+        "total_seconds": 4725,
+        "transfers": 1,
+        "generalized_cost": 7921
+      },
+      "stages": [
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "Origin",
+          "to": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "start": "2026-11-12T17:00:00+03:00",
+          "end": "2026-11-12T17:04:59+03:00",
+          "duration_seconds": 299,
+          "distance_metres": 327.6,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WAIT",
+          "line": null,
+          "from": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "to": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "start": "2026-11-12T17:04:59+03:00",
+          "end": "2026-11-12T17:14:47+03:00",
+          "duration_seconds": 588,
+          "distance_metres": 0,
+          "derived_from": "Gap between previous stage end and next leg start; not a separate raw OTP leg."
+        },
+        {
+          "mode": "BUS",
+          "line": "93",
+          "from": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "to": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "start": "2026-11-12T17:14:47+03:00",
+          "end": "2026-11-12T17:43:47+03:00",
+          "duration_seconds": 1740,
+          "distance_metres": 6772.0,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WAIT",
+          "line": null,
+          "from": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "to": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "start": "2026-11-12T17:43:47+03:00",
+          "end": "2026-11-12T17:53:16+03:00",
+          "duration_seconds": 569,
+          "distance_metres": 0,
+          "derived_from": "Gap between previous stage end and next leg start; not a separate raw OTP leg."
+        },
+        {
+          "mode": "BUS",
+          "line": "177",
+          "from": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "to": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "start": "2026-11-12T17:53:16+03:00",
+          "end": "2026-11-12T18:13:16+03:00",
+          "duration_seconds": 1200,
+          "distance_metres": 5953.0,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "to": "Destination",
+          "start": "2026-11-12T18:13:16+03:00",
+          "end": "2026-11-12T18:18:45+03:00",
+          "duration_seconds": 329,
+          "distance_metres": 370.57,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        }
+      ]
+    },
+    {
+      "title": "Метро 2 → трамвай 100 → автобус 177",
+      "source_label": "exclude93_list_all_first5",
+      "user_earliest_departure": "2026-11-12T17:00:00+03:00",
+      "route_start": "2026-11-12T17:00:00+03:00",
+      "route_end": "2026-11-12T18:20:11+03:00",
+      "initial_gap_seconds": 0,
+      "totals": {
+        "walk_seconds": 1276,
+        "wait_seconds": 1120,
+        "ride_seconds": 2415,
+        "walk_metres": 1116.3,
+        "ride_metres": 13994.0,
+        "total_metres": 15110.3,
+        "total_seconds": 4811,
+        "transfers": 2,
+        "generalized_cost": 9866
+      },
+      "stages": [
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "Origin",
+          "to": "Пионерская",
+          "start": "2026-11-12T17:00:00+03:00",
+          "end": "2026-11-12T17:05:17+03:00",
+          "duration_seconds": 317,
+          "distance_metres": 235.85,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WAIT",
+          "line": null,
+          "from": "Пионерская",
+          "to": "Пионерская",
+          "start": "2026-11-12T17:05:17+03:00",
+          "end": "2026-11-12T17:08:37+03:00",
+          "duration_seconds": 200,
+          "distance_metres": 0,
+          "derived_from": "Gap between previous stage end and next leg start; not a separate raw OTP leg."
+        },
+        {
+          "mode": "SUBWAY",
+          "line": "2",
+          "from": "Пионерская",
+          "to": "Проспект Просвещения",
+          "start": "2026-11-12T17:08:37+03:00",
+          "end": "2026-11-12T17:16:52+03:00",
+          "duration_seconds": 495,
+          "distance_metres": 5899.0,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "Проспект Просвещения",
+          "to": "Ст. метро \"Проспект Просвещения\"",
+          "start": "2026-11-12T17:16:52+03:00",
+          "end": "2026-11-12T17:24:26+03:00",
+          "duration_seconds": 454,
+          "distance_metres": 354.09,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WAIT",
+          "line": null,
+          "from": "Ст. метро \"Проспект Просвещения\"",
+          "to": "Ст. метро \"Проспект Просвещения\"",
+          "start": "2026-11-12T17:24:26+03:00",
+          "end": "2026-11-12T17:30:17+03:00",
+          "duration_seconds": 351,
+          "distance_metres": 0,
+          "derived_from": "Gap between previous stage end and next leg start; not a separate raw OTP leg."
+        },
+        {
+          "mode": "TRAM",
+          "line": "100",
+          "from": "Ст. метро \"Проспект Просвещения\"",
+          "to": "Ст. метро \"Гражданский проспект\"",
+          "start": "2026-11-12T17:30:17+03:00",
+          "end": "2026-11-12T17:52:17+03:00",
+          "duration_seconds": 1320,
+          "distance_metres": 5019.0,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "Ст. метро \"Гражданский проспект\"",
+          "to": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "start": "2026-11-12T17:52:17+03:00",
+          "end": "2026-11-12T17:55:13+03:00",
+          "duration_seconds": 176,
+          "distance_metres": 155.79,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WAIT",
+          "line": null,
+          "from": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "to": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "start": "2026-11-12T17:55:13+03:00",
+          "end": "2026-11-12T18:04:42+03:00",
+          "duration_seconds": 569,
+          "distance_metres": 0,
+          "derived_from": "Gap between previous stage end and next leg start; not a separate raw OTP leg."
+        },
+        {
+          "mode": "BUS",
+          "line": "177",
+          "from": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "to": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "start": "2026-11-12T18:04:42+03:00",
+          "end": "2026-11-12T18:14:42+03:00",
+          "duration_seconds": 600,
+          "distance_metres": 3076.0,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        },
+        {
+          "mode": "WALK",
+          "line": null,
+          "from": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "to": "Destination",
+          "start": "2026-11-12T18:14:42+03:00",
+          "end": "2026-11-12T18:20:11+03:00",
+          "duration_seconds": 329,
+          "distance_metres": 370.57,
+          "derived_from": "OTP leg scheduledTime fields and distance."
+        }
+      ]
+    }
+  ],
+  "delta_second_minus_first": {
+    "walk_seconds": 648,
+    "wait_seconds": -37,
+    "ride_seconds": -525,
+    "walk_metres": 418.13,
+    "ride_metres": 1269.0,
+    "total_metres": 1687.13,
+    "total_seconds": 86,
+    "transfers": 1,
+    "generalized_cost": 1945,
+    "generalized_cost_percent": 24.55
+  },
+  "cost_warning": "Generalized cost is an internal scoring measure, not elapsed seconds or rubles. Per-stage generalized cost was not returned and is not inferred."
+}

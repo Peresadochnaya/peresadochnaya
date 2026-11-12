@@ -141,12 +141,12 @@ def _parse_time(moment: str) -> datetime:
     return parsed
 
 
-def _time(value: dict | None, fallback: str | None = None) -> datetime:
+def _time(value: dict | None, fallback: str | None = None, *, scheduled_only: bool = False) -> datetime:
     """Prefer the real-time estimate, then the scheduled time."""
     if isinstance(value, dict):
         estimated = value.get("estimated") or {}
         moment = estimated.get("time") if isinstance(estimated, dict) else None
-        if isinstance(moment, str) and moment:
+        if not scheduled_only and isinstance(moment, str) and moment:
             return _parse_time(moment)
         fallback = value.get("scheduledTime", fallback)
     if isinstance(fallback, str) and fallback:
@@ -304,7 +304,8 @@ def _route_id(legs: list[Leg], start: datetime) -> str:
     return "otp:" + hashlib.sha1(payload.encode()).hexdigest()[:16]
 
 
-def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -> tuple[Route, bool]:
+def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger, *,
+               scheduled_only: bool = False) -> tuple[Route, bool]:
     raw_legs = node.get("legs")
     if not isinstance(raw_legs, list) or not raw_legs:
         raise ValueError("Itinerary without legs")
@@ -318,8 +319,8 @@ def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -
     for raw in raw_legs:
         origin = _place(raw.get("from") or {})
         destination = _place(raw.get("to") or {})
-        start = _time(raw.get("start"))
-        end = _time(raw.get("end"))
+        start = _time(raw.get("start"), scheduled_only=scheduled_only)
+        end = _time(raw.get("end"), scheduled_only=scheduled_only)
         if end < start:
             raise ValueError("Leg ends before it starts")
         if previous_end is not None and previous_place is not None:
@@ -350,6 +351,9 @@ def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -
     duration = node.get("duration")
     duration_seconds = int(duration) if type(duration) in (int, float) and duration >= 0 \
         else int((end_at - start_at).total_seconds())
+    if scheduled_only:
+        start_at, end_at = legs[0].start_at, legs[-1].end_at
+        duration_seconds = int((end_at - start_at).total_seconds())
     transfers = node.get("numberOfTransfers")
     if type(transfers) is not int or transfers < 0:
         raise ValueError("Invalid transfer count")
@@ -378,13 +382,14 @@ class OtpPlanner:
         self.timeout = timeout or float(os.getenv("OTP_TIMEOUT_SECONDS", DEFAULT_TIMEOUT))
         self.client = client
 
-    def _post(self, payload: dict) -> dict:
+    def _post(self, payload: dict, timeout_seconds: float | None = None) -> dict:
+        timeout = min(self.timeout, timeout_seconds) if timeout_seconds is not None else self.timeout
         try:
             if self.client is not None:
                 response = self.client.post(f"{self.url}/otp/gtfs/v1", json=payload,
-                                            follow_redirects=False, timeout=self.timeout)
+                                            follow_redirects=False, timeout=timeout)
             else:
-                with httpx.Client(timeout=self.timeout, follow_redirects=False,
+                with httpx.Client(timeout=timeout, follow_redirects=False,
                                   trust_env=False) as client:
                     response = client.post(f"{self.url}/otp/gtfs/v1", json=payload)
         except httpx.TimeoutException:
@@ -410,7 +415,9 @@ class OtpPlanner:
         return body
 
     def plan(self, request: RouteRequest, *, gtfs_version: str | None = None,
-             graph_version: str | None = None) -> RoutesResponse:
+             graph_version: str | None = None, timeout_seconds: float | None = None,
+             origin_stop_id: str | None = None,
+             exclude_realtime_updates: bool = False) -> RoutesResponse:
         prices = {rule.mode: rule.cost_rub for rule in request.fare.rules} \
             if request.fare is not None else {}
         enabled_modes = set(request.modes or REQUEST_MODE)
@@ -435,6 +442,11 @@ class OtpPlanner:
             )},
         }
 
+        if exclude_realtime_updates:
+            # Road correction requires the GTFS schedule, without the GPS-delay
+            # feed already accounting for congestion along the same journey.
+            preferences["timetable"] = {"excludeRealTimeUpdates": True}
+
         # No allowed transit modes is an intentional walking-only request, not
         # a malformed public-transport search.
         modes = ({"direct": ["WALK"], "directOnly": True}
@@ -455,7 +467,9 @@ class OtpPlanner:
                 "modes": modes,
             },
         }
-        body = self._post(payload)
+        if origin_stop_id:
+            payload["variables"]["origin"] = {"location": {"stopLocation": {"stopLocationId": origin_stop_id}}}
+        body = self._post(payload, timeout_seconds) if timeout_seconds is not None else self._post(payload)
         try:
             connection = body["data"]["planConnection"]
             errors = connection.get("routingErrors") or []
@@ -470,7 +484,8 @@ class OtpPlanner:
                 node = (edge or {}).get("node")
                 if not isinstance(node, dict):
                     raise ValueError("Invalid itinerary node")
-                route, transit = _itinerary(node, request.fare, request.passenger)
+                route, transit = _itinerary(node, request.fare, request.passenger,
+                                            scheduled_only=exclude_realtime_updates)
                 routes.append(route)
                 has_transit = has_transit or transit
             # OTP ranks by generalized cost; the public API promises the

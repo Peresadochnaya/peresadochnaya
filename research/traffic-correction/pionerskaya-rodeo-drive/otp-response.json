@@ -1,0 +1,131 @@
+{
+  "data": {
+    "planConnection": {
+      "routingErrors": [],
+      "edges": [
+        {
+          "node": {
+            "start": "2026-11-12T19:53:46+03:00",
+            "end": "2026-11-12T20:41:33+03:00",
+            "duration": 2867,
+            "numberOfTransfers": 0,
+            "legs": [
+              {
+                "mode": "WALK",
+                "transitLeg": false,
+                "distance": 65.28,
+                "start": {
+                  "scheduledTime": "2026-11-12T19:53:46+03:00",
+                  "estimated": null
+                },
+                "end": {
+                  "scheduledTime": "2026-11-12T19:54:59+03:00",
+                  "estimated": null
+                },
+                "from": {
+                  "name": "Origin",
+                  "lat": 60.0029,
+                  "lon": 30.2963,
+                  "stop": null
+                },
+                "to": {
+                  "name": "Ст. метро \"Пионерская\"",
+                  "lat": 60.003089,
+                  "lon": 30.296991,
+                  "stop": {
+                    "gtfsId": "2:16613",
+                    "name": "Ст. метро \"Пионерская\""
+                  }
+                },
+                "route": null,
+                "trip": null,
+                "legGeometry": {
+                  "points": "gifmJ}f|wDNuBUKKGKGC??H@?",
+                  "length": 8
+                }
+              },
+              {
+                "mode": "TRAM",
+                "transitLeg": true,
+                "distance": 8184.0,
+                "start": {
+                  "scheduledTime": "2026-11-12T20:00:50+03:00",
+                  "estimated": null
+                },
+                "end": {
+                  "scheduledTime": "2026-11-12T20:35:50+03:00",
+                  "estimated": null
+                },
+                "from": {
+                  "name": "Ст. метро \"Пионерская\"",
+                  "lat": 60.003089,
+                  "lon": 30.296991,
+                  "stop": {
+                    "gtfsId": "2:16613",
+                    "name": "Ст. метро \"Пионерская\""
+                  }
+                },
+                "to": {
+                  "name": "Пр. Луначарского",
+                  "lat": 60.03578,
+                  "lon": 30.36596,
+                  "stop": {
+                    "gtfsId": "2:15991",
+                    "name": "Пр. Луначарского"
+                  }
+                },
+                "route": {
+                  "gtfsId": "2:1138",
+                  "shortName": "55",
+                  "longName": "Шаврова ул. - Придорожная аллея",
+                  "mode": "TRAM"
+                },
+                "trip": {
+                  "gtfsId": "2:84066751"
+                },
+                "legGeometry": {
+                  "points": "mjfmJgk|wDfGe~@BBCA@YP_CFaABs@@m@?c@IwAUgFMmCwFoqACi@GsAA_@?U@YNsADi@A[?YKwBCW?I@AA@GcACk@AMCs@I}AAi@Bc@Dm@h@yG@MAA@@@Mn@{Ir@_J|C}a@@?A?JoAxC{`@z@eL@@AA?ETuCfAwNp@{I@@AABa@fAaOx@wKP}B~AqSDi@@@AARiCr@yJCg@E_@EUMUyE{AgDeAQG?E?DaEqAi@Wua@kVYEw@BkDf@OD?I?H{@Nk@RUN}@j@a@NOBM?SAk@Q]E]AeGt@e@Jy@HgAP}BZ?C?BwCf@iEn@{B\\gC^WBy@JkATiBXeBR?C?B??_ALaAD}A?o@F_LnAaWvCG@?G?FwYfDBGAHcJ|@gAHeAB[CsCSwAYSB_@Ro@d@c@\\QHOBQEOIaAy@sBeBu@q@]YBS",
+                  "length": 146
+                }
+              },
+              {
+                "mode": "WALK",
+                "transitLeg": false,
+                "distance": 388.03,
+                "start": {
+                  "scheduledTime": "2026-11-12T20:35:50+03:00",
+                  "estimated": null
+                },
+                "end": {
+                  "scheduledTime": "2026-11-12T20:41:33+03:00",
+                  "estimated": null
+                },
+                "from": {
+                  "name": "Пр. Луначарского",
+                  "lat": 60.03578,
+                  "lon": 30.36596,
+                  "stop": {
+                    "gtfsId": "2:15991",
+                    "name": "Пр. Луначарского"
+                  }
+                },
+                "to": {
+                  "name": "Destination",
+                  "lat": 60.033718,
+                  "lon": 30.367549,
+                  "stop": null
+                },
+                "route": null,
+                "trip": null,
+                "legGeometry": {
+                  "points": "svlmJgzixD?DQMBGDWD]P}ADWD]D]NAVL|@n@JD~@h@l@TTBF@NDLSNHx@b@l@\\BIBAFBHDDA@GPqBDi@@E",
+                  "length": 32
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

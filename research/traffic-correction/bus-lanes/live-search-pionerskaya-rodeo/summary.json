@@ -1,0 +1,111 @@
+{
+  "status": "succeeded",
+  "elapsed_seconds": 5.3937845829932485,
+  "otp_http_calls": 2,
+  "paid_attempts": 1,
+  "2gis_calls": 0,
+  "route_count": 3,
+  "routes": [
+    {
+      "id": "otp:61057f6d1c37f5af",
+      "duration_seconds": 3750,
+      "debug": {
+        "evaluation_group": "sufficient",
+        "tail_replanning_status": "not_needed",
+        "original_otp_route_id": "otp:61057f6d1c37f5af",
+        "original_rank": 3,
+        "final_rank": 1,
+        "original_duration_seconds": 3749,
+        "corrected_duration_seconds": 3750,
+        "added_delay_seconds": 1,
+        "coverage": {
+          "eligible_distance_meters": 5651.885022452076,
+          "matched_distance_meters": 5550.616876192995,
+          "usable_distance_meters": 5550.616876192995,
+          "usable_coverage_ratio": 0.9820824121763281,
+          "uncovered_distance_meters": 101.26814625908082,
+          "coverage_ratio": 0.9820824121763281
+        },
+        "transfer_status": "not_applicable",
+        "transfers": [],
+        "ranking_reason": "quality group, arrival, transfers, walking distance",
+        "warnings": []
+      }
+    },
+    {
+      "id": "otp:23c2af5a17257316",
+      "duration_seconds": 3408,
+      "debug": {
+        "evaluation_group": "incomplete",
+        "tail_replanning_status": "complete",
+        "original_otp_route_id": "otp:23c2af5a17257316",
+        "original_rank": 2,
+        "final_rank": 2,
+        "original_duration_seconds": 3543,
+        "corrected_duration_seconds": 3408,
+        "added_delay_seconds": 0,
+        "coverage": {
+          "eligible_distance_meters": 4658.847158082393,
+          "matched_distance_meters": 3354.077394681271,
+          "usable_distance_meters": 3354.077394681271,
+          "usable_coverage_ratio": 0.7199372035338089,
+          "uncovered_distance_meters": 1304.7697634011224,
+          "coverage_ratio": 0.7199372035338089
+        },
+        "transfer_status": "feasible",
+        "transfers": [
+          {
+            "from_leg_index": 2,
+            "to_leg_index": 4,
+            "stop_id": "2:4607",
+            "status": "feasible",
+            "next_service": {
+              "service_kind": "frequency",
+              "headway_seconds": 868,
+              "frequency_exact_times": 0,
+              "wait_model": null
+            },
+            "scheduled_departure_at": null,
+            "corrected_arrival_at": "2026-11-12T22:10:51+03:00",
+            "modeled_boarding_at": "2026-11-12T22:30:17+03:00",
+            "modeled_boarding_reachable": true,
+            "tail_replanning_required": true,
+            "minimum_transfer_seconds": 305.0,
+            "remaining_slack_seconds": 861.0,
+            "resolution": "otp_replanned",
+            "replacement_trip_id": null,
+            "reason": null
+          }
+        ],
+        "ranking_reason": "quality group, arrival, transfers, walking distance",
+        "warnings": []
+      }
+    },
+    {
+      "id": "otp:ce4a07abf87f3c57",
+      "duration_seconds": 3408,
+      "debug": {
+        "evaluation_group": "incomplete",
+        "tail_replanning_status": "not_needed",
+        "original_otp_route_id": "otp:ce4a07abf87f3c57",
+        "original_rank": 1,
+        "final_rank": 3,
+        "original_duration_seconds": 3401,
+        "corrected_duration_seconds": 3408,
+        "added_delay_seconds": 7,
+        "coverage": {
+          "eligible_distance_meters": 4658.847158082393,
+          "matched_distance_meters": 3354.077394681271,
+          "usable_distance_meters": 3354.077394681271,
+          "usable_coverage_ratio": 0.7199372035338089,
+          "uncovered_distance_meters": 1304.7697634011224,
+          "coverage_ratio": 0.7199372035338089
+        },
+        "transfer_status": "not_applicable",
+        "transfers": [],
+        "ranking_reason": "quality group, arrival, transfers, walking distance",
+        "warnings": []
+      }
+    }
+  ]
+}
