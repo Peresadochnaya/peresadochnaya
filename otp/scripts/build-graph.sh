@@ -12,14 +12,16 @@
 # Если версия уже опубликована, сборка пропускается (кроме --force).
 #
 # Использование:
-#   ./scripts/build-graph.sh                       # GTFS из ../data/gtfs
+#   ./scripts/build-graph.sh                       # GTFS из ../data/gtfs + метро
 #   ./scripts/build-graph.sh --gtfs-zip data/incoming/portal-gtfs.zip
 #   ./scripts/build-graph.sh --restart             # + пересоздать контейнер otp
 #   ./scripts/build-graph.sh --force               # пересобрать ту же версию
+#   ./scripts/build-graph.sh --no-metro            # граф без подземки
 #
 # Переменные: OTP_DATA_DIR, OSM_PBF, GTFS_STORE, GTFS_ZIP, METRO_STORE,
 #             METRO_ZIP, OTP_IMAGE.
-# METRO_STORE="" отключает метро; по умолчанию берётся ../data/metro.
+# Метро обязательно: фид берётся из ../data/metro, отсутствие — ошибка.
+# METRO_STORE="" равносилен --no-metro.
 # ============================================================================
 set -euo pipefail
 
@@ -40,7 +42,7 @@ FORCE=0
 log() { printf '[build-graph] %s\n' "$*"; }
 
 usage() {
-  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '5,24p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -49,6 +51,9 @@ while [ $# -gt 0 ]; do
     --gtfs-store) GTFS_STORE="${2:-}"; shift 2 ;;
     --osm-pbf) OSM_PBF="${2:-}"; shift 2 ;;
     --data-dir) DATA_DIR="${2:-}"; shift 2 ;;
+    --metro-zip) METRO_ZIP="${2:-}"; shift 2 ;;
+    --metro-store) METRO_STORE="${2:-}"; shift 2 ;;
+    --no-metro) METRO_STORE=""; METRO_ZIP=""; shift ;;
     --restart) RESTART=1; shift ;;
     --force) FORCE=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -94,6 +99,9 @@ if [ -n "${METRO_ZIP}" ]; then
   PREPARE_ARGS+=(--metro-zip "${METRO_ZIP}")
 elif [ -n "${METRO_STORE}" ]; then
   PREPARE_ARGS+=(--metro-store "${METRO_STORE}")
+else
+  # Без явного флага prepare взял бы путь по умолчанию и всё равно включил метро.
+  PREPARE_ARGS+=(--no-metro)
 fi
 [ "${FORCE}" -eq 1 ] && PREPARE_ARGS+=(--force)
 
@@ -101,8 +109,28 @@ PREPARED="$(python3 "${SCRIPT_DIR}/graph_store.py" "${PREPARE_ARGS[@]}")"
 STATUS="$(printf '%s' "${PREPARED}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
 VERSION="$(printf '%s' "${PREPARED}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
 
+restart_otp() {
+  log "пересоздаю контейнер otp"
+  docker compose -f "${OTP_DIR}/docker-compose.yml" up -d --force-recreate otp
+  for _ in $(seq 1 60); do
+    if python3 "${SCRIPT_DIR}/graph_store.py" verify --data-dir "${DATA_DIR}" \
+         --url "http://localhost:${OTP_PORT:-8080}" 2>/dev/null; then
+      log "OTP загрузил версию ${VERSION}"
+      return 0
+    fi
+    sleep 2
+  done
+  log "ERROR: OTP не подтвердил загрузку версии ${VERSION}; смотрите docker compose logs otp"
+  return 1
+}
+
 if [ "${STATUS}" = "unchanged" ]; then
   log "версия ${VERSION} уже опубликована — сборка не нужна"
+  # prepare мог активировать её сам, если указатель current отставал.
+  if [ "${RESTART}" -eq 1 ]; then
+    restart_otp
+    exit $?
+  fi
   log "пересоздать контейнер: docker compose up -d --force-recreate otp"
   exit 0
 fi
@@ -126,17 +154,8 @@ trap - ERR
 log "граф опубликован: ${DATA_DIR}/versions/${VERSION}"
 
 if [ "${RESTART}" -eq 1 ]; then
-  log "пересоздаю контейнер otp"
-  docker compose -f "${OTP_DIR}/docker-compose.yml" up -d --force-recreate otp
-  for _ in $(seq 1 60); do
-    if python3 "${SCRIPT_DIR}/graph_store.py" verify --data-dir "${DATA_DIR}" --url "http://localhost:${OTP_PORT:-8080}" 2>/dev/null; then
-      log "OTP загрузил версию ${VERSION}"
-      exit 0
-    fi
-    sleep 2
-  done
-  log "ERROR: OTP не подтвердил загрузку версии ${VERSION}; смотрите docker compose logs otp"
-  exit 1
+  restart_otp
+  exit $?
 fi
 
 log "дальше: docker compose up -d --force-recreate otp"

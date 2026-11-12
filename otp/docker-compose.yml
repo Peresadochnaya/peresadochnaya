@@ -6,9 +6,10 @@
 #   docker compose up -d otp              # запустить сервер маршрутизации
 #   docker compose logs -f otp            # смотреть логи
 #
-# Версия графа — каталог ./data/versions/<version>. Контейнер otp монтирует
-# только указатель ./data/current (симлинк), поэтому после публикации новой
-# версии контейнер нужно пересоздать: docker compose up -d --force-recreate otp
+# Версия графа — каталог ./data/versions/<version>. Сервис otp монтирует
+# каталог ./data целиком и работает с ./data/current (симлинк) через
+# OTP_HOMEDIR, поэтому после публикации новой версии контейнер нужно
+# пересоздать: docker compose up -d --force-recreate otp
 #
 # Healthcheck в compose не задан: в официальном образе нет curl/wget, а
 # прежняя проверка старого REST-пути давала ложный статус unhealthy.
@@ -31,11 +32,16 @@ services:
       OTP_PORT: "8080"
       OTP_HEAP_SIZE: "4G"
       JAVA_OPTS: "-Xmx4G"
+      # Активная версия графа: симлинк внутри смонтированного каталога data.
+      OTP_HOMEDIR: /otp-data/current
     ports:
       - "8080:8080"
     volumes:
-      # Только активная версия графа: graph.obj + три JSON-конфига
-      - ./data/current:/var/opentripplanner:ro
+      # Монтируется весь data, а не data/current: Docker Desktop резолвит
+      # симлинк при создании контейнера и запоминает цель, поэтому после
+      # публикации новой версии контейнер продолжал бы читать прежний граф.
+      # entrypoint передаёт OTP уже разрешённый путь.
+      - ./data:/otp-data:ro
     command: ["serve"]
 
   # --------------------------------------------------------------------------

@@ -23,6 +23,7 @@ OTP загружает ``graph.obj`` из базового каталога и �
 Команды
 -------
     graph_store.py prepare  --data-dir otp/data [--gtfs-zip FILE | --gtfs-store DIR]
+                            [--metro-store DIR | --metro-zip FILE | --no-metro]
     graph_store.py publish  --data-dir otp/data
     graph_store.py verify   --data-dir otp/data --url http://localhost:8080
     graph_store.py status   --data-dir otp/data
@@ -30,6 +31,10 @@ OTP загружает ``graph.obj`` из базового каталога и �
 ``prepare`` копирует GTFS в staging, исправляет календарь копии и вычисляет
 версию графа. Исходный ZIP не изменяется. ``publish`` переносит staging в
 ``versions/<version>`` и переключает указатель только после успешной сборки.
+
+В граф всегда попадают два фида: наземный (``feed.gtfs.zip``) и оценочный
+GTFS метро (``metro.gtfs.zip``) из ``data/metro``. Метро можно отключить только
+явным ``--no-metro``: пропавший фид — ошибка, а не тихая сборка без подземки.
 """
 
 from __future__ import annotations
@@ -256,16 +261,22 @@ def update_build_status(data_dir: Path, status: dict) -> None:
 def resolve_metro(metro_zip: Path | None, metro_store: Path | None) -> tuple[Path | None, str]:
     """Найти GTFS метро: явный файл или текущая версия из data/metro.
 
-    Метро необязательно: без него граф собирается только по наземному
-    транспорту, а пустая строка в версии сохраняет прежние идентификаторы.
+    Метро обязательно по умолчанию: без фида граф молча теряет подземку, а
+    версия при этом совпадает с прежней наземной сборкой. Отключение — только
+    явный ``--no-metro`` (в build-graph.sh это ``METRO_STORE=""``).
     """
     if metro_zip is not None:
         if not metro_zip.is_file():
             raise SystemExit(f"ERROR: GTFS метро не найден: {metro_zip}")
         return metro_zip, sha256_file(metro_zip)
-    if metro_store is None or not (metro_store / "current.json").is_file():
-        log("GTFS метро не найден — граф будет без метро")
+    if metro_store is None:
+        log("GTFS метро отключён (--no-metro): граф будет без метро")
         return None, ""
+    if not (metro_store / "current.json").is_file():
+        raise SystemExit(
+            f"ERROR: нет указателя GTFS метро: {metro_store / 'current.json'}\n"
+            f"Соберите фид: python -m data.metro.refresh --store-dir {metro_store}\n"
+            "или соберите граф без метро: --no-metro (METRO_STORE='')")
     for attempt in range(GTFS_READ_ATTEMPTS):
         pointer = read_json(metro_store / "current.json")
         digest = pointer.get("sha256")
@@ -298,7 +309,7 @@ def prepare(args) -> int:
 
         metro_path, metro_sha = resolve_metro(
             Path(args.metro_zip).resolve() if args.metro_zip else None,
-            Path(args.metro_store).resolve() if args.metro_store else None,
+            None if args.no_metro else Path(args.metro_store).resolve(),
         )
 
         if temporary.exists():
@@ -320,10 +331,15 @@ def prepare(args) -> int:
         published = data_dir / "versions" / version / "graph.obj"
         if published.is_file() and not args.force:
             shutil.rmtree(temporary)
+            # Готовый граф мог остаться неактивным: publish прервался или
+            # вернули предыдущую версию вручную. Иначе --restart молча
+            # перезапускает контейнер на старом графе.
+            activated = activate_published(data_dir, version)
             update_build_status(data_dir, {"status": "unchanged", "attempted_at": now_iso(),
                                            "version": version, "error": None})
             print(json.dumps({"status": "unchanged", "version": version,
-                              "graph": str(published)}, ensure_ascii=False))
+                              "activated": activated, "graph": str(published)},
+                             ensure_ascii=False))
             return 0
 
         write_configs(temporary, configs, version)
@@ -359,6 +375,29 @@ def switch_current(data_dir: Path, version: str) -> None:
     temporary.unlink(missing_ok=True)
     os.symlink(Path("versions") / version, temporary)
     os.replace(temporary, link)
+
+
+def is_current(data_dir: Path, version: str) -> bool:
+    link = data_dir / "current"
+    return link.is_symlink() and Path(os.readlink(link)) == Path("versions") / version
+
+
+def activate_published(data_dir: Path, version: str) -> bool:
+    """Сделать уже собранную версию активной. Возвращает True, если переключили.
+
+    В отличие от publish ничего не собирает и не переносит: каталог версии
+    должен быть полным, иначе это ошибка, а не повод пересобирать.
+    """
+    if is_current(data_dir, version):
+        return False
+    manifest = read_json(data_dir / "versions" / version / "manifest.json")
+    if not manifest.get("version"):
+        raise SystemExit(f"ERROR: нет manifest.json опубликованной версии: {version}")
+    switch_current(data_dir, version)
+    atomic_json(data_dir / "current.json", {**manifest, "activated_at": None, "activated_by": None})
+    prune(data_dir, version)
+    log(f"версия {version} уже собрана — активирована без пересборки")
+    return True
 
 
 def prune(data_dir: Path, keep: str) -> list[str]:
@@ -505,7 +544,10 @@ def main() -> int:
     prepare_parser.add_argument("--osm-pbf", default=str(DEFAULT_DATA_DIR / "osm" / "spb-lo.osm.pbf"))
     prepare_parser.add_argument("--gtfs-zip", help="явный GTFS ZIP для локальной отладки")
     prepare_parser.add_argument("--gtfs-store", help="каталог версионного хранилища GTFS")
-    prepare_parser.add_argument("--metro-zip", help="явный GTFS ZIP метро")
+    metro_source = prepare_parser.add_mutually_exclusive_group()
+    metro_source.add_argument("--metro-zip", help="явный GTFS ZIP метро")
+    metro_source.add_argument("--no-metro", action="store_true",
+                              help="собрать граф без метро (явное отключение)")
     prepare_parser.add_argument("--metro-store", default=str(ROOT_DIR / "data" / "metro"),
                                 help="каталог версионного хранилища GTFS метро")
     prepare_parser.add_argument("--otp-version", default="unknown")

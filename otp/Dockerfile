@@ -30,11 +30,13 @@ LABEL version="2.11"
 # OTP_MODE=serve  → запустить сервер маршрутизации (по умолчанию)
 # JAVA_OPTS       → параметры JVM (по умолчанию: -Xmx4G)
 # OTP_PORT        → порт сервера (по умолчанию: 8080)
+# OTP_HOMEDIR     → базовый каталог OTP (по умолчанию: /var/opentripplanner)
 # ---------------------------------------------------------------------------
 ENV OTP_MODE=serve
 ENV OTP_PORT=8080
 
-COPY config/ /otp/config/
+# Конфиги в образ не копируются: build-graph.sh передаёт их в staging через
+# graph_store.py prepare, поэтому у каждого графа свои configVersion.
 COPY scripts/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh

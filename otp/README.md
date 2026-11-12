@@ -5,6 +5,7 @@
 ## Структура
 
 ```
+```
 otp/
 ├── config/                        # эталонная конфигурация OTP (в Git)
 │   ├── otp-config.json            # фичи: DebugUi, GtfsGraphQlApi, ActuatorAPI
@@ -17,8 +18,7 @@ otp/
 │   ├── versions/<version>/        # опубликованный граф + три JSON-конфига
 │   ├── current -> versions/<version>
 │   ├── current.json               # метаданные активной версии
-│   ├── build-status.json          # результат последней сборки
-│   └── legacy/                    # старые файлы до перехода на версии
+│   └── build-status.json          # результат последней сборки
 ├── scripts/
 │   ├── build-graph.sh             # prepare + build + publish (основная команда)
 │   ├── graph_store.py             # версионное хранилище графа
@@ -26,10 +26,14 @@ otp/
 │   ├── fetch-data.sh              # скачивание OSM-данных
 │   ├── cut-osm.sh                 # разовая вырезка bbox из большого OSM
 │   ├── fix-gtfs-calendar-dates.py # исправление битых дат в calendar.txt
-│   └── tests/test_graph_store.py  # тесты хранилища, без Docker и сети
+│   └── tests/                     # тесты хранилища, без Docker и сети
 ├── Dockerfile
 ├── docker-compose.yml
 └── .gitignore
+```
+
+Второй фид — оценочный GTFS метро — лежит вне `otp/`, в `data/metro`
+(см. `data/README.md`).
 ```
 
 ## Как это устроено
@@ -39,15 +43,22 @@ OTP загружает `graph.obj` из базового каталога и н�
 и тремя JSON-конфигами, а указатели `data/current` (симлинк) и `data/current.json`
 публикуются атомарно.
 
+В граф всегда попадают два GTFS-фида: наземный транспорт и оценочный GTFS метро.
+OTP отличает фиды по имени файла, поэтому в `staging` они называются
+`feed.gtfs.zip` и `metro.gtfs.zip`.
+
 Версия вычисляется детерминированно:
 
 ```
-version = sha256(pipeline_version, gtfs_fixed_sha256, osm_sha256,
+version = sha256(pipeline_version, gtfs_fixed_sha256, metro_sha256, osm_sha256,
                  config_sha256, otp_version, otp_serialization_version_id)[:16]
 ```
 
-Если такая версия уже опубликована, сборка пропускается. `config_sha256` не
-учитывает `configVersion`, который подставляется уже после вычисления версии.
+`metro_sha256` входит в версию: обновление только метро пересобирает граф.
+Если такая версия уже опубликована, сборка пропускается, а `prepare` заодно
+активирует её, если указатель `current` от неё отстал (прерванный `publish`,
+ручной откат). `config_sha256` не учитывает `configVersion`, который
+подставляется уже после вычисления версии.
 
 `data/current.json` содержит:
 
@@ -57,6 +68,7 @@ version = sha256(pipeline_version, gtfs_fixed_sha256, osm_sha256,
 | `gtfs_source_sha256` | SHA-256 исходного GTFS из `data/gtfs` |
 | `gtfs_fixed_sha256` | SHA-256 GTFS после исправления календаря |
 | `gtfs_calendar_fixed` | применялся ли фикс календаря |
+| `metro_sha256` | SHA-256 фида метро (пусто, если собран с `--no-metro`) |
 | `osm_sha256`, `osm_file` | версия OSM, из которой собран граф |
 | `otp_version`, `otp_serialization_version_id` | версия OTP, создавшая граф |
 | `config_sha256` | хэш конфигурации без `configVersion` |
@@ -122,6 +134,34 @@ python -m data.gtfs.versioned_static --store-dir data/gtfs
 > `--gtfs-zip data/incoming/portal-gtfs.zip` либо сначала опубликуйте фид:
 > `python -m data.gtfs.versioned_static --store-dir data/gtfs`.
 
+### 2а. GTFS метро
+
+Метро — второй, обязательный фид. Он собирается отдельно из официальной схемы
+и времени перегонов pMetro:
+
+```bash
+python -m data.metro.refresh --store-dir data/metro
+```
+
+Результат — такое же версионное хранилище, что и `data/gtfs`:
+`data/metro/current.json` и `versions/<sha256>/feed.zip`. Сборка графа берёт
+`data/metro` по умолчанию и копирует фид в `staging` как `metro.gtfs.zip`.
+
+> **Пропавший фид — ошибка, а не тихая сборка без подземки.** Если
+> `data/metro/current.json` нет, `build-graph.sh` остановится с подсказкой.
+> Осознанно собрать граф без метро можно только явно:
+> `./scripts/build-graph.sh --no-metro` (или `METRO_STORE=""`).
+
+Что важно про этот фид:
+
+- расписание частотное (`frequencies.txt`, `exact_times=0`), интервалы — середина
+  опубликованного диапазона, а не официальный график;
+- календарь строится на 30 дней от даты сборки фида. Если граф не пересобирать
+  месяц, метро исчезнет из выдачи — обновляйте `data/metro` и граф вместе;
+- `shapes.txt` нет: геометрия поездки — прямые линии между станциями;
+- пересадки заданы `transfers.txt` с минимальным временем перехода; станции
+  разных линий — отдельные `stop_id` (`1:metro:kiv-tin`, `1:metro:mop-tin`).
+
 ### 3. Собрать и опубликовать граф
 
 ```bash
@@ -134,8 +174,8 @@ python -m data.gtfs.versioned_static --store-dir data/gtfs
 
 Три шага внутри одного запуска:
 
-1. `prepare` — копирует GTFS в `staging` как `feed.gtfs.zip`, исправляет
-   инвертированные `end_date` в копии, считает версию;
+1. `prepare` — копирует GTFS в `staging` как `feed.gtfs.zip`, добавляет
+   `metro.gtfs.zip`, исправляет инвертированные `end_date` в копии, считает версию;
 2. `build` — `docker compose run --rm otp-build` собирает `graph.obj`;
 3. `publish` — переносит `staging` в `versions/<version>`, переключает
    `current` и `current.json`, оставляет текущую и предыдущую версии.
@@ -156,9 +196,12 @@ docker compose up -d otp
 
 OTP API доступен на `http://localhost:8080/`.
 
-После публикации новой версии контейнер нужно пересоздать: Docker разрешает
-симлинк `data/current` при создании контейнера, поэтому работающий OTP продолжит
-читать прежний `graph.obj`.
+После публикации новой версии контейнер нужно пересоздать:
+`docker compose up -d --force-recreate otp`. Сервис монтирует каталог `data`
+целиком, а активную версию выбирает `OTP_HOMEDIR=/otp-data/current`. Симлинк
+разрешается внутри контейнера, потому что Docker Desktop запоминает цель
+симлинка при создании контейнера и после переключения версии продолжал бы
+отдавать старый `graph.obj`.
 
 ```bash
 docker compose up -d --force-recreate otp
@@ -171,6 +214,8 @@ python3 scripts/graph_store.py verify --url http://localhost:8080
 просто опубликованный каталог.
 
 `build-graph.sh --restart` делает пересоздание и проверку автоматически.
+Если версия уже собрана, флаг тоже работает: `prepare` активирует её, а
+`--restart` пересоздаёт контейнер и проверяет загрузку.
 
 ### Полезные команды
 
@@ -211,8 +256,13 @@ curl -X POST 'http://localhost:8080/otp/gtfs/v1' \
 
 ### Что важно учитывать при интеграции
 
+- Метро приходит теми же легами `mode: SUBWAY`, `route.gtfsId` вида
+  `1:metro:2` (префикс `1:` — номер загруженного фида). Проверка живости:
+  `{ routes(transportModes: [SUBWAY]) { shortName gtfsId } }` должна вернуть
+  6 линий.
 - `routingErrors[].code = OUTSIDE_SERVICE_PERIOD` означает дату вне расписания.
   OTP при этом может вернуть пешеходный маршрут — это не маршрут на транспорте.
+  Для метро это типичный симптом истёкшего 30-дневного календаря фида.
 - `estimated` в `LegTime` заполняется только при наличии GTFS-RT. Сейчас
   `updaters: []`, поэтому используется `scheduledTime`.
 - `legGeometry.points` — encoded polyline с точностью 5, порядок координат
@@ -293,12 +343,13 @@ OTP требует GTFS-RT TripUpdates. Позиции машин сами по 
 
 | Режим | Описание |
 |---|---|
-| `build` | Собрать граф в `/var/opentripplanner` и завершиться |
+| `build` | Собрать граф в `OTP_HOMEDIR` и завершиться |
 | `serve` | Загрузить `graph.obj` и запустить сервер |
 
-Устанавливается через `OTP_MODE` или первый аргумент контейнера. В режиме
-`serve` каталог смонтирован только для чтения, автоматической сборки нет:
-сначала `build-graph.sh`.
+Устанавливается через `OTP_MODE` или первый аргумент контейнера. `OTP_HOMEDIR`
+задаёт базовый каталог OTP: у `otp-build` это `/var/opentripplanner` (staging),
+у `otp` — `/otp-data/current`. В режиме `serve` каталог смонтирован только для
+чтения, автоматической сборки нет: сначала `build-graph.sh`.
 
 ## Сброс и откат
 
@@ -317,6 +368,10 @@ ln -sfn versions/<previous> data/current.tmp && mv -T data/current.tmp data/curr
 docker compose up -d --force-recreate otp
 python3 scripts/graph_store.py verify --url http://localhost:8080
 ```
+
+Откат не «залипает»: следующий `build-graph.sh` посчитает версию по текущим
+входам и снова активирует её, если она уже собрана. Чтобы откатиться надолго,
+нужно вернуть прежние входные данные (GTFS, метро, OSM или конфиги).
 
 ## Известные проблемы и фиксы
 
@@ -363,8 +418,9 @@ curl -f http://localhost:8080/otp/actuators/health
   `docker compose up -d --force-recreate otp` или флаг `--restart`.
 - **`OUTSIDE_SERVICE_PERIOD` → HTTP 422 `invalid_service_date`.** Решение
   отложено: сейчас backend возвращает walk-only вариант с предупреждением.
-- **Kubernetes и CI/CD.** Модуль разворачивается локально; манифесты и
-  workflow для OTP не добавлены.
+- **Kubernetes и CI/CD.** Модуль разворачивается локально. Тесты
+  `scripts/tests` гоняются в общем workflow, но манифестов и сборки образа OTP
+  в CI нет.
 
 ## Пин образа и совместимость графа
 
@@ -397,9 +453,11 @@ OTP перезаписывается при каждом dev-релизе, по�
 
 | Файл | Назначение |
 |---|---|
-| `scripts/build-graph.sh` | Основная команда: prepare + build + publish (+ `--restart`, `--force`) |
+| `scripts/build-graph.sh` | Основная команда: prepare + build + publish (+ `--restart`, `--force`, `--no-metro`) |
 | `scripts/graph_store.py` | Версии графа: `prepare`, `publish`, `verify`, `status`, `mark` |
-| `scripts/entrypoint.sh` | Обёртка над `/docker-entrypoint.sh`. Флаг `--port` — **только через пробел** |
+| `scripts/entrypoint.sh` | Запуск OTP с базовым каталогом из `OTP_HOMEDIR`. Флаг `--port` — **только через пробел** |
 | `scripts/fix-gtfs-calendar-dates.py` | Фикс инвертированных `end_date` в `calendar.txt` |
 | `scripts/cut-osm.sh` | Разовая вырезка bbox через `osmium-tool` |
 | `config/` | Эталонные конфиги; `configVersion` подставляет версию графа |
+
+Метро-фид и его обновление описаны в `data/README.md` (`data/metro`).
