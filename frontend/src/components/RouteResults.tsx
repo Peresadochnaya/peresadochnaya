@@ -8,7 +8,15 @@ interface RouteResultsProps {
   isLoading: boolean;
 }
 
-const formatMinutes = (seconds: number) => Math.round(seconds / 60);
+const formatDuration = (seconds: number) => {
+  const totalMinutes = Math.round(seconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) return `${minutes} мин`;
+  if (minutes === 0) return `${hours} ч`;
+  return `${hours} ч ${minutes} мин`;
+};
 
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
@@ -18,9 +26,9 @@ const formatTime = (isoString: string) => {
 const getModeBadge = (leg: Leg) => {
   switch (leg.mode) {
     case 'walk':
-      return <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[11px]">Пешком {formatMinutes(leg.duration_seconds)} мин</span>;
+      return <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[11px]">Пешком {formatDuration(leg.duration_seconds)}</span>;
     case 'wait':
-      return <span className="bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded text-[11px]">Ожидание {formatMinutes(leg.duration_seconds)} мин</span>;
+      return <span className="bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded text-[11px]">Ожидание {formatDuration(leg.duration_seconds)}</span>;
     default:
       return (
         <span className="bg-blue-100 text-blue-800 font-semibold px-1.5 py-0.5 rounded text-[11px] flex items-center gap-1">
@@ -63,16 +71,16 @@ export const RouteResults: React.FC<RouteResultsProps> = ({
             onClick={() => onSelectRoute(idx)}
             className={`cursor-pointer p-4 rounded-xl border transition flex flex-col gap-2 ${
               isSelected
-                ? 'bg-blue-50/50 border-blue-500 ring-2 ring-blue-500/20 shadow-md'
+                ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500 shadow-md'
                 : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
             }`}
           >
             {/* Заголовок карточки: время и длительность */}
-            <div className="flex justify-between items-baseline">
+            <div className="flex justify-between items-baseline gap-2">
               <span className="text-xl font-bold text-slate-900">
-                {formatMinutes(route.duration_seconds)} <span className="text-sm font-normal text-slate-500">мин</span>
+                {formatDuration(route.duration_seconds)}
               </span>
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 font-medium shrink-0">
                 {formatTime(route.start_at)} — {formatTime(route.end_at)}
               </span>
             </div>
@@ -101,16 +109,16 @@ export const RouteResults: React.FC<RouteResultsProps> = ({
                   <div key={lIdx} className="flex gap-2">
                     <div className="w-1.5 bg-slate-300 rounded-full" />
                     <div className="flex-1">
-                      <div className="flex justify-between font-medium text-slate-700">
-                        <span>{leg.from.name || 'Точка отправления'}</span>
-                        <span>{formatTime(leg.start_at)}</span>
+                      <div className="flex justify-between gap-2 font-medium text-slate-700">
+                        <span className="min-w-0 truncate">{leg.from.name || 'Точка отправления'}</span>
+                        <span className="shrink-0">{formatTime(leg.start_at)}</span>
                       </div>
                       <div className="text-slate-500 my-0.5">
-                        {leg.line ? `${leg.mode}: ${leg.line.short_name}` : leg.mode} ({formatMinutes(leg.duration_seconds)} мин)
+                        {leg.line ? `${leg.mode}: ${leg.line.short_name}` : leg.mode} ({formatDuration(leg.duration_seconds)})
                       </div>
-                      <div className="flex justify-between font-medium text-slate-700">
-                        <span>{leg.to.name || 'Точка прибытия'}</span>
-                        <span>{formatTime(leg.end_at)}</span>
+                      <div className="flex justify-between gap-2 font-medium text-slate-700">
+                        <span className="min-w-0 truncate">{leg.to.name || 'Точка прибытия'}</span>
+                        <span className="shrink-0">{formatTime(leg.end_at)}</span>
                       </div>
                     </div>
                   </div>

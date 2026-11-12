@@ -29,7 +29,7 @@ export const StopDrawer: React.FC<StopDrawerProps> = ({ stop, onClose, dummyMode
   if (!stop) return null;
 
   return (
-    <div className="absolute bottom-6 right-6 z-50 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[480px]">
+    <div className="absolute z-50 bottom-2 left-2 right-2 w-auto max-h-[70vh] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col sm:bottom-6 sm:left-auto sm:right-6 sm:w-80 sm:max-h-[480px]">
       <div className="p-4 bg-slate-900 text-white flex justify-between items-start">
         <div>
           <h4 className="font-bold text-base leading-tight">{stop.name}</h4>

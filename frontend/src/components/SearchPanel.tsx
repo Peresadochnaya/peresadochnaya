@@ -17,6 +17,8 @@ interface SearchPanelProps {
   }) => void;
   dummyConfig: DummyConfig;
   onUpdateDummyConfig: (newConfig: DummyConfig) => void;
+  hasRoutes: boolean;
+  onClearRoute: () => void;
 }
 
 const MODES: { id: TransportMode; label: string }[] = [
@@ -37,7 +39,9 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   onSwapPoints,
   onSearch,
   dummyConfig,
-  onUpdateDummyConfig
+  onUpdateDummyConfig,
+  hasRoutes,
+  onClearRoute
 }) => {
   const [inputA, setInputA] = useState(labelA);
   const [inputB, setInputB] = useState(labelB);
@@ -45,6 +49,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   const [suggestionsB, setSuggestionsB] = useState<Suggestion[]>([]);
   const [activeField, setActiveField] = useState<'A' | 'B' | null>(null);
   const [showDummyDetails, setShowDummyDetails] = useState(false);
+  const [isCompact, setIsCompact] = useState(false);
 
   // Фильтры
   const [selectedModes, setSelectedModes] = useState<TransportMode[]>([
@@ -136,16 +141,31 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   const isAllDummy = Object.values(dummyConfig).every(Boolean);
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col gap-3">
+    <div className="bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        {!isCompact && (
+          <span className="text-sm font-semibold text-slate-700">Поиск маршрута</span>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsCompact(prev => !prev)}
+          aria-pressed={isCompact}
+          className={`text-[11px] text-blue-600 hover:text-blue-800 underline ${isCompact ? 'ml-auto' : ''}`}
+        >
+          {isCompact ? 'Подробно' : 'Компактно'}
+        </button>
+      </div>
+
       {/* Панель настройки DUMMY режимов */}
+      {!isCompact && (
       <div className="pb-2 border-b border-slate-100 text-xs">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-2">
           <label className="flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
             <input
               type="checkbox"
               checked={isAllDummy}
               onChange={(e) => toggleAllDummy(e.target.checked)}
-              className="rounded text-blue-600 focus:ring-0"
+              className="rounded text-blue-600 focus:ring-0 shrink-0"
             />
             <span>Все запросы Dummy (демо)</span>
           </label>
@@ -160,49 +180,55 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
         {showDummyDetails && (
           <div className="mt-2.5 p-2.5 bg-slate-50 rounded-lg grid grid-cols-1 gap-1.5 border border-slate-200">
-            <label className="flex items-center justify-between text-slate-600">
-              <span>/api/v1/suggest</span>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/suggest</span>
               <input
                 type="checkbox"
                 checked={dummyConfig.suggest}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, suggest: e.target.checked })}
+                className="shrink-0"
               />
             </label>
-            <label className="flex items-center justify-between text-slate-600">
-              <span>/api/v1/geocode & reverse</span>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/geocode & reverse</span>
               <input
                 type="checkbox"
                 checked={dummyConfig.geocode}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, geocode: e.target.checked })}
+                className="shrink-0"
               />
             </label>
-            <label className="flex items-center justify-between text-slate-600">
-              <span>/api/v1/routes (планировщик)</span>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/routes (планировщик)</span>
               <input
                 type="checkbox"
                 checked={dummyConfig.routes}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, routes: e.target.checked })}
+                className="shrink-0"
               />
             </label>
-            <label className="flex items-center justify-between text-slate-600">
-              <span>/api/v1/stops (остановки BBOX)</span>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/stops (остановки BBOX)</span>
               <input
                 type="checkbox"
                 checked={dummyConfig.stops}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, stops: e.target.checked })}
+                className="shrink-0"
               />
             </label>
-            <label className="flex items-center justify-between text-slate-600">
-              <span>/api/v1/stops/.../departures</span>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/stops/.../departures</span>
               <input
                 type="checkbox"
                 checked={dummyConfig.departures}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, departures: e.target.checked })}
+                className="shrink-0"
               />
             </label>
           </div>
         )}
       </div>
+      )}
 
       {/* Поля ввода адресов */}
       <div className="relative flex flex-col gap-2">
@@ -241,8 +267,8 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
                   onClick={() => handleSelectSuggestion('A', s)}
                   className="px-3 py-2 hover:bg-slate-50 cursor-pointer border-b last:border-0"
                 >
-                  <p className="text-sm font-medium text-slate-800">{s.title}</p>
-                  {s.subtitle && <p className="text-xs text-slate-500">{s.subtitle}</p>}
+                  <p className="text-sm font-medium text-slate-800 break-words">{s.title}</p>
+                  {s.subtitle && <p className="text-xs text-slate-500 break-words">{s.subtitle}</p>}
                 </li>
               ))}
             </ul>
@@ -250,13 +276,16 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
         </div>
 
         {/* Кнопка смены мест точек */}
-        <button
-          onClick={onSwapPoints}
-          title="Поменять местами"
-          className="self-end mr-3 text-slate-400 hover:text-slate-700 text-xs flex items-center gap-1"
-        >
-          ⇅ Поменять местами
-        </button>
+        {!isCompact && (
+          <button
+            type="button"
+            onClick={onSwapPoints}
+            title="Поменять местами"
+            className="self-end mr-3 text-slate-400 hover:text-slate-700 text-xs flex items-center gap-1"
+          >
+            ⇅ Поменять местами
+          </button>
+        )}
 
         {/* Точка Б */}
         <div className="relative">
@@ -293,8 +322,8 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
                   onClick={() => handleSelectSuggestion('B', s)}
                   className="px-3 py-2 hover:bg-slate-50 cursor-pointer border-b last:border-0"
                 >
-                  <p className="text-sm font-medium text-slate-800">{s.title}</p>
-                  {s.subtitle && <p className="text-xs text-slate-500">{s.subtitle}</p>}
+                  <p className="text-sm font-medium text-slate-800 break-words">{s.title}</p>
+                  {s.subtitle && <p className="text-xs text-slate-500 break-words">{s.subtitle}</p>}
                 </li>
               ))}
             </ul>
@@ -303,6 +332,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       </div>
 
       {/* Фильтры по видам транспорта */}
+      {!isCompact && (
       <div className="flex flex-col gap-1">
         <label className="text-xs font-semibold text-slate-600">Виды транспорта:</label>
         <div className="flex flex-wrap gap-1">
@@ -329,15 +359,17 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           })}
         </div>
       </div>
+      )}
 
       {/* Проездной и «Меньше пешком» */}
+      {!isCompact && (
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div>
+        <div className="min-w-0">
           <label className="font-semibold text-slate-600 block mb-1">Проездной:</label>
           <select
             value={ticketProfile}
             onChange={(e) => setTicketProfile(e.target.value as TicketProfile)}
-            className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+            className="w-full min-w-0 border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
           >
             {profiles.length > 0 ? (
               profiles.map(p => <option key={p.id} value={p.id}>{p.label_ru}</option>)
@@ -353,26 +385,38 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           </select>
         </div>
 
-        <div className="flex items-end pb-1.5">
+        <div className="flex items-end pb-1.5 min-w-0">
           <label className="flex items-center gap-1.5 cursor-pointer text-slate-700">
             <input
               type="checkbox"
               checked={lessWalking}
               onChange={(e) => setLessWalking(e.target.checked)}
-              className="rounded text-blue-600 focus:ring-0"
+              className="rounded text-blue-600 focus:ring-0 shrink-0"
             />
-            <span>Меньше пешком</span>
+            <span className="leading-tight">Меньше пешком</span>
           </label>
         </div>
       </div>
+      )}
 
-      <button
-        disabled={!pointA || !pointB}
-        onClick={() => onSearch({ modes: selectedModes, lessWalking, ticketProfile })}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-2 rounded-lg transition"
-      >
-        {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}
-      </button>
+      {hasRoutes ? (
+        <button
+          type="button"
+          onClick={onClearRoute}
+          className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-medium py-2 rounded-lg transition"
+        >
+          Очистить маршрут
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={!pointA || !pointB}
+          onClick={() => onSearch({ modes: selectedModes, lessWalking, ticketProfile })}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-2 rounded-lg transition"
+        >
+          {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}
+        </button>
+      )}
     </div>
   );
 };
