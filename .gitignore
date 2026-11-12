@@ -21,3 +21,4 @@ coverage/
 !.env.example
 *.log
 data/raw/rail/
+data/processed/rail/tables
