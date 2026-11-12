@@ -5,7 +5,9 @@ from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from urllib.parse import urlencode
 
 from .api_docs import API_DESCRIPTION, OPERATION_DESCRIPTIONS
 from .data_status import load_status, read_object
@@ -208,6 +210,20 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         return document
 
     app.openapi = documented_openapi
+
+    @app.get("/map-api.js", include_in_schema=False)
+    def map_api_script():
+        key = os.getenv("YANDEX_JS_API_KEY", "")
+        if not key:
+            return error(503, "map_unavailable", "Map JavaScript API is not configured")
+        return RedirectResponse(
+            "https://api-maps.yandex.ru/2.1/?" + urlencode({"apikey": key, "lang": "ru_RU"}),
+            headers={"Cache-Control": "no-store"})
+
+    # Mount last so API, health and Swagger keep their existing routes.
+    frontend = Path(os.getenv("FRONTEND_DIST", "/app/frontend/dist"))
+    if frontend.is_dir():
+        app.mount("/", StaticFiles(directory=frontend, html=True), name="frontend")
     return app
 
 

@@ -32,6 +32,17 @@ jobs:
           (cd backend && python -m pytest tests)
           python -m pytest data/gtfs/tests data/metro/tests
           python -m pytest otp/scripts/tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Test and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run build
       - name: Render deployment
         run: kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
 
@@ -111,7 +122,7 @@ jobs:
         env:
           IMAGE: ${{ needs.image.outputs.image }}
         run: |
-          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/gtfs-cronjob.yaml deploy/k8s/metro-cronjob.yaml
+          sed -i "s|ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA|$IMAGE|g" deploy/k8s/api.yaml deploy/k8s/otp.yaml deploy/k8s/gtfs-cronjob.yaml deploy/k8s/metro-cronjob.yaml
           kubectl kustomize deploy/k8s > /tmp/peresadochnaya.yaml
       - name: Apply and verify rollout
         env:
@@ -120,7 +131,7 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
           test "$DEPLOY_USER" = peresadochnaya
-          ssh -p "${DEPLOY_PORT:-22}" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" 'export KUBECONFIG=/home/peresadochnaya/.kube/config; kubectl --namespace peresadochnaya apply -f - && kubectl --namespace peresadochnaya rollout status deployment/api --timeout=180s' < /tmp/peresadochnaya.yaml
+          ssh -p "${DEPLOY_PORT:-22}" -o ConnectTimeout=15 -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" 'export KUBECONFIG=/home/peresadochnaya/.kube/config; kubectl --namespace peresadochnaya apply -f - && kubectl --namespace peresadochnaya rollout status deployment/api --timeout=180s && kubectl --namespace peresadochnaya rollout status deployment/otp --timeout=180s' < /tmp/peresadochnaya.yaml
       - name: Public smoke tests
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL || 'https://peresadochnaya.rjnk.cc' }}

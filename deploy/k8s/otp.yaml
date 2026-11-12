@@ -19,6 +19,27 @@ spec:
         runAsGroup: 10001
         fsGroup: 10001
         fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: router-config
+          image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
+          command: [python, /app/otp/scripts/runtime_router_config.py]
+          args:
+            - --base
+            - /data/otp/current/router-config.json
+            - --defaults
+            - /app/otp/config/router-config.json
+            - --output
+            - /runtime/router-config.json
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: '1', memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data, readOnly: true}
+            - {name: runtime-config, mountPath: /runtime}
       containers:
         - name: otp
           # The builder must use this same pinned runtime/serialization version.
@@ -56,10 +77,13 @@ spec:
             # Kubernetes resolves current on pod start. Restart after publishing
             # a new graph to load the new immutable version.
             - {name: data, mountPath: /var/opentripplanner, subPath: otp/current, readOnly: true}
+            - {name: runtime-config, mountPath: /var/opentripplanner/router-config.json, subPath: router-config.json, readOnly: true}
             - {name: tmp, mountPath: /tmp}
       volumes:
         - name: data
           persistentVolumeClaim: {claimName: transit-data}
+        - name: runtime-config
+          emptyDir: {}
         - name: tmp
           emptyDir: {}
 ---
