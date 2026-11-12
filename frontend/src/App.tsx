@@ -109,6 +109,12 @@ export const App: React.FC = () => {
     }
   };
 
+  // Очистка найденных маршрутов, точки А и Б остаются
+  const handleClearRoute = () => {
+    setRoutes([]);
+    setSelectedRouteIndex(0);
+  };
+
   // Загрузка остановок из бэкенда
   const handleLoadStops = async (bbox: string) => {
     try {
@@ -121,9 +127,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex">
-      {/* Боковая панель поиска и результатов (слева) */}
-      <div className="absolute top-4 left-4 z-40 w-96 max-h-[calc(100vh-2rem)] flex flex-col gap-3 overflow-y-auto pointer-events-auto">
+    <div className="relative w-full h-[100dvh] overflow-hidden flex">
+      {/* Боковая панель поиска и результатов: снизу на мобильных, слева на десктопе */}
+      <div className="absolute z-40 bottom-2 left-2 right-2 max-h-[55vh] flex flex-col gap-3 overflow-y-auto pointer-events-auto sm:bottom-auto sm:top-4 sm:left-4 sm:right-auto sm:w-96 sm:max-h-[calc(100vh-2rem)]">
         <SearchPanel
           labelA={labelA}
           labelB={labelB}
@@ -135,6 +141,8 @@ export const App: React.FC = () => {
           onSearch={handleSearch}
           dummyConfig={dummyConfig}
           onUpdateDummyConfig={setDummyConfig}
+          hasRoutes={routes.length > 0}
+          onClearRoute={handleClearRoute}
         />
 
         <RouteResults
@@ -162,6 +170,7 @@ export const App: React.FC = () => {
           selectedRouteIndex={selectedRouteIndex}
           onSelectStop={setSelectedStop}
           loadStops={handleLoadStops}
+          dummyStops={dummyConfig.stops}
         />
       </div>
     </div>
