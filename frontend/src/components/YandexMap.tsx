@@ -17,9 +17,9 @@ interface YandexMapProps {
 
 const MODE_COLORS: Record<LegMode, string> = {
   walk: '#7C3AED',
-  bus: '#16A34A',
-  tram: '#DC2626',
-  trolleybus: '#2563EB',
+  bus: '#65A30D',
+  tram: '#DB2777',
+  trolleybus: '#06B6D4',
   metro: '#CA8A04',
   rail: '#374151',
   wait: '#CBD5E1'

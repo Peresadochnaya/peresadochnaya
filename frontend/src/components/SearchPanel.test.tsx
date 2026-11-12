@@ -35,8 +35,7 @@ const baseProps = {
   onSearch: vi.fn(),
   dummyConfig,
   onUpdateDummyConfig: vi.fn(),
-  hasRoutes: false,
-  onClearRoute: vi.fn(),
+  onClearPoints: vi.fn(),
 };
 
 beforeEach(() => {
@@ -63,6 +62,7 @@ describe('SearchPanel compact view', () => {
     expect(screen.queryByText('Виды транспорта:')).toBeNull();
     expect(screen.queryByText('Проездной:')).toBeNull();
     expect(screen.queryByText('⇅ Поменять местами')).toBeNull();
+    expect(screen.queryByText('✕ Очистить точки')).toBeNull();
     expect(screen.getByDisplayValue('Старт')).toBeTruthy();
     expect(screen.getByDisplayValue('Финиш')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Найти маршруты' })).toBeTruthy();
@@ -80,20 +80,16 @@ describe('SearchPanel compact view', () => {
   });
 });
 
-describe('SearchPanel clear route button', () => {
-  it('replaces the search button after route results appear', () => {
-    render(<SearchPanel {...baseProps} hasRoutes />);
+describe('SearchPanel clear points button', () => {
+  it('clears both point fields and calls onClearPoints', () => {
+    render(<SearchPanel {...baseProps} />);
 
-    expect(screen.queryByRole('button', { name: 'Найти маршруты' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Очистить маршрут' })).toBeTruthy();
-  });
+    fireEvent.click(screen.getByRole('button', { name: '✕ Очистить точки' }));
 
-  it('calls onClearRoute when clicked', () => {
-    render(<SearchPanel {...baseProps} hasRoutes />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Очистить маршрут' }));
-
-    expect(baseProps.onClearRoute).toHaveBeenCalledTimes(1);
+    expect(baseProps.onClearPoints).toHaveBeenCalledTimes(1);
+    expect(screen.queryByDisplayValue('Старт')).toBeNull();
+    expect(screen.queryByDisplayValue('Финиш')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Найти маршруты' })).toBeTruthy();
   });
 });
 

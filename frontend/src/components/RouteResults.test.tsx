@@ -82,6 +82,44 @@ describe('RouteResults duration formatting', () => {
   });
 });
 
+describe('RouteResults wait legs', () => {
+  it('shows only the wait label and time without from/to names', () => {
+    const route = createRoute(10 * 60);
+    route.legs = [
+      {
+        mode: 'wait',
+        from: { lat: 59.93, lon: 30.31, name: 'Станция отправления' },
+        to: { lat: 59.93, lon: 30.31, name: 'Станция прибытия' },
+        start_at: '2026-11-12T10:00:00+03:00',
+        end_at: '2026-11-12T10:05:00+03:00',
+        duration_seconds: 300,
+        original_duration_seconds: 300,
+        duration_source: 'schedule',
+        line: null,
+        geometry: {
+          type: 'LineString',
+          coordinates: [[30.31, 59.93], [30.31, 59.93]],
+        },
+        distance_meters: 0,
+      },
+    ];
+
+    const { container } = render(
+      <RouteResults
+        routes={[route]}
+        selectedIndex={0}
+        onSelectRoute={() => {}}
+        isLoading={false}
+      />
+    );
+
+    expect(container.textContent).toContain('Ожидание');
+    expect(container.textContent).toMatch(/\d{2}:\d{2}/);
+    expect(container.textContent).not.toContain('Станция отправления');
+    expect(container.textContent).not.toContain('Станция прибытия');
+  });
+});
+
 describe('RouteResults selected card', () => {
   it('uses opaque colors for the selected route card', () => {
     const { container } = render(

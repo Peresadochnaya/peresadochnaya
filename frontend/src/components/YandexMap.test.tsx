@@ -174,8 +174,9 @@ describe('YandexMap stops', () => {
 describe('YandexMap transport colors', () => {
   const cases: { mode: LegMode; color: string }[] = [
     { mode: 'walk', color: '#7C3AED' },
-    { mode: 'bus', color: '#16A34A' },
-    { mode: 'trolleybus', color: '#2563EB' },
+    { mode: 'bus', color: '#65A30D' },
+    { mode: 'trolleybus', color: '#06B6D4' },
+    { mode: 'tram', color: '#DB2777' },
     { mode: 'rail', color: '#374151' },
   ];
 
