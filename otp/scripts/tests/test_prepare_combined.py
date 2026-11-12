@@ -42,6 +42,8 @@ def data(tmp_path):
         graph.atomic_json(config / name, {'configVersion': 'local'})
     surface, _ = publish_feed(tmp_path, 'gtfs', 'surface')
     metro, _ = publish_feed(tmp_path, 'metro', 'metro', end='20291109')
+    rail = feed(tmp_path / 'processed/rail/feed.zip', marker='rail', end='20261118')
+    graph.atomic_json(tmp_path / 'processed/rail/current.json', {'sha256': graph.sha256_file(rail)})
     return tmp_path, config, surface, metro
 
 
@@ -56,7 +58,7 @@ def test_both_sources_provenance_and_only_surface_staging_calendar_repaired(data
     result = combined.prepare(root, config)
     assert result['status'] == 'prepared'
     manifest = graph.read_json(root / 'otp/staging/manifest.prepared.json')
-    assert manifest['gtfs_sources'] == {'surface': graph.sha256_file(surface), 'metro': graph.sha256_file(metro)}
+    assert manifest['gtfs_sources'] == {'surface': graph.sha256_file(surface), 'metro': graph.sha256_file(metro), 'rail': graph.sha256_file(root / 'processed/rail/feed.zip')}
     assert manifest['metro_source_sha256'] == graph.sha256_file(metro)
     assert manifest['runtime_image'] == combined.OTP_IMAGE_DIGEST
     assert manifest['otp_version'] == combined.OTP_VERSION
@@ -66,6 +68,7 @@ def test_both_sources_provenance_and_only_surface_staging_calendar_repaired(data
     staging = root / 'otp/staging'
     assert graph.sha256_file(staging / 'feed.gtfs.zip') != graph.sha256_file(surface)
     assert (staging / 'metro.gtfs.zip').read_bytes() == metro_before
+    assert (staging / 'rail.gtfs.zip').read_bytes() == (root / 'processed/rail/feed.zip').read_bytes()
     assert (staging / 'spb-lo.osm.pbf').is_symlink()
     assert (staging / 'spb-lo.osm.pbf').readlink() == root / 'otp/osm/spb-lo.osm.pbf'
     assert graph.read_json(staging / 'router-config.json')['configVersion'] == result['version']
@@ -83,6 +86,18 @@ def test_same_inputs_skip_build_and_publish_without_touching_current(data):
     assert (root / 'otp/staging/.skip-build').read_text() == version
     assert combined.publish(root) == {'status': 'unchanged', 'version': version}
     assert current.read_bytes() == before
+
+
+def test_rail_snapshot_change_requires_a_new_graph(data):
+    root, config, _, _ = data
+    first = combined.prepare(root, config)
+    finish_build(root)
+    rail = root / 'processed/rail/feed.zip'
+    rail.write_bytes(feed(root / 'replacement-rail.zip', marker='new rail', end='20261118').read_bytes())
+    graph.atomic_json(root / 'processed/rail/current.json', {'sha256': graph.sha256_file(rail)})
+    second = combined.prepare(root, config)
+    assert second['status'] == 'prepared'
+    assert second['version'] != first['version']
 
 
 @pytest.mark.parametrize('changed', ['gtfs', 'metro', 'config', 'osm'])
