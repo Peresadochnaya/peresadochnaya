@@ -10,17 +10,16 @@ interface YandexMapProps {
   routes: Route[];
   selectedRouteIndex: number;
   onSelectStop: (stop: GtfsStop) => void;
-  dummyMode: boolean;
   loadStops: (bbox: string) => Promise<GtfsStop[]>;
 }
 
 const MODE_COLORS: Record<LegMode, string> = {
-  walk: '#94A3B8',      // Slate / Серый
-  bus: '#2563EB',       // Синий
-  tram: '#DC2626',      // Красный
-  trolleybus: '#16A34A', // Зеленый
-  metro: '#CA8A04',     // Золотой / Желтый
-  rail: '#9333EA',      // Фиолетовый
+  walk: '#94A3B8',
+  bus: '#2563EB',
+  tram: '#DC2626',
+  trolleybus: '#16A34A',
+  metro: '#CA8A04',
+  rail: '#9333EA',
   wait: '#CBD5E1'
 };
 
@@ -39,67 +38,87 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   const markerBRef = useRef<any>(null);
   const routesCollectionRef = useRef<any>(null);
   const stopsCollectionRef = useRef<any>(null);
-  const pointsRef = useRef({ pointA, pointB });
 
-  // Карта инициализируется один раз, поэтому ее обработчики должны читать
-  // актуальные точки из ref, а не из замыкания первого рендера.
-  useEffect(() => {
-    pointsRef.current = { pointA, pointB };
-  }, [pointA, pointB]);
+  // Ссылки на актуальные точки для событий клика
+  const pointAState = useRef(pointA);
+  const pointBState = useRef(pointB);
+  useEffect(() => { pointAState.current = pointA; }, [pointA]);
+  useEffect(() => { pointBState.current = pointB; }, [pointB]);
 
   // Инициализация карты
   useEffect(() => {
     ymaps.ready(() => {
       if (!mapContainerRef.current || mapInstance.current) return;
 
-      const map = new ymaps.Map(mapContainerRef.current, {
-        center: [59.9386, 30.3141], // Санкт-Петербург по умолчанию
-        zoom: 12,
-        controls: ['zoomControl', 'geolocationControl']
-      });
+      const map = new ymaps.Map(
+        mapContainerRef.current,
+        {
+          center: [59.9386, 30.3141],
+          zoom: 13,
+          controls: [] // Убираем контролы по умолчанию с левой стороны
+        },
+        {
+          suppressMapOpenBlock: true,
+          // ВАЖНО: отключает встроенные всплывающие запросы Яндекса по объектам подложки
+          yandexMapDisablePoiInteractivity: true
+        }
+      );
+
+      // Добавляем зум и геолокацию СПРАВА, чтобы виджет слева их не перекрывал
+      map.controls.add(new ymaps.control.ZoomControl({
+        options: { position: { right: 16, top: 100 } }
+      }));
+      map.controls.add(new ymaps.control.GeolocationControl({
+        options: { position: { right: 16, top: 220 } }
+      }));
 
       routesCollectionRef.current = new ymaps.GeoObjectCollection();
       stopsCollectionRef.current = new ymaps.GeoObjectCollection();
       map.geoObjects.add(routesCollectionRef.current);
       map.geoObjects.add(stopsCollectionRef.current);
 
-      // Клик по карте для установки точек
+      // Клик по карте для последовательной установки точек
       map.events.add('click', (e: any) => {
-        const coords = e.get('coords'); // [lat, lon]
+        const coords = e.get('coords');
         const clickedPoint = { lat: coords[0], lon: coords[1] };
-        const current = pointsRef.current;
 
-        if (!current.pointA) {
-          pointsRef.current = { ...current, pointA: clickedPoint };
+        if (!pointAState.current) {
           onPointChange('A', clickedPoint);
-        } else if (!current.pointB) {
-          pointsRef.current = { ...current, pointB: clickedPoint };
+        } else if (!pointBState.current) {
           onPointChange('B', clickedPoint);
         }
       });
 
-      // Подгрузка остановок при изменении видимой зоны
+      // Загрузка остановок через бэкенд /api/v1/stops при изменении BBOX
       const handleBoundsChange = async () => {
         if (map.getZoom() < 14) {
           stopsCollectionRef.current.removeAll();
           return;
         }
-        const bounds = map.getBounds(); // [[latMin, lonMin], [latMax, lonMax]]
-        // BBOX в формате minLon,minLat,maxLon,maxLat
-        const bbox = `${bounds[0][1]},${bounds[0][0]},${bounds[1][1]},${bounds[1][0]}`;
+        const bounds = map.getBounds();
+        // Формат BBOX: minLon,minLat,maxLon,maxLat
+        const bbox = `${bounds[0][1].toFixed(6)},${bounds[0][0].toFixed(6)},${bounds[1][1].toFixed(6)},${bounds[1][0].toFixed(6)}`;
         const stops = await loadStops(bbox);
 
         stopsCollectionRef.current.removeAll();
         stops.forEach((stop) => {
+          // Создаем визуальную метку остановки
           const stopPlacemark = new ymaps.Placemark(
             [stop.lat, stop.lon],
-            { hintContent: stop.name },
+            { hintContent: `Остановка: ${stop.name}` },
             {
-              preset: 'islands#circleDotIcon',
-              iconColor: '#0284c7'
+              preset: 'islands#nightCircleIcon',
+              iconColor: '#0284c7',
+              hasBalloon: false // Не открываем балун Яндекса, работаем через наш интерфейс
             }
           );
-          stopPlacemark.events.add('click', () => onSelectStop(stop));
+
+          // Клик по остановке открывает наше окно с /api/v1/stops/{stop_id}/departures
+          stopPlacemark.events.add('click', (e: any) => {
+            e.stopPropagation();
+            onSelectStop(stop);
+          });
+
           stopsCollectionRef.current.add(stopPlacemark);
         });
       };
@@ -116,7 +135,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
     };
   }, []);
 
-  // Синхронизация маркера точки А
+  // Синхронизация маркера точки А (включая корректное удаление)
   useEffect(() => {
     if (!mapInstance.current) return;
     if (pointA) {
@@ -141,7 +160,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
     }
   }, [pointA]);
 
-  // Синхронизация маркера точки Б
+  // Синхронизация маркера точки Б (включая корректное удаление)
   useEffect(() => {
     if (!mapInstance.current) return;
     if (pointB) {
@@ -166,7 +185,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
     }
   }, [pointB]);
 
-  // Отрисовка маршрутов и их сегментов
+  // Отрисовка маршрутов
   useEffect(() => {
     if (!routesCollectionRef.current || !mapInstance.current) return;
     routesCollectionRef.current.removeAll();
@@ -177,17 +196,14 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       const isSelected = index === selectedRouteIndex;
 
       if (!isSelected) {
-        // Фоновый маршрут рисуется единой серой линией
-        // Важно: координаты в LineString хранятся как [lon, lat], в Yandex Maps передаем [lat, lon]
         const coords = route.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
         const polyline = new ymaps.Polyline(coords, {}, {
           strokeColor: '#94A3B8',
           strokeWidth: 4,
-          strokeOpacity: 0.4
+          strokeOpacity: 0.35
         });
         routesCollectionRef.current.add(polyline);
       } else {
-        // Выбранный маршрут рендерится по участкам (Legs) с цветовым кодированием
         route.legs.forEach((leg) => {
           if (!leg.geometry?.coordinates?.length) return;
           const legCoords = leg.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
@@ -207,7 +223,6 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       }
     });
 
-    // Масштабирование карты под выбранный маршрут
     const activeRoute = routes[selectedRouteIndex];
     if (activeRoute?.geometry?.coordinates?.length) {
       const coords = activeRoute.geometry.coordinates.map(([lon, lat]) => [lat, lon]);

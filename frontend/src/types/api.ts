@@ -145,3 +145,10 @@ export interface TicketProfileInfo {
   label_ru: string;
   description_ru: string;
 }
+export interface DummyConfig {
+  suggest: boolean;
+  geocode: boolean;
+  routes: boolean;
+  stops: boolean;
+  departures: boolean;
+}

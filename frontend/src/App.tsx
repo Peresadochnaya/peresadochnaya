@@ -3,7 +3,7 @@ import { YandexMap } from './components/YandexMap';
 import { SearchPanel } from './components/SearchPanel';
 import { RouteResults } from './components/RouteResults';
 import { StopDrawer } from './components/StopDrawer';
-import { Point, Route, GtfsStop, TransportMode, TicketProfile } from './types/api';
+import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig } from './types/api';
 import { api } from './api/client';
 
 export const App: React.FC = () => {
@@ -17,16 +17,23 @@ export const App: React.FC = () => {
   const [isLoadingRoutes, setIsLoadingRoutes] = useState(false);
 
   const [selectedStop, setSelectedStop] = useState<GtfsStop | null>(null);
-  const [dummyMode, setDummyMode] = useState(true);
 
-  // Обработка установки точек (клик/драг на карте)
+  // Конфигурация dummy по умолчанию: все true, как в спецификации
+  const [dummyConfig, setDummyConfig] = useState<DummyConfig>({
+    suggest: true,
+    geocode: true,
+    routes: true,
+    stops: true,
+    departures: true
+  });
+
+  // Установка точки при клике/драге на карте
   const handlePointChange = async (type: 'A' | 'B', point: Point) => {
     if (type === 'A') setPointA(point);
     else setPointB(point);
 
-    // Вызов обратного геокодирования для заполнения понятного адреса в инпуте
     try {
-      const res = await api.reverseGeocode(point.lat, point.lon, dummyMode);
+      const res = await api.reverseGeocode(point.lat, point.lon, dummyConfig.geocode);
       const text = res.items?.[0]?.label || `${point.lat.toFixed(4)}, ${point.lon.toFixed(4)}`;
       if (type === 'A') setLabelA(text);
       else setLabelB(text);
@@ -35,6 +42,18 @@ export const App: React.FC = () => {
       if (type === 'A') setLabelA(fallback);
       else setLabelB(fallback);
     }
+  };
+
+  // Очистка точки
+  const handleClearPoint = (type: 'A' | 'B') => {
+    if (type === 'A') {
+      setPointA(null);
+      setLabelA('');
+    } else {
+      setPointB(null);
+      setLabelB('');
+    }
+    setRoutes([]);
   };
 
   const handleSelectPlace = (type: 'A' | 'B', point: Point, label: string) => {
@@ -78,21 +97,22 @@ export const App: React.FC = () => {
         },
         providers: ['otp'],
         max_results: 5
-      }, dummyMode);
+      }, dummyConfig.routes);
 
       setRoutes(res.routes || []);
       setSelectedRouteIndex(0);
     } catch (err) {
       console.error('Route planning error', err);
-      alert('Не удалось построить маршрут. Включите режим Демо (dummy), если бэкенд OTP еще не запущен.');
+      alert('Ошибка при расчёте маршрута. Если реальный OTP ещё не подключён на бэкенде, включите флаг Dummy для /routes.');
     } finally {
       setIsLoadingRoutes(false);
     }
   };
 
+  // Загрузка остановок из бэкенда
   const handleLoadStops = async (bbox: string) => {
     try {
-      const res = await api.getStops(bbox, dummyMode);
+      const res = await api.getStops(bbox, dummyConfig.stops);
       return res.items || [];
     } catch (err) {
       console.error('Failed to fetch stops by bbox', err);
@@ -102,18 +122,19 @@ export const App: React.FC = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden flex">
-      {/* Боковая панель поиска и результатов */}
-      <div className="absolute top-4 left-4 z-40 w-96 max-h-[calc(100vh-2rem)] flex flex-col gap-4 overflow-y-auto no-scrollbar pointer-events-auto">
+      {/* Боковая панель поиска и результатов (слева) */}
+      <div className="absolute top-4 left-4 z-40 w-96 max-h-[calc(100vh-2rem)] flex flex-col gap-3 overflow-y-auto pointer-events-auto">
         <SearchPanel
           labelA={labelA}
           labelB={labelB}
           pointA={pointA}
           pointB={pointB}
           onSelectPlace={handleSelectPlace}
+          onClearPoint={handleClearPoint}
           onSwapPoints={handleSwapPoints}
           onSearch={handleSearch}
-          dummyMode={dummyMode}
-          onToggleDummy={setDummyMode}
+          dummyConfig={dummyConfig}
+          onUpdateDummyConfig={setDummyConfig}
         />
 
         <RouteResults
@@ -124,14 +145,14 @@ export const App: React.FC = () => {
         />
       </div>
 
-      {/* Окно остановки */}
+      {/* Окно выбранной остановки */}
       <StopDrawer
         stop={selectedStop}
         onClose={() => setSelectedStop(null)}
-        dummyMode={dummyMode}
+        dummyMode={dummyConfig.departures}
       />
 
-      {/* Карта */}
+      {/* Карта (зум и контролы автоматически перенесены вправо) */}
       <div className="w-full h-full">
         <YandexMap
           pointA={pointA}
@@ -140,7 +161,6 @@ export const App: React.FC = () => {
           routes={routes}
           selectedRouteIndex={selectedRouteIndex}
           onSelectStop={setSelectedStop}
-          dummyMode={dummyMode}
           loadStops={handleLoadStops}
         />
       </div>
