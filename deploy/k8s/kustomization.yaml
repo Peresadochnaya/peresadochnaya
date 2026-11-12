@@ -5,6 +5,7 @@ resources:
   - config.yaml
   - api.yaml
   - otp.yaml
+  - realtime.yaml
   - gtfs-cronjob.yaml
   - metro-cronjob.yaml
   - rail-cronjob.yaml

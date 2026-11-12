@@ -38,8 +38,8 @@ spec:
           containers:
             - name: refresh
               image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
-              command: [python, -m, data.metro.refresh]
-              args: [--store-dir, /data/metro]
+              command: [python, -m, app.refresh_gtfs_index]
+              args: [metro, --data-root, /data]
               envFrom:
                 - configMapRef: {name: backend-config}
               env:

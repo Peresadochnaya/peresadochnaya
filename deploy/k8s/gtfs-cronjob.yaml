@@ -38,8 +38,8 @@ spec:
           containers:
             - name: refresh
               image: ghcr.io/peresadochnaya/peresadochnaya:REPLACE_WITH_COMMIT_SHA
-              command: [python, -m, data.gtfs.versioned_static]
-              args: [--store-dir, /data/gtfs]
+              command: [python, -m, app.refresh_gtfs_index]
+              args: [gtfs, --data-root, /data]
               envFrom:
                 - configMapRef: {name: backend-config}
               env:

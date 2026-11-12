@@ -10,6 +10,12 @@ class MultiFeedGtfsStore:
         self.surface = GtfsStore(root)
         self.rail = GtfsStore(root, feed='rail')
 
+    def preload(self):
+        for store in (self.surface, self.rail):
+            if (self.root / store.feed / 'current.json').exists():
+                with store.open() as snapshot:
+                    snapshot.index
+
     @contextmanager
     def open(self, dummy=False):
         with ExitStack() as stack:
@@ -24,6 +30,7 @@ class FeedCollection:
     def __init__(self, surface, rail):
         self.surface, self.rail = surface, rail
         self.selected = None
+        self._merged = {}
 
     @property
     def metadata(self):
@@ -33,12 +40,15 @@ class FeedCollection:
         return meta
 
     def _combined(self, name):
+        if name in self._merged:
+            return self._merged[name]
         result = dict(getattr(self.surface, name))
         if self.rail is not None:
             for key, value in getattr(self.rail, name).items():
                 if key in result:
                     raise ValueError('Colliding GTFS identifiers across feeds')
                 result[key] = value
+        self._merged[name] = result
         return result
 
     @property
