@@ -1,0 +1,386 @@
+{
+  "provenance": {
+    "source": "Own deployed OTP GraphQL introspection",
+    "checked_at": "2026-11-13",
+    "raw_capture": "research/traffic-correction/otp-walking-live-schema.json"
+  },
+  "types": {
+    "PlanPreferencesInput": {
+      "name": "PlanPreferencesInput",
+      "inputFields": [
+        {
+          "name": "accessibility",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "AccessibilityPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "street",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "PlanStreetPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "transit",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "TransitPreferencesInput",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "TransitPreferencesInput": {
+      "name": "TransitPreferencesInput",
+      "inputFields": [
+        {
+          "name": "alight",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "AlightPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "board",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "BoardPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "filters",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "TransitFilterInput"
+              }
+            }
+          }
+        },
+        {
+          "name": "relaxTransitGroupPriority",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "LinearCostFunctionInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "timetable",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "TimetablePreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "transfer",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "TransferPreferencesInput",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "TimetablePreferencesInput": {
+      "name": "TimetablePreferencesInput",
+      "inputFields": [
+        {
+          "name": "excludeRealTimeUpdates",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Boolean",
+            "ofType": null
+          }
+        },
+        {
+          "name": "includePlannedCancellations",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Boolean",
+            "ofType": null
+          }
+        },
+        {
+          "name": "includeRealTimeCancellations",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Boolean",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "PlanModesInput": {
+      "name": "PlanModesInput",
+      "inputFields": [
+        {
+          "name": "direct",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "PlanDirectMode"
+              }
+            }
+          }
+        },
+        {
+          "name": "directOnly",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Boolean",
+            "ofType": null
+          }
+        },
+        {
+          "name": "transit",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "PlanTransitModesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "transitOnly",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Boolean",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "WalkPreferencesInput": {
+      "name": "WalkPreferencesInput",
+      "inputFields": [
+        {
+          "name": "boardCost",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Cost",
+            "ofType": null
+          }
+        },
+        {
+          "name": "reluctance",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Reluctance",
+            "ofType": null
+          }
+        },
+        {
+          "name": "safetyFactor",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Ratio",
+            "ofType": null
+          }
+        },
+        {
+          "name": "speed",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Speed",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "PlanDirectMode": {
+      "name": "PlanDirectMode",
+      "enumValues": [
+        {
+          "name": "BICYCLE"
+        },
+        {
+          "name": "BICYCLE_PARKING"
+        },
+        {
+          "name": "BICYCLE_RENTAL"
+        },
+        {
+          "name": "CAR"
+        },
+        {
+          "name": "CAR_PARKING"
+        },
+        {
+          "name": "CAR_RENTAL"
+        },
+        {
+          "name": "FLEX"
+        },
+        {
+          "name": "SCOOTER_RENTAL"
+        },
+        {
+          "name": "TAXI"
+        },
+        {
+          "name": "WALK"
+        }
+      ],
+      "inputFields": null
+    },
+    "PlanTransitModesInput": {
+      "name": "PlanTransitModesInput",
+      "enumValues": null,
+      "inputFields": [
+        {
+          "name": "access",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "PlanAccessMode"
+              }
+            }
+          }
+        },
+        {
+          "name": "egress",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "PlanEgressMode"
+              }
+            }
+          }
+        },
+        {
+          "name": "transfer",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "PlanTransferMode"
+              }
+            }
+          }
+        },
+        {
+          "name": "transit",
+          "type": {
+            "kind": "LIST",
+            "name": null,
+            "ofType": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "PlanTransitModePreferenceInput"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PlanStreetPreferencesInput": {
+      "name": "PlanStreetPreferencesInput",
+      "enumValues": null,
+      "inputFields": [
+        {
+          "name": "bicycle",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "BicyclePreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "car",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "CarPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "scooter",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "ScooterPreferencesInput",
+            "ofType": null
+          }
+        },
+        {
+          "name": "walk",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "WalkPreferencesInput",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "TransferPreferencesInput": {
+      "name": "TransferPreferencesInput",
+      "enumValues": null,
+      "inputFields": [
+        {
+          "name": "cost",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Cost",
+            "ofType": null
+          }
+        },
+        {
+          "name": "maximumAdditionalTransfers",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "maximumTransfers",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "slack",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Duration",
+            "ofType": null
+          }
+        }
+      ]
+    }
+  }
+}

@@ -478,3 +478,53 @@ def test_every_unchanged_transfer_has_diagnostics_and_unknown_requirements_are_v
     assert unknown.debug.transfer_status=='unknown'
     assert unknown.debug.evaluation_group=='incomplete'
     assert any('transfer requirements' in warning for warning in unknown.debug.warnings)
+
+
+def test_walking_shares_transit_limit_and_never_collected_or_corrected():
+    walking = route('foot', [leg(mode='walk', duration=5000)])
+    planner = Planner([route('bus-a'), walking, route('bus-b')])
+    collected = []
+    result = TrafficEngine(planner, graph_loader=lambda **kwargs: Graph(),
+        collector=lambda candidates, *args: (collected.extend(candidates) or [], []),
+        clock=lambda: 0, wall_clock=lambda: NOW).plan(request(max_results=1))
+    assert [r.id for r in result.routes] == ['foot']
+    assert [r.id for r in collected] == ['bus-a', 'bus-b']
+    foot = result.routes[-1]
+    assert foot.duration_seconds == 5000
+    assert foot.debug.evaluation_group == 'not_applicable'
+    assert foot.debug.coverage.eligible_distance_meters == 0
+    assert all(l.debug.traffic_status == 'not_applicable' for l in foot.legs)
+    assert [r.debug.final_rank for r in result.routes] == [1]
+    assert result.debug.candidate_count == 3 and result.debug.returned_count == 1
+
+
+def test_walking_survives_excluded_broken_transit_and_failed_tail():
+    broken = route('broken', [leg(duration=600), leg('second', start=610, duration=300)])
+    walking = route('foot', [leg(mode='walk', duration=5000)])
+    planner = Planner([broken, walking], tails=TimeoutError('deadline'))
+    result = engine(planner, Graph(), [road(seconds=900)]).plan(request(max_results=1))
+    assert [r.id for r in result.routes] == ['foot']
+    assert result.debug.excluded_count == 1
+    assert result.debug.excluded_candidates[0].reason_code == 'boarding_unreachable'
+    assert result.routes[0].debug.evaluation_group == 'not_applicable'
+
+
+def test_all_excluded_transit_queries_real_walking_fallback_within_deadline():
+    broken = route('broken', [leg(duration=600), leg('second', start=610, duration=300)])
+    walking = route('foot', [leg(mode='walk', duration=5000)])
+
+    class FallbackPlanner(Planner):
+        def plan(self, req, **kwargs):
+            if req.modes == ['walk']:
+                self.calls.append((req.model_copy(deep=True), kwargs))
+                return response([walking])
+            return super().plan(req, **kwargs)
+
+    planner = FallbackPlanner([broken], tails=TimeoutError('tail unavailable'))
+    result = engine(planner, Graph(), [road(seconds=900)]).plan(request(max_results=1))
+    assert [r.id for r in result.routes] == ['foot']
+    assert planner.calls[-1][0].modes == ['walk']
+    assert result.debug.candidate_count == 2
+    assert result.debug.returned_count == 1 and result.debug.excluded_count == 1
+    assert result.debug.provider_calls[-1].purpose == 'initial_candidates'
+    assert result.routes[0].debug.final_rank == 1

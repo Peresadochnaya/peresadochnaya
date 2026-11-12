@@ -1,5 +1,6 @@
 export type TransportMode = 'bus' | 'tram' | 'trolleybus' | 'metro' | 'rail';
-export type LegMode = TransportMode | 'walk' | 'wait';
+export type RoutingMode = TransportMode | 'walk';
+export type LegMode = RoutingMode | 'wait';
 
 export type TicketProfile = 
   | 'podorozhnik_wallet'
@@ -100,7 +101,7 @@ export interface RouteRequest {
   traffic_mode?: 'off' | 'on';
   max_results?: number;
   providers?: ('otp' | 'yandex' | '2gis')[];
-  modes?: TransportMode[] | null;
+  modes?: RoutingMode[] | null;
   exclude_modes?: TransportMode[] | null;
   max_transfers?: number | null;
   walk_speed?: 'slow' | 'normal' | 'fast';

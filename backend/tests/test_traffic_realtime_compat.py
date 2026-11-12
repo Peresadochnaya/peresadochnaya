@@ -46,7 +46,8 @@ def test_schedule_opt_out_preserves_default_realtime_and_schedule_baseline(sched
                        departure_at='2026-11-11T12:00:00+03:00')
     result = planner.plan(req, exclude_realtime_updates=scheduled_only)
     preference = payloads[0]['variables']['preferences']
-    assert preference.get('timetable') == ({'excludeRealTimeUpdates': True} if scheduled_only else None)
+    assert 'timetable' not in preference
+    assert preference['transit'].get('timetable') == ({'excludeRealTimeUpdates': True} if scheduled_only else None)
     expected = node['legs'][0]['start']['scheduledTime' if scheduled_only else 'estimated']
     if not scheduled_only:
         expected = expected['time']
@@ -60,3 +61,39 @@ def test_schedule_opt_out_rejects_missing_scheduled_time():
     from app.otp import _time
     with pytest.raises(ValueError, match='Missing leg time'):
         _time({'estimated': {'time': '2026-11-11T12:00:00+03:00'}}, scheduled_only=True)
+
+
+def _assert_recorded_input_fields(value, type_name, contract):
+    """Validate captured OTP input fields independently of adapter code."""
+    fields = {field['name']: field['type'] for field in contract['types'][type_name]['inputFields']}
+    assert value.keys() <= fields.keys(), f'Unsupported {type_name} fields: {value.keys() - fields.keys()}'
+    for name, child in value.items():
+        field_type = fields[name]
+        while field_type.get('ofType'):
+            field_type = field_type['ofType']
+        if field_type['kind'] == 'INPUT_OBJECT' and field_type['name'] in contract['types']:
+            _assert_recorded_input_fields(child, field_type['name'], contract)
+        elif field_type['kind'] == 'ENUM' and field_type['name'] in contract['types']:
+            allowed = {item['name'] for item in contract['types'][field_type['name']]['enumValues']}
+            assert set(child if isinstance(child, list) else [child]) <= allowed
+        elif field_type['kind'] == 'SCALAR' and field_type['name'] == 'Boolean':
+            assert type(child) is bool
+
+
+@pytest.mark.parametrize('modes', [['walk'], ['walk','bus'], ['bus']])
+def test_traffic_request_matches_recorded_live_otp_input_contract(modes):
+    contract = json.loads((Path(__file__).parent/'fixtures/otp-live-input-contract.json').read_text())
+    payloads = []
+    def handler(req):
+        payloads.append(json.loads(req.content)['variables'])
+        return httpx.Response(200,json={'data':{'planConnection':{'edges':[],'routingErrors':[]}}})
+    planner = OtpPlanner(client=httpx.Client(transport=httpx.MockTransport(handler)))
+    planner.plan(request().model_copy(update={'modes':modes}),exclude_realtime_updates=True)
+    variables = payloads[0]
+    _assert_recorded_input_fields(variables['preferences'], 'PlanPreferencesInput', contract)
+    _assert_recorded_input_fields(variables['modes'], 'PlanModesInput', contract)
+    assert variables['preferences']['transit']['timetable']['excludeRealTimeUpdates'] is True
+    # The old root placement passed mocks but real OTP rejects it.
+    with pytest.raises(AssertionError,match='Unsupported PlanPreferencesInput'):
+        _assert_recorded_input_fields({'timetable':{'excludeRealTimeUpdates':True}},
+                                      'PlanPreferencesInput',contract)

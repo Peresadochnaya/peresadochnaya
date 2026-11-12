@@ -1,0 +1,72 @@
+{
+  "label": "pionerskaya-palace",
+  "request": {
+    "query": "query($origin:PlanLabeledLocationInput!,$destination:PlanLabeledLocationInput!,$dateTime:PlanDateTimeInput!,$modes:PlanModesInput,$preferences:PlanPreferencesInput){planConnection(origin:$origin,destination:$destination,dateTime:$dateTime,modes:$modes,preferences:$preferences,first:1){routingErrors{code description inputField} edges{node{start end duration walkDistance legs{mode distance legGeometry{points length}}}}}}",
+    "variables": {
+      "origin": {
+        "location": {
+          "coordinate": {
+            "latitude": 60.0029,
+            "longitude": 30.2963
+          }
+        }
+      },
+      "destination": {
+        "location": {
+          "coordinate": {
+            "latitude": 59.939,
+            "longitude": 30.315
+          }
+        }
+      },
+      "dateTime": {
+        "earliestDeparture": "2026-11-13T03:00:00+03:00"
+      },
+      "modes": {
+        "direct": [
+          "WALK"
+        ],
+        "directOnly": true
+      },
+      "preferences": {
+        "street": {
+          "walk": {
+            "speed": 1.3,
+            "reluctance": 4.0
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "http_status": 200,
+    "elapsed_seconds": 0.12521548010408878,
+    "body": {
+      "data": {
+        "planConnection": {
+          "routingErrors": [],
+          "edges": [
+            {
+              "node": {
+                "start": "2026-11-13T03:00:00+03:00",
+                "end": "2026-11-13T04:57:29+03:00",
+                "duration": 7049,
+                "walkDistance": 8444.22,
+                "legs": [
+                  {
+                    "mode": "WALK",
+                    "distance": 8444.22,
+                    "legGeometry": {
+                      "points": "gifmJ}f|wDNuBFgALo@XI\\K@?LCt@U@?|EsAJEDz@XIBAJCd@MHC`@MREXIj@O`@K`@KjA[nFwAd@Mh@MLQHAFAJA\\InCo@d@MFAFCHCF?F@BMFEFA^Dj@PDFDHBJFBvBh@tBh@h@LHQFOAKAKLuDvA\\B@d@L`@LBGDJFBB@LDTHLDDHHGb@J@[CGDUFQbAjBJBb@JTFTF^HnA\\t@DJEPiATiAHa@DMDMHOB]Da@Ji@@AF[FSJUXk@NYGWDOJODI@ADGJOPKZD^SFGFCb@SRCVChDUXCL?n@GTEZGD?JCDAVINKPOTUFI@SJQFMBEDILSLP@BDJFL@D?D@Fd@pADFFDL@JANCZRNJ@PfC`Bt@f@NH@Bl@^J?XAP?B?N?f@RNFFl@HFFDAP?N@HBF|JlBNBbB\\f@Zf@Z`Aj@ZNLDJAL?JCLENKd@[LK@At@m@HUxAsATUNMFCHKNULALEJIxFuGV[l@g@PMh@a@JIb@[z@o@DEFIDEDEF@tAaA|@m@jBqAbAu@NKLIpByAnA}@DCFGBGPMNK?DLIrA_Ah@a@DCf@_@d@[DCTSBC@MLIJGFHzDsCHG?INMLKJG\\]DEBG@IDCRQ@ABCLKDBD?RSlAkAdB_Bx@y@~@}@RQjBeBrAsANOBCDERUBQNMBCRSVSRS@wAJw@BKFMDK??d@WHAD?PAbAbA|BuBb@a@ZYlBmBfAeAvAyALMJKHI`C}BzA{ADENOBC@KJIJG@FhE}DFG@I?K?I?KH}@BOFKJIHGDAF@`@JDBBDBH@DB@BABC^]HIHIz@{@zAwApAmAFIBG@I@O@IH?J?HBlAkAn@m@fAcAb@c@|@y@t@}B@GDLFBFBD@D@JK`@c@j@m@HENMpBoB`CyBJKx@{@p@o@@?TUJIDIFOFK@C@CDGDKHQ@CDDD@F?DA|@u@lCuBnAaARQBE@I?GBCBA@CTS@GBGDKDLDHFBFBJAFCr[cWDEBK@F@J@JBLBN@F@LJLDXHj@Hf@dAzH`@rBBLFVr@pDH\\x@dEDVrBdKFVhA~FJKBEDECKz@cAPSRSj@q@h@m@@?B@BJv@hCb@xAl@lBd@vAj@jBj@fB@BPh@@HDPHZ@B@BB@@@D^BLBNFPJ\\HZFRLZFVX~@BJNWPh@L`@NDNB\\JHZt@rCd@fBHZHXDGb@s@^tA",
+                      "length": 470
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
