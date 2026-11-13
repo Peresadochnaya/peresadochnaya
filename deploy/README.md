@@ -28,7 +28,7 @@ TTL завершённых Job — 1 час; Kubernetes удаляет Job вм�
 
 Проверить Traefik certificate resolver: манифест предполагает имя `letsencrypt`.
 Если в кластере другое имя, заменить аннотацию в `k8s/ingress.yaml`.
-Проверить DNS `peresadochnaya.rjnk.cc` и наличие `local-path` StorageClass.
+Проверить DNS `peresadochnaya.lol` и наличие `local-path` StorageClass.
 
 ```bash
 kubectl apply -f deploy/k8s/namespace.yaml
@@ -79,7 +79,7 @@ sshd или порт не нужен. Команды выполняются Linu
 NetBird, а не `authorized_keys`: указанный в workflow пользователь сам по себе
 не запрещает разрешённому peer выбирать других локальных пользователей.
 
-Environment variable `API_BASE_URL` по умолчанию `https://peresadochnaya.rjnk.cc`.
+Environment variable `API_BASE_URL` по умолчанию `https://peresadochnaya.lol`.
 GTFS updater получает `HTTPS_PROXY` из Secret `gtfs-proxy`, ключ `url`.
 Secret создаётся отдельно от Git; его отсутствие допускает прямое подключение.
 Прокси работает на роутере arctur `10.147.8.92:18080`, слушает только
@@ -123,8 +123,8 @@ kubectl -n peresadochnaya create job --from=cronjob/gtfs-refresh gtfs-bootstrap
 kubectl -n peresadochnaya logs -f job/gtfs-bootstrap
 kubectl -n peresadochnaya create job --from=cronjob/metro-refresh metro-bootstrap
 kubectl -n peresadochnaya logs -f job/metro-bootstrap
-curl --fail https://peresadochnaya.rjnk.cc/health/ready
-curl --fail https://peresadochnaya.rjnk.cc/api/v1/data/status
+curl --fail https://peresadochnaya.lol/health/ready
+curl --fail https://peresadochnaya.lol/api/v1/data/status
 ```
 
 Первый bootstrap Job запускает администратор: deploy Role специально не даёт
@@ -197,7 +197,7 @@ less_walking пока отклоняются явно, стоимость про
 ## Веб-интерфейс
 
 Production-сборка React/Vite включена в образ API через Node build stage.
-Фронт доступен в корне https://peresadochnaya.rjnk.cc/, API — на /api/v1,
+Фронт доступен в корне https://peresadochnaya.lol/, API — на /api/v1,
 Swagger — на /docs. Отдельный домен и CORS для этого не нужны.
 CI запускает тесты и сборку фронта перед публикацией образа.
 
