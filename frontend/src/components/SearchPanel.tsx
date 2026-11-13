@@ -584,6 +584,71 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
         </div>
       )}
 
+      {/* Время прибытия и пересадки */}
+      {!isCompact && (
+        <div className="flex flex-col gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="departure-time" className="font-semibold text-slate-600">Отправление в:</label>
+              <input
+                id="departure-time"
+                type="time"
+                value={departureTime}
+                onChange={(e) => {
+                  setDepartureTime(e.target.value);
+                  if (e.target.value) setArrivalTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="arrival-time" className="font-semibold text-slate-600">Прибытие к:</label>
+              <input
+                id="arrival-time"
+                type="time"
+                value={arrivalTime}
+                onChange={(e) => {
+                  setArrivalTime(e.target.value);
+                  if (e.target.value) setDepartureTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-slate-400">{timeHint}</p>
+            {(departureTime || arrivalTime) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDepartureTime('');
+                  setArrivalTime('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-slate-700 shrink-0"
+              >
+                Сбросить
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="max-transfers" className="font-semibold text-slate-600">Пересадки:</label>
+            <span className="font-semibold text-slate-700">{transfersLabel}</span>
+          </div>
+          <input
+            id="max-transfers"
+            type="range"
+            min={0}
+            max={UNLIMITED_TRANSFERS}
+            step={1}
+            value={maxTransfersOption}
+            onChange={(e) => setMaxTransfersOption(Number(e.target.value))}
+            className="w-full accent-blue-600"
+            aria-valuetext={transfersLabel}
+          />
+        </div>
+      )}
+
       <button
         type="button"
         disabled={!pointA || !pointB}
