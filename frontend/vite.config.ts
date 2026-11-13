@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-	target: 'https://peresadochnaya.rjnk.cc', // для локальных тестров 
+	target: 'https://peresadochnaya.lol/', // для локальных тестров 
         // target: 'http://localhost:8000', для прода
         changeOrigin: true
       }

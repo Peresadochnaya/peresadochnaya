@@ -95,6 +95,8 @@ export interface Route {
   fare?: RouteFare | null;
 }
 
+export type UncoveredPayment = 'podorozhnik_wallet' | 'bank_card';
+
 export interface RouteRequest {
   points: [Point, Point];
   departure_at?: string;
@@ -109,7 +111,7 @@ export interface RouteRequest {
   less_walking?: boolean;
   passenger?: {
     ticket_profile: TicketProfile;
-    uncovered_payment?: 'podorozhnik_wallet' | 'bank_card';
+    uncovered_payment?: UncoveredPayment;
   };
 }
 
@@ -168,4 +170,28 @@ export interface DummyConfig {
   routes: boolean;
   stops: boolean;
   departures: boolean;
+  vehicles: boolean;
+}
+
+export type VehicleMode = TransportMode | 'unknown';
+
+export interface VehiclePosition {
+  vehicle_id: string;
+  route_id?: string | null;
+  trip_id?: string | null;
+  lat: number;
+  lon: number;
+  heading?: number | null;
+  speed_mps?: number | null;
+  mode: VehicleMode;
+  timestamp: string;
+  label?: string | null;
+}
+
+export interface VehiclesResponse {
+  mode: 'dummy' | 'realtime';
+  items: VehiclePosition[];
+  updated_at: string;
+  stale: boolean;
+  warnings: string[];
 }

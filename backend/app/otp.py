@@ -252,7 +252,13 @@ def route_fare(legs: list[Leg], preferences: FarePreferences | None,
     transfer_start: datetime | None = None
     surface_rides = 0
     transit_legs = [leg for leg in legs if leg.line is not None]
+    previous_mode: str | None = None
     for leg in transit_legs:
+        # A line change inside the paid area is one boarding: OTP splits it into
+        # consecutive metro legs, with wait/walk legs in between.
+        if leg.mode == "metro" and previous_mode == "metro":
+            continue
+        previous_mode = leg.mode
         rides[leg.mode] = rides.get(leg.mode, 0) + 1
         if leg.mode in custom_prices:
             cost = custom_prices[leg.mode]

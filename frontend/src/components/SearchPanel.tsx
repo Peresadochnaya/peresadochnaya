@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { Suggestion, TransportMode, TicketProfile, TicketProfileInfo, Point, DummyConfig } from '../types/api';
+import { Suggestion, TransportMode, TicketProfile, TicketProfileInfo, UncoveredPayment, Point, DummyConfig } from '../types/api';
 
 interface SearchPanelProps {
   labelA: string;
@@ -14,6 +14,7 @@ interface SearchPanelProps {
     modes: TransportMode[];
     lessWalking: boolean;
     ticketProfile: TicketProfile;
+    uncoveredPayment: UncoveredPayment;
     departureAt: string | null;
     arrivalAt: string | null;
     maxTransfers: number | null;
@@ -21,6 +22,10 @@ interface SearchPanelProps {
   dummyConfig: DummyConfig;
   onUpdateDummyConfig: (newConfig: DummyConfig) => void;
   onClearPoints: () => void;
+  vehiclesEnabled: boolean;
+  onToggleVehicles: () => void;
+  showAllVehicles: boolean;
+  onToggleShowAllVehicles: () => void;
 }
 
 const MODES: { id: TransportMode; label: string }[] = [
@@ -45,7 +50,11 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   onSearch,
   dummyConfig,
   onUpdateDummyConfig,
-  onClearPoints
+  onClearPoints,
+  vehiclesEnabled,
+  onToggleVehicles,
+  showAllVehicles,
+  onToggleShowAllVehicles
 }) => {
   const [inputA, setInputA] = useState(labelA);
   const [inputB, setInputB] = useState(labelB);
@@ -61,6 +70,8 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   ]);
   const [lessWalking, setLessWalking] = useState(false);
   const [ticketProfile, setTicketProfile] = useState<TicketProfile>('bank_card');
+  // Оплата поездок, не покрытых безлимитным проездным.
+  const [uncoveredPayment, setUncoveredPayment] = useState<UncoveredPayment>('bank_card');
   const [profiles, setProfiles] = useState<TicketProfileInfo[]>([]);
   const [arrivalTime, setArrivalTime] = useState('');
   const [departureTime, setDepartureTime] = useState('');
@@ -162,6 +173,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       modes: selectedModes,
       lessWalking,
       ticketProfile,
+      uncoveredPayment,
       departureAt: departureTime ? buildTimeIso(departureTime) : null,
       arrivalAt: arrivalTime ? buildTimeIso(arrivalTime) : null,
       maxTransfers: maxTransfersOption === UNLIMITED_TRANSFERS ? null : maxTransfersOption,
@@ -184,11 +196,17 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       geocode: enabled,
       routes: enabled,
       stops: enabled,
-      departures: enabled
+      departures: enabled,
+      vehicles: enabled
     });
   };
 
   const isAllDummy = Object.values(dummyConfig).every(Boolean);
+
+  // Дополнительный выбор нужен только для безлимитов, которые покрывают
+  // не весь город: поездки вне зоны оплачиваются отдельно.
+  const needsUncoveredPayment =
+    ticketProfile === 'unlimited_surface' || ticketProfile === 'unlimited_metro';
 
   return (
     <div className="bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col gap-3">
@@ -219,13 +237,27 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
             />
             <span>Все запросы Dummy (демо)</span>
           </label>
-          <button
-            type="button"
-            onClick={() => setShowDummyDetails(prev => !prev)}
-            className="text-blue-600 hover:text-blue-800 underline text-[11px]"
-          >
-            {showDummyDetails ? 'Скрыть эндпоинты' : 'Настроить эндпоинты'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleVehicles}
+              aria-pressed={vehiclesEnabled}
+              className={`text-[11px] px-2 py-1 rounded-md border transition ${
+                vehiclesEnabled
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                  : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {vehiclesEnabled ? 'Скрыть транспорт' : 'Показать транспорт'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDummyDetails(prev => !prev)}
+              className="text-blue-600 hover:text-blue-800 underline text-[11px]"
+            >
+              {showDummyDetails ? 'Скрыть эндпоинты' : 'Настроить эндпоинты'}
+            </button>
+          </div>
         </div>
 
         {showDummyDetails && (
@@ -272,6 +304,15 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
                 type="checkbox"
                 checked={dummyConfig.departures}
                 onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, departures: e.target.checked })}
+                className="shrink-0"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-2 text-slate-600">
+              <span className="truncate">/api/v1/vehicles</span>
+              <input
+                type="checkbox"
+                checked={dummyConfig.vehicles}
+                onChange={(e) => onUpdateDummyConfig({ ...dummyConfig, vehicles: e.target.checked })}
                 className="shrink-0"
               />
             </label>
@@ -423,10 +464,12 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
       {/* Проездной и «Меньше пешком» */}
       {!isCompact && (
+      <>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="min-w-0">
-          <label className="font-semibold text-slate-600 block mb-1">Проездной:</label>
+          <label htmlFor="ticket-profile" className="font-semibold text-slate-600 block mb-1">Проездной:</label>
           <select
+            id="ticket-profile"
             value={ticketProfile}
             onChange={(e) => setTicketProfile(e.target.value as TicketProfile)}
             className="w-full min-w-0 border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
@@ -457,6 +500,88 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           </label>
         </div>
       </div>
+      {needsUncoveredPayment && (
+        <div className="text-xs">
+          <label htmlFor="uncovered-payment" className="font-semibold text-slate-600 block mb-1">
+            Оплата вне безлимита:
+          </label>
+          <select
+            id="uncovered-payment"
+            value={uncoveredPayment}
+            onChange={(e) => setUncoveredPayment(e.target.value as UncoveredPayment)}
+            className="w-full min-w-0 border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+          >
+            <option value="podorozhnik_wallet">Подорожник</option>
+            <option value="bank_card">Банковская карта</option>
+          </select>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* Время прибытия и пересадки */}
+      {!isCompact && (
+        <div className="flex flex-col gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="departure-time" className="font-semibold text-slate-600">Отправление в:</label>
+              <input
+                id="departure-time"
+                type="time"
+                value={departureTime}
+                onChange={(e) => {
+                  setDepartureTime(e.target.value);
+                  if (e.target.value) setArrivalTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="arrival-time" className="font-semibold text-slate-600">Прибытие к:</label>
+              <input
+                id="arrival-time"
+                type="time"
+                value={arrivalTime}
+                onChange={(e) => {
+                  setArrivalTime(e.target.value);
+                  if (e.target.value) setDepartureTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-slate-400">{timeHint}</p>
+            {(departureTime || arrivalTime) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDepartureTime('');
+                  setArrivalTime('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-slate-700 shrink-0"
+              >
+                Сбросить
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="max-transfers" className="font-semibold text-slate-600">Пересадки:</label>
+            <span className="font-semibold text-slate-700">{transfersLabel}</span>
+          </div>
+          <input
+            id="max-transfers"
+            type="range"
+            min={0}
+            max={UNLIMITED_TRANSFERS}
+            step={1}
+            value={maxTransfersOption}
+            onChange={(e) => setMaxTransfersOption(Number(e.target.value))}
+            className="w-full accent-blue-600"
+            aria-valuetext={transfersLabel}
+          />
+        </div>
       )}
 
       {/* Время прибытия и пересадки */}
@@ -532,6 +657,17 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       >
         {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}
       </button>
+
+      {!isCompact && vehiclesEnabled && (
+        <button
+          type="button"
+          onClick={onToggleShowAllVehicles}
+          aria-pressed={showAllVehicles}
+          className="w-full text-xs font-medium py-2 rounded-lg border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition"
+        >
+          {showAllVehicles ? 'Только транспорт выбранного маршрута' : 'Показать весь транспорт'}
+        </button>
+      )}
     </div>
   );
 };
