@@ -113,6 +113,23 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
     }
 
 
+def test_arrival_search_uses_latest_arrival(tmp_path):
+    requests = []
+
+    def handler(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=payload())
+
+    request = {key: value for key, value in REQUEST.items() if key != "departure_at"}
+    request["arrival_at"] = "2026-11-11T13:00:00+03:00"
+    request["max_transfers"] = 7
+    response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json=request)
+    assert response.status_code == 200
+    variables = requests[0]["variables"]
+    assert variables["dateTime"] == {"latestArrival": "2026-11-11T13:00:00+03:00"}
+    assert variables["preferences"]["transit"]["transfer"] == {"maximumTransfers": 7}
+
+
 def test_search_filters_are_forwarded_to_otp(tmp_path):
     requests = []
 

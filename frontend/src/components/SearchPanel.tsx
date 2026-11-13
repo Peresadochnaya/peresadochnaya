@@ -14,6 +14,9 @@ interface SearchPanelProps {
     modes: TransportMode[];
     lessWalking: boolean;
     ticketProfile: TicketProfile;
+    departureAt: string | null;
+    arrivalAt: string | null;
+    maxTransfers: number | null;
   }) => void;
   dummyConfig: DummyConfig;
   onUpdateDummyConfig: (newConfig: DummyConfig) => void;
@@ -27,6 +30,9 @@ const MODES: { id: TransportMode; label: string }[] = [
   { id: 'trolleybus', label: 'Троллейбус' },
   { id: 'rail', label: 'Электричка' },
 ];
+
+// Ползунок пересадок: 0..7 — конкретное число, 8 — без ограничений.
+const UNLIMITED_TRANSFERS = 8;
 
 export const SearchPanel: React.FC<SearchPanelProps> = ({
   labelA,
@@ -56,6 +62,9 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   const [lessWalking, setLessWalking] = useState(false);
   const [ticketProfile, setTicketProfile] = useState<TicketProfile>('bank_card');
   const [profiles, setProfiles] = useState<TicketProfileInfo[]>([]);
+  const [arrivalTime, setArrivalTime] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [maxTransfersOption, setMaxTransfersOption] = useState(UNLIMITED_TRANSFERS);
 
   useEffect(() => { setInputA(labelA); }, [labelA]);
   useEffect(() => { setInputB(labelB); }, [labelB]);
@@ -133,6 +142,41 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
     setSuggestionsB([]);
     onClearPoints();
   };
+
+  // Время относится к сегодняшнему дню; если оно уже прошло,
+  // планируем на завтра, чтобы запрос оставался в будущем.
+  const buildTimeIso = (time: string): string | null => {
+    const [hours, minutes] = time.split(':').map(Number);
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+
+    const value = new Date();
+    value.setHours(hours, minutes, 0, 0);
+    if (value.getTime() <= Date.now()) {
+      value.setDate(value.getDate() + 1);
+    }
+    return value.toISOString();
+  };
+
+  const handleSearch = () => {
+    onSearch({
+      modes: selectedModes,
+      lessWalking,
+      ticketProfile,
+      departureAt: departureTime ? buildTimeIso(departureTime) : null,
+      arrivalAt: arrivalTime ? buildTimeIso(arrivalTime) : null,
+      maxTransfers: maxTransfersOption === UNLIMITED_TRANSFERS ? null : maxTransfersOption,
+    });
+  };
+
+  const transfersLabel = maxTransfersOption === UNLIMITED_TRANSFERS
+    ? 'Без ограничений'
+    : String(maxTransfersOption);
+
+  const timeHint = departureTime
+    ? 'Маршрут будет построен от указанного времени'
+    : arrivalTime
+      ? 'Маршрут будет построен к указанному времени'
+      : 'Без времени — отправление сейчас';
 
   const toggleAllDummy = (enabled: boolean) => {
     onUpdateDummyConfig({
@@ -415,10 +459,75 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       </div>
       )}
 
+      {/* Время прибытия и пересадки */}
+      {!isCompact && (
+        <div className="flex flex-col gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="departure-time" className="font-semibold text-slate-600">Отправление в:</label>
+              <input
+                id="departure-time"
+                type="time"
+                value={departureTime}
+                onChange={(e) => {
+                  setDepartureTime(e.target.value);
+                  if (e.target.value) setArrivalTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="arrival-time" className="font-semibold text-slate-600">Прибытие к:</label>
+              <input
+                id="arrival-time"
+                type="time"
+                value={arrivalTime}
+                onChange={(e) => {
+                  setArrivalTime(e.target.value);
+                  if (e.target.value) setDepartureTime('');
+                }}
+                className="w-full border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] text-slate-400">{timeHint}</p>
+            {(departureTime || arrivalTime) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDepartureTime('');
+                  setArrivalTime('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-slate-700 shrink-0"
+              >
+                Сбросить
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="max-transfers" className="font-semibold text-slate-600">Пересадки:</label>
+            <span className="font-semibold text-slate-700">{transfersLabel}</span>
+          </div>
+          <input
+            id="max-transfers"
+            type="range"
+            min={0}
+            max={UNLIMITED_TRANSFERS}
+            step={1}
+            value={maxTransfersOption}
+            onChange={(e) => setMaxTransfersOption(Number(e.target.value))}
+            className="w-full accent-blue-600"
+            aria-valuetext={transfersLabel}
+          />
+        </div>
+      )}
+
       <button
         type="button"
         disabled={!pointA || !pointB}
-        onClick={() => onSearch({ modes: selectedModes, lessWalking, ticketProfile })}
+        onClick={handleSearch}
         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-2 rounded-lg transition"
       >
         {!pointA ? 'Укажите точку А' : !pointB ? 'Укажите точку Б' : 'Найти маршруты'}

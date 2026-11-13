@@ -63,6 +63,9 @@ describe('SearchPanel compact view', () => {
     expect(screen.queryByText('Проездной:')).toBeNull();
     expect(screen.queryByText('⇅ Поменять местами')).toBeNull();
     expect(screen.queryByText('✕ Очистить точки')).toBeNull();
+    expect(screen.queryByText('Прибытие к:')).toBeNull();
+    expect(screen.queryByText('Отправление в:')).toBeNull();
+    expect(screen.queryByText('Пересадки:')).toBeNull();
     expect(screen.getByDisplayValue('Старт')).toBeTruthy();
     expect(screen.getByDisplayValue('Финиш')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Найти маршруты' })).toBeTruthy();
@@ -77,6 +80,76 @@ describe('SearchPanel compact view', () => {
 
     expect(screen.getByText('Виды транспорта:')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Компактно' })).toBeTruthy();
+  });
+});
+
+describe('SearchPanel time and transfers', () => {
+  it('sends the selected arrival time and transfer limit', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(screen.getByLabelText('Прибытие к:'), { target: { value: '09:30' } });
+    fireEvent.change(screen.getByLabelText('Пересадки:'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        departureAt: null,
+        arrivalAt: expect.any(String),
+        maxTransfers: 3,
+      })
+    );
+    expect(screen.queryByText('∞')).toBeNull();
+  });
+
+  it('sends the selected departure time', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(screen.getByLabelText('Отправление в:'), { target: { value: '08:15' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        departureAt: expect.any(String),
+        arrivalAt: null,
+      })
+    );
+  });
+
+  it('keeps departure and arrival mutually exclusive', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(screen.getByLabelText('Отправление в:'), { target: { value: '08:15' } });
+    fireEvent.change(screen.getByLabelText('Прибытие к:'), { target: { value: '09:30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        departureAt: null,
+        arrivalAt: expect.any(String),
+      })
+    );
+  });
+
+  it('defaults to departure now and unlimited transfers', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ departureAt: null, arrivalAt: null, maxTransfers: null })
+    );
+  });
+
+  it('sends null transfers for the unlimited option', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(screen.getByLabelText('Пересадки:'), { target: { value: '4' } });
+    fireEvent.change(screen.getByLabelText('Пересадки:'), { target: { value: '8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ maxTransfers: null })
+    );
   });
 });
 

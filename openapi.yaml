@@ -2732,9 +2732,21 @@ components:
         passenger:
           $ref: '#/components/schemas/Passenger'
         departure_at:
-          type: string
-          format: date-time
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
           title: Departure At
+          description: Search routes departing at or after this time; exactly one
+            of departure_at or arrival_at is required
+        arrival_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Arrival At
+          description: Search routes arriving by this time; exactly one of departure_at
+            or arrival_at is required
         traffic_mode:
           type: string
           enum:
@@ -2798,7 +2810,7 @@ components:
         max_transfers:
           anyOf:
           - type: integer
-            maximum: 5.0
+            maximum: 7.0
             minimum: 0.0
           - type: 'null'
           title: Max Transfers
@@ -2825,7 +2837,6 @@ components:
       type: object
       required:
       - points
-      - departure_at
       title: RouteRequest
     RoutesDebug:
       properties:

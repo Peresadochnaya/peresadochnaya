@@ -97,7 +97,8 @@ export interface Route {
 
 export interface RouteRequest {
   points: [Point, Point];
-  departure_at: string;
+  departure_at?: string;
+  arrival_at?: string;
   traffic_mode?: 'off' | 'on';
   max_results?: number;
   providers?: ('otp' | 'yandex' | '2gis')[];

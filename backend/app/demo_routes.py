@@ -21,7 +21,10 @@ def compose(request: RouteRequest) -> Route:
     origin = Place(**request.points[0].model_dump(), name="Начало маршрута")
     destination = Place(**request.points[1].model_dump(), name="Конец маршрута")
     speed = {"slow": 1.0, "normal": 1.4, "fast": 1.8}[request.walk_speed]
-    start = request.departure_at + timedelta(microseconds=(1000000 - request.departure_at.microsecond) % 1000000)
+    # For an arrival search the demo composes a route backwards from a
+    # conservative two-hour window, then aligns it to the requested arrival.
+    anchor = request.departure_at if request.departure_at is not None else request.arrival_at - timedelta(hours=2)
+    start = anchor + timedelta(microseconds=(1000000 - anchor.microsecond) % 1000000)
     current, legs = start, []
 
     def append(mode, a, b, duration, coordinates=None, line=None):
@@ -92,7 +95,21 @@ def compose(request: RouteRequest) -> Route:
     coords = list(legs[0].geometry.coordinates)
     for leg in legs[1:]:
         coords.extend(leg.geometry.coordinates[1:])
-    return Route(id="dummy:route-193", name="Демонстрационный маршрут", distance_meters=round(sum(x.distance_meters for x in legs), 2),
-                 geometry={"type": "LineString", "coordinates": coords}, start_at=start, end_at=current,
-                 duration_seconds=sum(x.duration_seconds for x in legs), transfers=0, legs=legs,
-                 provenance=RouteProvenance(candidate_providers=[], traffic_providers=[]))
+    route = Route(id="dummy:route-193", name="Демонстрационный маршрут", distance_meters=round(sum(x.distance_meters for x in legs), 2),
+                  geometry={"type": "LineString", "coordinates": coords}, start_at=start, end_at=current,
+                  duration_seconds=sum(x.duration_seconds for x in legs), transfers=0, legs=legs,
+                  provenance=RouteProvenance(candidate_providers=[], traffic_providers=[]))
+    if request.arrival_at is not None:
+        delta = request.arrival_at - route.end_at
+        route = route.model_copy(update={
+            "start_at": route.start_at + delta,
+            "end_at": request.arrival_at,
+            "legs": [
+                leg.model_copy(update={
+                    "start_at": leg.start_at + delta,
+                    "end_at": leg.end_at + delta,
+                })
+                for leg in route.legs
+            ],
+        })
+    return route

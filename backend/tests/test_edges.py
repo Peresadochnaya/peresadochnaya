@@ -47,6 +47,28 @@ def test_dummy_geometry_and_leg_times_at_coordinate_bounds(tmp_path, points):
         assert leg["duration_source"] == "dummy"
 
 
+def test_arrival_search_aligns_dummy_route_to_requested_time(tmp_path):
+    client = TestClient(create_app(tmp_path, "dummy"))
+    arrival_at = "2026-11-10T17:00:00+03:00"
+    response = client.post("/api/v1/routes", json={
+        "points": REQUEST["points"], "arrival_at": arrival_at, "max_transfers": 7,
+    })
+    assert response.status_code == 200
+    route = response.json()["routes"][0]
+    assert route["end_at"] == arrival_at
+    for leg in route["legs"]:
+        assert (datetime.fromisoformat(leg["end_at"]) - datetime.fromisoformat(leg["start_at"])).total_seconds() == leg["duration_seconds"]
+
+
+@pytest.mark.parametrize("patch", [
+    {"departure_at": None},
+    {"departure_at": "2026-11-10T15:00:00+03:00", "arrival_at": "2026-11-10T17:00:00+03:00"},
+])
+def test_route_request_requires_exactly_one_search_time(tmp_path, patch):
+    client = TestClient(create_app(tmp_path, "dummy"))
+    assert client.post("/api/v1/routes", json={**REQUEST, **patch}).status_code == 422
+
+
 def test_unrepresentable_dummy_arrival_is_validation_error(tmp_path):
     client = TestClient(create_app(tmp_path, "dummy"))
     response = client.post("/api/v1/routes", json={**REQUEST, "departure_at": "9999-12-31T23:59:59Z"})

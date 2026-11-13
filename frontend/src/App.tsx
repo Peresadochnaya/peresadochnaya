@@ -3,7 +3,7 @@ import { YandexMap } from './components/YandexMap';
 import { SearchPanel } from './components/SearchPanel';
 import { RouteResults } from './components/RouteResults';
 import { StopDrawer } from './components/StopDrawer';
-import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig } from './types/api';
+import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig, RouteRequest } from './types/api';
 import { api } from './api/client';
 
 export const App: React.FC = () => {
@@ -82,17 +82,20 @@ export const App: React.FC = () => {
     modes: TransportMode[];
     lessWalking: boolean;
     ticketProfile: TicketProfile;
+    departureAt: string | null;
+    arrivalAt: string | null;
+    maxTransfers: number | null;
   }) => {
     if (!pointA || !pointB) return;
 
     setIsLoadingRoutes(true);
     setHasSearched(false);
     try {
-      const res = await api.planRoute({
+      const payload: RouteRequest = {
         points: [pointA, pointB],
-        departure_at: new Date().toISOString(),
         traffic_mode: 'off',
         modes: filters.modes.length ? filters.modes : ['walk'],
+        max_transfers: filters.maxTransfers,
         less_walking: filters.lessWalking,
         passenger: {
           ticket_profile: filters.ticketProfile,
@@ -100,7 +103,12 @@ export const App: React.FC = () => {
         },
         providers: ['otp'],
         max_results: 5
-      }, dummyConfig.routes);
+      };
+      if (filters.departureAt) payload.departure_at = filters.departureAt;
+      else if (filters.arrivalAt) payload.arrival_at = filters.arrivalAt;
+      else payload.departure_at = new Date().toISOString();
+
+      const res = await api.planRoute(payload, dummyConfig.routes);
 
       setRoutes(res.routes || []);
       setHasSearched(true);
