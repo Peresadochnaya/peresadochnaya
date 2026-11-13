@@ -5,6 +5,7 @@ import {
   RoutesResponse,
   GtfsStopsResponse,
   GtfsDeparturesResponse,
+  VehiclesResponse,
   TicketProfileInfo
 } from '../types/api';
 
@@ -59,6 +60,14 @@ export const api = {
     const params = new URLSearchParams({ bbox, dummy: String(dummy), limit: '200' });
     const res = await fetch(`${API_BASE}/api/v1/stops?${params}`);
     if (!res.ok) throw new Error(`Stops load failed: ${res.statusText}`);
+    return res.json();
+  },
+
+  // Позиции транспорта в видимой области (BBOX)
+  async getVehicles(bbox: string, dummy = true): Promise<VehiclesResponse> {
+    const params = new URLSearchParams({ bbox, dummy: String(dummy), limit: '20000' });
+    const res = await fetch(`${API_BASE}/api/v1/vehicles?${params}`);
+    if (!res.ok) throw new Error(`Vehicles load failed: ${res.statusText}`);
     return res.json();
   },
 

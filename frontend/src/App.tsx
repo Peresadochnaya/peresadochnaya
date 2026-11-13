@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { YandexMap } from './components/YandexMap';
 import { SearchPanel } from './components/SearchPanel';
 import { RouteResults } from './components/RouteResults';
 import { StopDrawer } from './components/StopDrawer';
-import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig, RouteRequest } from './types/api';
+import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig, RouteRequest, VehiclePosition } from './types/api';
 import { api } from './api/client';
+import { getVehiclesBBox, vehicleMatchesRoute } from './utils/vehicleFilters';
 
 export const App: React.FC = () => {
   const [pointA, setPointA] = useState<Point | null>(null);
@@ -19,13 +20,18 @@ export const App: React.FC = () => {
 
   const [selectedStop, setSelectedStop] = useState<GtfsStop | null>(null);
 
+  const [vehiclesEnabled, setVehiclesEnabled] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [vehicles, setVehicles] = useState<VehiclePosition[]>([]);
+
   // Конфигурация dummy по умолчанию: все true, как в спецификации
   const [dummyConfig, setDummyConfig] = useState<DummyConfig>({
     suggest: true,
     geocode: true,
     routes: true,
     stops: true,
-    departures: true
+    departures: true,
+    vehicles: true
   });
 
   // Установка точки при клике/драге на карте
@@ -143,6 +149,47 @@ export const App: React.FC = () => {
     }
   };
 
+  // Позиции транспорта запрашиваем по области найденных маршрутов
+  const vehiclesBBox = useMemo(() => getVehiclesBBox(routes), [routes]);
+
+  useEffect(() => {
+    if (!vehiclesEnabled || !vehiclesBBox) {
+      setVehicles([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadVehicles = async () => {
+      try {
+        const res = await api.getVehicles(vehiclesBBox, dummyConfig.vehicles);
+        if (!cancelled) setVehicles(res.items || []);
+      } catch (err) {
+        console.error('Vehicles load error', err);
+        if (!cancelled) setVehicles([]);
+      }
+    };
+
+    loadVehicles();
+    const timer = window.setInterval(loadVehicles, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [vehiclesEnabled, vehiclesBBox, dummyConfig.vehicles]);
+
+  // На карте показываем либо только транспорт выбранного маршрута,
+  // либо весь транспорт в области маршрутов.
+  const visibleVehicles = useMemo(() => {
+    if (!vehiclesEnabled) return [];
+
+    const route = routes[selectedRouteIndex];
+    if (showAllVehicles || !route) return vehicles;
+
+    return vehicles.filter((vehicle) => vehicleMatchesRoute(vehicle, route));
+  }, [vehicles, vehiclesEnabled, showAllVehicles, routes, selectedRouteIndex]);
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden flex">
       {/* Боковая панель поиска и результатов: снизу на мобильных, слева на десктопе */}
@@ -159,6 +206,10 @@ export const App: React.FC = () => {
           dummyConfig={dummyConfig}
           onUpdateDummyConfig={setDummyConfig}
           onClearPoints={handleClearPoints}
+          vehiclesEnabled={vehiclesEnabled}
+          onToggleVehicles={() => setVehiclesEnabled(prev => !prev)}
+          showAllVehicles={showAllVehicles}
+          onToggleShowAllVehicles={() => setShowAllVehicles(prev => !prev)}
         />
 
         {hasSearched && !isLoadingRoutes && routes.length === 0 && (
@@ -194,6 +245,7 @@ export const App: React.FC = () => {
           onSelectStop={setSelectedStop}
           loadStops={handleLoadStops}
           dummyStops={dummyConfig.stops}
+          vehicles={visibleVehicles}
         />
       </div>
     </div>

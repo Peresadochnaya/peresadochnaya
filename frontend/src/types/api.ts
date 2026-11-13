@@ -168,4 +168,28 @@ export interface DummyConfig {
   routes: boolean;
   stops: boolean;
   departures: boolean;
+  vehicles: boolean;
+}
+
+export type VehicleMode = TransportMode | 'unknown';
+
+export interface VehiclePosition {
+  vehicle_id: string;
+  route_id?: string | null;
+  trip_id?: string | null;
+  lat: number;
+  lon: number;
+  heading?: number | null;
+  speed_mps?: number | null;
+  mode: VehicleMode;
+  timestamp: string;
+  label?: string | null;
+}
+
+export interface VehiclesResponse {
+  mode: 'dummy' | 'realtime';
+  items: VehiclePosition[];
+  updated_at: string;
+  stale: boolean;
+  warnings: string[];
 }

@@ -22,6 +22,7 @@ const dummyConfig: DummyConfig = {
   routes: true,
   stops: true,
   departures: true,
+  vehicles: true,
 };
 
 const baseProps = {
@@ -36,6 +37,10 @@ const baseProps = {
   dummyConfig,
   onUpdateDummyConfig: vi.fn(),
   onClearPoints: vi.fn(),
+  vehiclesEnabled: false,
+  onToggleVehicles: vi.fn(),
+  showAllVehicles: false,
+  onToggleShowAllVehicles: vi.fn(),
 };
 
 beforeEach(() => {
@@ -150,6 +155,35 @@ describe('SearchPanel time and transfers', () => {
     expect(baseProps.onSearch).toHaveBeenCalledWith(
       expect.objectContaining({ maxTransfers: null })
     );
+  });
+});
+
+describe('SearchPanel vehicles controls', () => {
+  it('toggles transport display from the dummy section', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Показать транспорт' }));
+
+    expect(baseProps.onToggleVehicles).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the all-transport button only when vehicles are enabled', () => {
+    const { rerender } = render(<SearchPanel {...baseProps} />);
+
+    expect(screen.queryByRole('button', { name: 'Показать весь транспорт' })).toBeNull();
+
+    rerender(<SearchPanel {...baseProps} vehiclesEnabled />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Показать весь транспорт' }));
+    expect(baseProps.onToggleShowAllVehicles).toHaveBeenCalledTimes(1);
+  });
+
+  it('switches the all-transport button back to the selected route', () => {
+    render(<SearchPanel {...baseProps} vehiclesEnabled showAllVehicles />);
+
+    expect(
+      screen.getByRole('button', { name: 'Только транспорт выбранного маршрута' })
+    ).toBeTruthy();
   });
 });
 
