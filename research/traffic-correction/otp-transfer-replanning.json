@@ -1,0 +1,2958 @@
+{
+  "synthetic_delay_seconds": 480,
+  "paid_provider_calls": 0,
+  "scope": "Research-only simulation. Original user departure and preference constraints are preserved. Tail uses a concrete stop/new time and remaining transfer budget. Whole-route line exclusion is a separate sensitivity experiment, not the same correction model. Delay is synthetic, not a traffic measurement.",
+  "records": [
+    {
+      "label": "baseline",
+      "request": {
+        "query": "\nquery Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,\n           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,\n           $preferences: PlanPreferencesInput) {\n  planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,\n                 first: $first, modes: $modes, preferences: $preferences) {\n    routingErrors { code description inputField }\n    edges {\n      node {\n        start\n        end\n        duration\n        numberOfTransfers\n        legs {\n          mode\n          transitLeg\n          distance\n          start { scheduledTime estimated { time delay } }\n          end { scheduledTime estimated { time delay } }\n          from { name lat lon stop { gtfsId name } }\n          to { name lat lon stop { gtfsId name } }\n          route { gtfsId shortName longName mode }\n          trip { gtfsId }\n          legGeometry { points length }\n        }\n      }\n    }\n  }\n}\n",
+        "variables": {
+          "origin": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.002,
+                "longitude": 30.296
+              }
+            }
+          },
+          "destination": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.036,
+                "longitude": 30.445
+              }
+            }
+          },
+          "dateTime": {
+            "earliestDeparture": "2026-11-12T17:00:00+03:00"
+          },
+          "first": 5,
+          "modes": {
+            "transit": {
+              "access": [
+                "WALK"
+              ],
+              "egress": [
+                "WALK"
+              ],
+              "transfer": [
+                "WALK"
+              ],
+              "transit": [
+                {
+                  "mode": "BUS"
+                },
+                {
+                  "mode": "SUBWAY"
+                },
+                {
+                  "mode": "TRAM"
+                },
+                {
+                  "mode": "TROLLEYBUS"
+                },
+                {
+                  "mode": "RAIL"
+                }
+              ]
+            }
+          },
+          "preferences": {
+            "transit": {
+              "transfer": {
+                "maximumTransfers": 2
+              },
+              "timetable": {
+                "excludeRealTimeUpdates": true
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "data": {
+          "planConnection": {
+            "routingErrors": [],
+            "edges": [
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:18:45+03:00",
+                  "duration": 4725,
+                  "numberOfTransfers": 1,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 327.6,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:04:59+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+                        "length": 16
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 6772.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:14:47+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:43:47+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:337",
+                        "shortName": "93",
+                        "longName": "А.С. \"ЛАХТИНСКИЙ РАЗЛИВ\" - ПР. КУЛЬТУРЫ",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:84486404"
+                      },
+                      "legGeometry": {
+                        "points": "kgfmJ{y|wDOADeAbB_WBa@`AgN^mGN{BFeA@aAAm@Q{ERGSFYeH_@_I[yG_Ec~@DaBJw@FiBEaBUqCGcBOwCKw@OWaB`@s@mCHMILg@kBc@{BK]eCqJJUKTOg@_@aAmAeE}CuK_I{ZHOINiNqg@_@kAWs@LOMLiOqg@JQKNcJ}ZgAmDJOKJmBqGuFgRwBkHmAaEk@sBtCc@?P?MvGgALq@QmHPCQDOaIGkCGs@Ki@kCiIOo@?o@~BkV|BqUH@GAlB{RnEud@LHMIh@wEdA}HpEqYGB@Ke@e@aAaAc@c@F_@",
+                        "length": 93
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5953.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:53:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:13:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 132
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:13:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:18:45+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:41:21+03:00",
+                  "duration": 6081,
+                  "numberOfTransfers": 0,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 327.6,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:04:59+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+                        "length": 16
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 17140.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:18:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:25:19+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+                        "lat": 60.031381,
+                        "lon": 30.458251,
+                        "stop": {
+                          "gtfsId": "2:31924",
+                          "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:8287",
+                        "shortName": "293",
+                        "longName": "ПР. МАРШАКА, 28 - АЭРОДРОМНАЯ УЛ.",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81595288"
+                      },
+                      "legGeometry": {
+                        "points": "kgfmJ{y|wDOGFaAp@eKp@aKpA{RLeBDy@Ds@JeBDcBKaDI_BTGUFI_COcD[yGCq@YaHUeFAKMmC?Kc@wJuBoe@?[@_AP_BBc@@k@C{@GcASgBKaB@u@A]MsBQe@_Bh@Wu@a@{AHOILACc@cBe@aCQu@AC}BwIJQKLq@cBMe@Ka@eCcJaAkD[mAsAaFQm@gEaPJMILiCgJuDoNaBuFq@eCUw@K]k@cBLQOPc@wAq@_C{AgFuAyEyDsMY}@Qo@So@D[EZsIoYMc@{@wCQg@HSGPqBwGuFgRwBkHmAaEm@yBn@GfBY?T?WvAKlB[tAWFk@OqHPCS@M_IIoCG}@UaAo@kBqA{DKg@Cc@@]Di@v@}Hz@}INuAfAwKj@}FHDICrCmYj@yFZ{CbBeQLBKCZiDh@oEj@qDx@eFb@kCZmBd@yCb@sC@o@\\iAZuBPNQQbBeKxAeJ|@wFd@wCHNGQbAqGpCgQPaAFBEInB}LxCcRrBqMJFIGtCqQxAgJlAkHx@uFPNOOpCeQ|EmZHJIOfA}G|@wFn@uDBUH_@PWL]He@@k@d@Gv@MrCe@?L?M`SaDhHqA@b@Aa@vDo@`@Av@JRNRRxC`DpGvGIh@Hc@n@l@hClClCxCZ\\tB~B^bAJ`@@jAGh@_BzIK\\MXMLMFOAKGOMKYGc@Ak@BoA@Kj@yDfAcIXeC^yCLeAT{AP{@Ji@Hm@Jm@JgA`@{El@yGRqBh@iFDs@?_@C]E_@I[ISMOQKUGEAKBMNKZE^E^G`BGtA]rFGbAKdBKzAUzEIzBClAAj@Ap@IjBIz@SbAIZIPGLIHKHMFO@OEQOQQSUmEgFsAqA[[QQcAm@g@a@sAyA{DkEqAcBcBmBwHcI}P_RoF_Gu@y@aBeBk@m@EGD[EZmBuByEcFqAwADWEXeFqFSS]_@mKaLcBgBmCuCiBmBc@e@sB}BwGcHi@k@qCyCuAgB_GiGwFeGkAmAiDwDi@k@gDmDuFeGe@]c@[YMa@Oi@OQAUCYA_@Bc@H]J[L]RSP[\\eAlAoAjAWVoCfC[PWNOFQHUFSBa@BQ?wBD}ABsDLEIEc@GQW?YFFBC`A{CViH~@k@He@\\i@d@i@p@KNwBtDWd@}@vA[j@d@|AGJ",
+                        "length": 364
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 1160.16,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:25:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:41:21+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+                        "lat": 60.031381,
+                        "lon": 30.458251,
+                        "stop": {
+                          "gtfsId": "2:31924",
+                          "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "c{kmJa{{xDGLQm@EOGH{CxF]n@Yj@EHEFw@xAABy@zA_BvCCFGJeAnBkAtBCDYh@]r@ILEJGJKRd@~A@Pt@zGBHk@hAKPB|B@VFb@HDADCTCXCXEVALAJEACDMr@Gf@APAFK|@Q|AALANIECBEFQfCCb@Ej@CVy@_@c@WAFAH?HAHCPCXCNAJGEk@e@?fB?X@PAh@r@?",
+                        "length": 76
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "elapsed_seconds": 1.077
+    },
+    {
+      "label": "prefix_fixed_tail",
+      "request": {
+        "query": "\nquery Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,\n           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,\n           $preferences: PlanPreferencesInput) {\n  planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,\n                 first: $first, modes: $modes, preferences: $preferences) {\n    routingErrors { code description inputField }\n    edges {\n      node {\n        start\n        end\n        duration\n        numberOfTransfers\n        legs {\n          mode\n          transitLeg\n          distance\n          start { scheduledTime estimated { time delay } }\n          end { scheduledTime estimated { time delay } }\n          from { name lat lon stop { gtfsId name } }\n          to { name lat lon stop { gtfsId name } }\n          route { gtfsId shortName longName mode }\n          trip { gtfsId }\n          legGeometry { points length }\n        }\n      }\n    }\n  }\n}\n",
+        "variables": {
+          "origin": {
+            "location": {
+              "stopLocation": {
+                "stopLocationId": "2:39321"
+              }
+            }
+          },
+          "destination": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.036,
+                "longitude": 30.445
+              }
+            }
+          },
+          "dateTime": {
+            "earliestDeparture": "2026-11-12T17:53:47+03:00"
+          },
+          "first": 5,
+          "modes": {
+            "transit": {
+              "access": [
+                "WALK"
+              ],
+              "egress": [
+                "WALK"
+              ],
+              "transfer": [
+                "WALK"
+              ],
+              "transit": [
+                {
+                  "mode": "BUS"
+                },
+                {
+                  "mode": "SUBWAY"
+                },
+                {
+                  "mode": "TRAM"
+                },
+                {
+                  "mode": "TROLLEYBUS"
+                },
+                {
+                  "mode": "RAIL"
+                }
+              ]
+            }
+          },
+          "preferences": {
+            "transit": {
+              "transfer": {
+                "maximumTransfers": 2
+              },
+              "timetable": {
+                "excludeRealTimeUpdates": true
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "data": {
+          "planConnection": {
+            "routingErrors": [],
+            "edges": [
+              {
+                "node": {
+                  "start": "2026-11-12T18:01:16+03:00",
+                  "end": "2026-11-12T18:26:45+03:00",
+                  "duration": 1529,
+                  "numberOfTransfers": 0,
+                  "legs": [
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5953.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:01:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 132
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:21:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:26:45+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "elapsed_seconds": 0.204,
+      "comparison_status": "Exploratory tail call with maximumTransfers=2; final comparison uses fifth call with remaining tail budget=1. No returned tail needed any transfer, so this did not affect the outcome."
+    },
+    {
+      "label": "whole_route_same_original_departure",
+      "request": {
+        "query": "\nquery Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,\n           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,\n           $preferences: PlanPreferencesInput) {\n  planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,\n                 first: $first, modes: $modes, preferences: $preferences) {\n    routingErrors { code description inputField }\n    edges {\n      node {\n        start\n        end\n        duration\n        numberOfTransfers\n        legs {\n          mode\n          transitLeg\n          distance\n          start { scheduledTime estimated { time delay } }\n          end { scheduledTime estimated { time delay } }\n          from { name lat lon stop { gtfsId name } }\n          to { name lat lon stop { gtfsId name } }\n          route { gtfsId shortName longName mode }\n          trip { gtfsId }\n          legGeometry { points length }\n        }\n      }\n    }\n  }\n}\n",
+        "variables": {
+          "origin": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.002,
+                "longitude": 30.296
+              }
+            }
+          },
+          "destination": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.036,
+                "longitude": 30.445
+              }
+            }
+          },
+          "dateTime": {
+            "earliestDeparture": "2026-11-12T17:00:00+03:00"
+          },
+          "first": 5,
+          "modes": {
+            "transit": {
+              "access": [
+                "WALK"
+              ],
+              "egress": [
+                "WALK"
+              ],
+              "transfer": [
+                "WALK"
+              ],
+              "transit": [
+                {
+                  "mode": "BUS"
+                },
+                {
+                  "mode": "SUBWAY"
+                },
+                {
+                  "mode": "TRAM"
+                },
+                {
+                  "mode": "TROLLEYBUS"
+                },
+                {
+                  "mode": "RAIL"
+                }
+              ]
+            }
+          },
+          "preferences": {
+            "transit": {
+              "transfer": {
+                "maximumTransfers": 2
+              },
+              "timetable": {
+                "excludeRealTimeUpdates": true
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "data": {
+          "planConnection": {
+            "routingErrors": [],
+            "edges": [
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:18:45+03:00",
+                  "duration": 4725,
+                  "numberOfTransfers": 1,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 327.6,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:04:59+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+                        "length": 16
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 6772.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:14:47+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:43:47+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:337",
+                        "shortName": "93",
+                        "longName": "А.С. \"ЛАХТИНСКИЙ РАЗЛИВ\" - ПР. КУЛЬТУРЫ",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:84486404"
+                      },
+                      "legGeometry": {
+                        "points": "kgfmJ{y|wDOADeAbB_WBa@`AgN^mGN{BFeA@aAAm@Q{ERGSFYeH_@_I[yG_Ec~@DaBJw@FiBEaBUqCGcBOwCKw@OWaB`@s@mCHMILg@kBc@{BK]eCqJJUKTOg@_@aAmAeE}CuK_I{ZHOINiNqg@_@kAWs@LOMLiOqg@JQKNcJ}ZgAmDJOKJmBqGuFgRwBkHmAaEk@sBtCc@?P?MvGgALq@QmHPCQDOaIGkCGs@Ki@kCiIOo@?o@~BkV|BqUH@GAlB{RnEud@LHMIh@wEdA}HpEqYGB@Ke@e@aAaAc@c@F_@",
+                        "length": 93
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5953.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:53:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:13:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 132
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:13:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:18:45+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:41:21+03:00",
+                  "duration": 6081,
+                  "numberOfTransfers": 0,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 327.6,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:04:59+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+                        "length": 16
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 17140.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:18:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:25:19+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+                        "lat": 60.031381,
+                        "lon": 30.458251,
+                        "stop": {
+                          "gtfsId": "2:31924",
+                          "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:8287",
+                        "shortName": "293",
+                        "longName": "ПР. МАРШАКА, 28 - АЭРОДРОМНАЯ УЛ.",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81595288"
+                      },
+                      "legGeometry": {
+                        "points": "kgfmJ{y|wDOGFaAp@eKp@aKpA{RLeBDy@Ds@JeBDcBKaDI_BTGUFI_COcD[yGCq@YaHUeFAKMmC?Kc@wJuBoe@?[@_AP_BBc@@k@C{@GcASgBKaB@u@A]MsBQe@_Bh@Wu@a@{AHOILACc@cBe@aCQu@AC}BwIJQKLq@cBMe@Ka@eCcJaAkD[mAsAaFQm@gEaPJMILiCgJuDoNaBuFq@eCUw@K]k@cBLQOPc@wAq@_C{AgFuAyEyDsMY}@Qo@So@D[EZsIoYMc@{@wCQg@HSGPqBwGuFgRwBkHmAaEm@yBn@GfBY?T?WvAKlB[tAWFk@OqHPCS@M_IIoCG}@UaAo@kBqA{DKg@Cc@@]Di@v@}Hz@}INuAfAwKj@}FHDICrCmYj@yFZ{CbBeQLBKCZiDh@oEj@qDx@eFb@kCZmBd@yCb@sC@o@\\iAZuBPNQQbBeKxAeJ|@wFd@wCHNGQbAqGpCgQPaAFBEInB}LxCcRrBqMJFIGtCqQxAgJlAkHx@uFPNOOpCeQ|EmZHJIOfA}G|@wFn@uDBUH_@PWL]He@@k@d@Gv@MrCe@?L?M`SaDhHqA@b@Aa@vDo@`@Av@JRNRRxC`DpGvGIh@Hc@n@l@hClClCxCZ\\tB~B^bAJ`@@jAGh@_BzIK\\MXMLMFOAKGOMKYGc@Ak@BoA@Kj@yDfAcIXeC^yCLeAT{AP{@Ji@Hm@Jm@JgA`@{El@yGRqBh@iFDs@?_@C]E_@I[ISMOQKUGEAKBMNKZE^E^G`BGtA]rFGbAKdBKzAUzEIzBClAAj@Ap@IjBIz@SbAIZIPGLIHKHMFO@OEQOQQSUmEgFsAqA[[QQcAm@g@a@sAyA{DkEqAcBcBmBwHcI}P_RoF_Gu@y@aBeBk@m@EGD[EZmBuByEcFqAwADWEXeFqFSS]_@mKaLcBgBmCuCiBmBc@e@sB}BwGcHi@k@qCyCuAgB_GiGwFeGkAmAiDwDi@k@gDmDuFeGe@]c@[YMa@Oi@OQAUCYA_@Bc@H]J[L]RSP[\\eAlAoAjAWVoCfC[PWNOFQHUFSBa@BQ?wBD}ABsDLEIEc@GQW?YFFBC`A{CViH~@k@He@\\i@d@i@p@KNwBtDWd@}@vA[j@d@|AGJ",
+                        "length": 364
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 1160.16,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:25:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:41:21+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+                        "lat": 60.031381,
+                        "lon": 30.458251,
+                        "stop": {
+                          "gtfsId": "2:31924",
+                          "name": "УЛ. КОРНЕЯ ЧУКОВСКОГО"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "c{kmJa{{xDGLQm@EOGH{CxF]n@Yj@EHEFw@xAABy@zA_BvCCFGJeAnBkAtBCDYh@]r@ILEJGJKRd@~A@Pt@zGBHk@hAKPB|B@VFb@HDADCTCXCXEVALAJEACDMr@Gf@APAFK|@Q|AALANIECBEFQfCCb@Ej@CVy@_@c@WAFAH?HAHCPCXCNAJGEk@e@?fB?X@PAh@r@?",
+                        "length": 76
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "elapsed_seconds": 0.976
+    },
+    {
+      "label": "whole_route_excluding_delayed_line_sensitivity",
+      "request": {
+        "query": "\nquery Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,\n           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,\n           $preferences: PlanPreferencesInput) {\n  planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,\n                 first: $first, modes: $modes, preferences: $preferences) {\n    routingErrors { code description inputField }\n    edges {\n      node {\n        start\n        end\n        duration\n        numberOfTransfers\n        legs {\n          mode\n          transitLeg\n          distance\n          start { scheduledTime estimated { time delay } }\n          end { scheduledTime estimated { time delay } }\n          from { name lat lon stop { gtfsId name } }\n          to { name lat lon stop { gtfsId name } }\n          route { gtfsId shortName longName mode }\n          trip { gtfsId }\n          legGeometry { points length }\n        }\n      }\n    }\n  }\n}\n",
+        "variables": {
+          "origin": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.002,
+                "longitude": 30.296
+              }
+            }
+          },
+          "destination": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.036,
+                "longitude": 30.445
+              }
+            }
+          },
+          "dateTime": {
+            "earliestDeparture": "2026-11-12T17:00:00+03:00"
+          },
+          "first": 5,
+          "modes": {
+            "transit": {
+              "access": [
+                "WALK"
+              ],
+              "egress": [
+                "WALK"
+              ],
+              "transfer": [
+                "WALK"
+              ],
+              "transit": [
+                {
+                  "mode": "BUS"
+                },
+                {
+                  "mode": "SUBWAY"
+                },
+                {
+                  "mode": "TRAM"
+                },
+                {
+                  "mode": "TROLLEYBUS"
+                },
+                {
+                  "mode": "RAIL"
+                }
+              ]
+            }
+          },
+          "preferences": {
+            "transit": {
+              "transfer": {
+                "maximumTransfers": 2
+              },
+              "timetable": {
+                "excludeRealTimeUpdates": true
+              },
+              "filters": [
+                {
+                  "exclude": [
+                    {
+                      "routes": [
+                        "2:337"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "response": {
+        "data": {
+          "planConnection": {
+            "routingErrors": [],
+            "edges": [
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:20:11+03:00",
+                  "duration": 4811,
+                  "numberOfTransfers": 2,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 235.85,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:05:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@p@QFoAKc@DaAl@O@ZANA?@J",
+                        "length": 13
+                      }
+                    },
+                    {
+                      "mode": "SUBWAY",
+                      "transitLeg": true,
+                      "distance": 5899.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:08:37+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "to": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "1:metro:2",
+                        "shortName": "2",
+                        "longName": "Парнас — Купчино",
+                        "mode": "SUBWAY"
+                      },
+                      "trip": {
+                        "gtfsId": "1:metro:2:1:weekday"
+                      },
+                      "legGeometry": {
+                        "points": "offmJui|wDywAytBo~Byc@wxAadA",
+                        "length": 4
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 354.09,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:24:26+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "to": {
+                        "name": "Ст. метро \"Проспект Просвещения\"",
+                        "lat": 60.05244,
+                        "lon": 30.33664,
+                        "stop": {
+                          "gtfsId": "2:16760",
+                          "name": "Ст. метро \"Проспект Просвещения\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "qxomJkicxD?@Hs@@G@E@Qq@a@kBwAeAs@SOLkAF_@D]@M?CD[BWBWIIIWAM@WQMQKFc@d@uD??",
+                        "length": 27
+                      }
+                    },
+                    {
+                      "mode": "TRAM",
+                      "transitLeg": true,
+                      "distance": 5019.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:30:17+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:52:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Ст. метро \"Проспект Просвещения\"",
+                        "lat": 60.05244,
+                        "lon": 30.33664,
+                        "stop": {
+                          "gtfsId": "2:16760",
+                          "name": "Ст. метро \"Проспект Просвещения\""
+                        }
+                      },
+                      "to": {
+                        "name": "Ст. метро \"Гражданский проспект\"",
+                        "lat": 60.035611,
+                        "lon": 30.419361,
+                        "stop": {
+                          "gtfsId": "2:16628",
+                          "name": "Ст. метро \"Гражданский проспект\""
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:1128",
+                        "shortName": "100",
+                        "longName": "Придорожная аллея - ж.-д. станция Ручьи",
+                        "mode": "TRAM"
+                      },
+                      "trip": {
+                        "gtfsId": "2:84035162"
+                      },
+                      "legGeometry": {
+                        "points": "}~omJccdxDDBEC|De\\Hs@VwBd@uD????lC{TJ{@ZcCb@uDAA@@jEi^D_@l@{Eb@qDA?@?hEg^Hk@VwBp@uF?@?AbCkSFe@X_Cb@oD@@AA~Ega@D]DBECBYDWNiA@KNiAd@}DrEi_@@EBBCEJ}@f@{DfDaYhAoJB@C@xCmVbAkIBACAhEc^He@D]ZoCFk@h@mEBBCCjEg^BYDBEC@GReBlA{JtB{PFc@@@AA@IBWD_@Hm@zCwV|CsWB@",
+                        "length": 83
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 155.79,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:52:17+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:55:13+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Ст. метро \"Гражданский проспект\"",
+                        "lat": 60.035611,
+                        "lon": 30.419361,
+                        "stop": {
+                          "gtfsId": "2:16628",
+                          "name": "Ст. метро \"Гражданский проспект\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035008,
+                        "lon": 30.421406,
+                        "stop": {
+                          "gtfsId": "2:24795",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "qulmJ_htxD??Hm@HHJFDD@OFQDIH@Fa@L_AFa@CGCM?O@QNgAPsA??",
+                        "length": 20
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 3076.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:04:42+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:14:42+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035008,
+                        "lon": 30.421406,
+                        "stop": {
+                          "gtfsId": "2:24795",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wqlmJwttxDUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 70
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:14:42+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:20:11+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:21:17+03:00",
+                  "duration": 4877,
+                  "numberOfTransfers": 2,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 235.85,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:05:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@p@QFoAKc@DaAl@O@ZANA?@J",
+                        "length": 13
+                      }
+                    },
+                    {
+                      "mode": "SUBWAY",
+                      "transitLeg": true,
+                      "distance": 5899.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:08:37+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "to": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "1:metro:2",
+                        "shortName": "2",
+                        "longName": "Парнас — Купчино",
+                        "mode": "SUBWAY"
+                      },
+                      "trip": {
+                        "gtfsId": "1:metro:2:1:weekday"
+                      },
+                      "legGeometry": {
+                        "points": "offmJui|wDywAytBo~Byc@wxAadA",
+                        "length": 4
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 354.09,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:24:26+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "to": {
+                        "name": "Ст. метро \"Проспект Просвещения\"",
+                        "lat": 60.05244,
+                        "lon": 30.33664,
+                        "stop": {
+                          "gtfsId": "2:16760",
+                          "name": "Ст. метро \"Проспект Просвещения\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "qxomJkicxD?@Hs@@G@E@Qq@a@kBwAeAs@SOLkAF_@D]@M?CD[BWBWIIIWAM@WQMQKFc@d@uD??",
+                        "length": 27
+                      }
+                    },
+                    {
+                      "mode": "TRAM",
+                      "transitLeg": true,
+                      "distance": 5883.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:30:17+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:56:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Ст. метро \"Проспект Просвещения\"",
+                        "lat": 60.05244,
+                        "lon": 30.33664,
+                        "stop": {
+                          "gtfsId": "2:16760",
+                          "name": "Ст. метро \"Проспект Просвещения\""
+                        }
+                      },
+                      "to": {
+                        "name": "Платформа Новая Охта",
+                        "lat": 60.032469,
+                        "lon": 30.4326,
+                        "stop": {
+                          "gtfsId": "2:16636",
+                          "name": "Платформа Новая Охта"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:1128",
+                        "shortName": "100",
+                        "longName": "Придорожная аллея - ж.-д. станция Ручьи",
+                        "mode": "TRAM"
+                      },
+                      "trip": {
+                        "gtfsId": "2:84035162"
+                      },
+                      "legGeometry": {
+                        "points": "}~omJccdxDDBEC|De\\Hs@VwBd@uD????lC{TJ{@ZcCb@uDAA@@jEi^D_@l@{Eb@qDA?@?hEg^Hk@VwBp@uF?@?AbCkSFe@X_Cb@oD@@AA~Ega@D]DBECBYDWNiA@KNiAd@}DrEi_@@EBBCEJ}@f@{DfDaYhAoJB@C@xCmVbAkIBACAhEc^He@D]ZoCFk@h@mEBBCCjEg^BYDBEC@GReBlA{JtB{PFc@@@AA@IBWD_@Hm@zCwV|CsWB@CADU^_D`Gof@B@CA@GFg@d@yDrByPB@CABQNwALcALeARaBNq@JMDAXGX?R@?P?Q",
+                        "length": 108
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 126.25,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:56:17+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:58:19+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Платформа Новая Охта",
+                        "lat": 60.032469,
+                        "lon": 30.4326,
+                        "stop": {
+                          "gtfsId": "2:16636",
+                          "name": "Платформа Новая Охта"
+                        }
+                      },
+                      "to": {
+                        "name": "ПЛАТФОРМА НОВАЯ ОХТА",
+                        "lat": 60.033483,
+                        "lon": 30.43269,
+                        "stop": {
+                          "gtfsId": "2:4434",
+                          "name": "ПЛАТФОРМА НОВАЯ ОХТА"
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "{almJwzvxD?Eq@AC?IXSGCEGICEACEGEKAAGVGJIDK?KCSIQ??G",
+                        "length": 21
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 2349.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:07:48+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:15:48+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "ПЛАТФОРМА НОВАЯ ОХТА",
+                        "lat": 60.033483,
+                        "lon": 30.43269,
+                        "stop": {
+                          "gtfsId": "2:4434",
+                          "name": "ПЛАТФОРМА НОВАЯ ОХТА"
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "ghlmJi{vxD?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 59
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:15:48+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:21:40+03:00",
+                  "duration": 4900,
+                  "numberOfTransfers": 2,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 235.85,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:05:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@p@QFoAKc@DaAl@O@ZANA?@J",
+                        "length": 13
+                      }
+                    },
+                    {
+                      "mode": "SUBWAY",
+                      "transitLeg": true,
+                      "distance": 5899.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:08:37+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "to": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "1:metro:2",
+                        "shortName": "2",
+                        "longName": "Парнас — Купчино",
+                        "mode": "SUBWAY"
+                      },
+                      "trip": {
+                        "gtfsId": "1:metro:2:1:weekday"
+                      },
+                      "legGeometry": {
+                        "points": "offmJui|wDywAytBo~Byc@wxAadA",
+                        "length": 4
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 254.76,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:22:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+                        "lat": 60.052979,
+                        "lon": 30.332774,
+                        "stop": {
+                          "gtfsId": "2:4578",
+                          "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "qxomJkicxD?@Hs@@G@E@Qq@a@kBwAeAs@SOSGg@fEA@Eb@CC",
+                        "length": 15
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5384.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:33:22+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:53:22+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+                        "lat": 60.052979,
+                        "lon": 30.332774,
+                        "stop": {
+                          "gtfsId": "2:4578",
+                          "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035722,
+                        "lon": 30.417976,
+                        "stop": {
+                          "gtfsId": "2:3252",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:1801",
+                        "shortName": "121",
+                        "longName": "АВТОБУСНАЯ СТАНЦИЯ \"УЛ. ЖЕНИ ЕГОРОВОЙ\" - УЛ. РУСТАВЕЛИ",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81521367"
+                      },
+                      "legGeometry": {
+                        "points": "abpmJyjcxDYQR_BXwBXcCLqAL_Bn@gF|CkWh@}DL{@J{@JgALJKIjDoZJu@\\mCNLOKPaBnAgK`B}Md@sDNmAL{@XoCPNOM~D}\\fAaJNJOGzEy`@RNSKbEg]fA_Jt@sGLaAPuANLMO\\aDNmAvBeQRiBPNQONiA@EJ{@J_AlCsTJy@h@kEHu@ZgCLJMOh@{Dd@sDhCyTNDOEnAiKzEu`@RNSO`E_]pAqKPJOK`Fcb@VPWS`CaSlByOPR",
+                        "length": 79
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 214.79,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:53:22+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:56:42+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035722,
+                        "lon": 30.417976,
+                        "stop": {
+                          "gtfsId": "2:3252",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035008,
+                        "lon": 30.421406,
+                        "stop": {
+                          "gtfsId": "2:24795",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "gvlmJi_txD?ANmAj@{E@OFQDIH@Fa@L_AFa@CGCM?O@QNgAPsA??",
+                        "length": 18
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 3076.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:06:11+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:16:11+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+                        "lat": 60.035008,
+                        "lon": 30.421406,
+                        "stop": {
+                          "gtfsId": "2:24795",
+                          "name": "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wqlmJwttxDUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 70
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:16:11+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:40+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:21:49+03:00",
+                  "duration": 4909,
+                  "numberOfTransfers": 2,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 235.85,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:05:17+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@p@QFoAKc@DaAl@O@ZANA?@J",
+                        "length": 13
+                      }
+                    },
+                    {
+                      "mode": "SUBWAY",
+                      "transitLeg": true,
+                      "distance": 5899.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:08:37+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Пионерская",
+                        "lat": 60.002487,
+                        "lon": 30.296759,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-pnr",
+                          "name": "Пионерская"
+                        }
+                      },
+                      "to": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "1:metro:2",
+                        "shortName": "2",
+                        "longName": "Парнас — Купчино",
+                        "mode": "SUBWAY"
+                      },
+                      "trip": {
+                        "gtfsId": "1:metro:2:1:weekday"
+                      },
+                      "legGeometry": {
+                        "points": "offmJui|wDywAytBo~Byc@wxAadA",
+                        "length": 4
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 254.76,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:16:52+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:22:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Проспект Просвещения",
+                        "lat": 60.051456,
+                        "lon": 30.332544,
+                        "stop": {
+                          "gtfsId": "1:metro:mop-prp",
+                          "name": "Проспект Просвещения"
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+                        "lat": 60.052979,
+                        "lon": 30.332774,
+                        "stop": {
+                          "gtfsId": "2:4578",
+                          "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "qxomJkicxD?@Hs@@G@E@Qq@a@kBwAeAs@SOSGg@fEA@Eb@CC",
+                        "length": 15
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5004.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:33:22+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:51:22+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+                        "lat": 60.052979,
+                        "lon": 30.332774,
+                        "stop": {
+                          "gtfsId": "2:4578",
+                          "name": "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО",
+                        "lat": 60.036892,
+                        "lon": 30.412072,
+                        "stop": {
+                          "gtfsId": "2:3099",
+                          "name": "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:1801",
+                        "shortName": "121",
+                        "longName": "АВТОБУСНАЯ СТАНЦИЯ \"УЛ. ЖЕНИ ЕГОРОВОЙ\" - УЛ. РУСТАВЕЛИ",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81521367"
+                      },
+                      "legGeometry": {
+                        "points": "abpmJyjcxDYQR_BXwBXcCLqAL_Bn@gF|CkWh@}DL{@J{@JgALJKIjDoZJu@\\mCNLOKPaBnAgK`B}Md@sDNmAL{@XoCPNOM~D}\\fAaJNJOGzEy`@RNSKbEg]fA_Jt@sGLaAPuANLMO\\aDNmAvBeQRiBPNQONiA@EJ{@J_AlCsTJy@h@kEHu@ZgCLJMOh@{Dd@sDhCyTNDOEnAiKzEu`@RNSO`E_]pAqKPJOK`Fcb@VP",
+                        "length": 75
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 3683.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:00:20+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:16:20+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО",
+                        "lat": 60.036892,
+                        "lon": 30.412072,
+                        "stop": {
+                          "gtfsId": "2:3099",
+                          "name": "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО"
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:3812",
+                        "shortName": "193",
+                        "longName": "ПР. КУЛЬТУРЫ - ЖК \"ЦВЕТНОЙ ГОРОД\"",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81827415"
+                      },
+                      "legGeometry": {
+                        "points": "q}lmJmzrxDWQbCcSzAmMNeAPLQOz@kHR}AJaANgAFi@VmBTLUOf@_EnDyYjCkT^yCJy@ZkDYcAS?w@C?s@?r@oACqAEkJQqBE}J?e@EQKaAEq@IMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 85
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:16:20+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:49+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "node": {
+                  "start": "2026-11-12T17:00:00+03:00",
+                  "end": "2026-11-12T18:21:54+03:00",
+                  "duration": 4914,
+                  "numberOfTransfers": 1,
+                  "legs": [
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 327.6,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:00:00+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:04:59+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "Origin",
+                        "lat": 60.002,
+                        "lon": 30.296,
+                        "stop": null
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+                        "length": 16
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 6750.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:18:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:44:19+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+                        "lat": 60.00262,
+                        "lon": 30.29934,
+                        "stop": {
+                          "gtfsId": "2:2088",
+                          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.012695,
+                        "lon": 30.398626,
+                        "stop": {
+                          "gtfsId": "2:3247",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:8287",
+                        "shortName": "293",
+                        "longName": "ПР. МАРШАКА, 28 - АЭРОДРОМНАЯ УЛ.",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81595288"
+                      },
+                      "legGeometry": {
+                        "points": "kgfmJ{y|wDOGFaAp@eKp@aKpA{RLeBDy@Ds@JeBDcBKaDI_BTGUFI_COcD[yGCq@YaHUeFAKMmC?Kc@wJuBoe@?[@_AP_BBc@@k@C{@GcASgBKaB@u@A]MsBQe@_Bh@Wu@a@{AHOILACc@cBe@aCQu@AC}BwIJQKLq@cBMe@Ka@eCcJaAkD[mAsAaFQm@gEaPJMILiCgJuDoNaBuFq@eCUw@K]k@cBLQOPc@wAq@_C{AgFuAyEyDsMY}@Qo@So@D[EZsIoYMc@{@wCQg@HSGPqBwGuFgRwBkHmAaEm@yBn@GfBY?T?WvAKlB[tAWFk@OqHPCS@M_IIoCG}@UaAo@kBqA{DKg@Cc@@]Di@v@}Hz@}INuAfAwKj@}FHDICrCmYj@yFZ{CbBeQLBKCZiDh@oEj@qDx@eFb@kCZmBd@yCb@sC@o@\\iAZuBPN",
+                        "length": 139
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 155.44,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:44:19+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T17:46:56+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.012695,
+                        "lon": 30.398626,
+                        "stop": {
+                          "gtfsId": "2:3247",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "ifhmJkfpxDDDQdAAV?PEXUSGGEEEGAACCGGAAGFEBKE]a@a@_@ECSSIIAA?@",
+                        "length": 24
+                      }
+                    },
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5953.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T17:56:25+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:16:25+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 132
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:16:25+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:54+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "elapsed_seconds": 1.713
+    },
+    {
+      "label": "prefix_fixed_tail_remaining_transfer_budget",
+      "request": {
+        "query": "\nquery Plan($origin: PlanLabeledLocationInput!, $destination: PlanLabeledLocationInput!,\n           $dateTime: PlanDateTimeInput!, $first: Int!, $modes: PlanModesInput,\n           $preferences: PlanPreferencesInput) {\n  planConnection(origin: $origin, destination: $destination, dateTime: $dateTime,\n                 first: $first, modes: $modes, preferences: $preferences) {\n    routingErrors { code description inputField }\n    edges {\n      node {\n        start\n        end\n        duration\n        numberOfTransfers\n        legs {\n          mode\n          transitLeg\n          distance\n          start { scheduledTime estimated { time delay } }\n          end { scheduledTime estimated { time delay } }\n          from { name lat lon stop { gtfsId name } }\n          to { name lat lon stop { gtfsId name } }\n          route { gtfsId shortName longName mode }\n          trip { gtfsId }\n          legGeometry { points length }\n        }\n      }\n    }\n  }\n}\n",
+        "variables": {
+          "origin": {
+            "location": {
+              "stopLocation": {
+                "stopLocationId": "2:39321"
+              }
+            }
+          },
+          "destination": {
+            "location": {
+              "coordinate": {
+                "latitude": 60.036,
+                "longitude": 30.445
+              }
+            }
+          },
+          "dateTime": {
+            "earliestDeparture": "2026-11-12T17:53:47+03:00"
+          },
+          "first": 5,
+          "modes": {
+            "transit": {
+              "access": [
+                "WALK"
+              ],
+              "egress": [
+                "WALK"
+              ],
+              "transfer": [
+                "WALK"
+              ],
+              "transit": [
+                {
+                  "mode": "BUS"
+                },
+                {
+                  "mode": "SUBWAY"
+                },
+                {
+                  "mode": "TRAM"
+                },
+                {
+                  "mode": "TROLLEYBUS"
+                },
+                {
+                  "mode": "RAIL"
+                }
+              ]
+            }
+          },
+          "preferences": {
+            "transit": {
+              "transfer": {
+                "maximumTransfers": 1
+              },
+              "timetable": {
+                "excludeRealTimeUpdates": true
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "data": {
+          "planConnection": {
+            "routingErrors": [],
+            "edges": [
+              {
+                "node": {
+                  "start": "2026-11-12T18:01:16+03:00",
+                  "end": "2026-11-12T18:26:45+03:00",
+                  "duration": 1529,
+                  "numberOfTransfers": 0,
+                  "legs": [
+                    {
+                      "mode": "BUS",
+                      "transitLeg": true,
+                      "distance": 5953.0,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:01:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:21:16+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+                        "lat": 60.013722,
+                        "lon": 30.398665,
+                        "stop": {
+                          "gtfsId": "2:39321",
+                          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+                        }
+                      },
+                      "to": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "route": {
+                        "gtfsId": "2:264",
+                        "shortName": "177",
+                        "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+                        "mode": "BUS"
+                      },
+                      "trip": {
+                        "gtfsId": "2:81713851"
+                      },
+                      "legGeometry": {
+                        "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+                        "length": 132
+                      }
+                    },
+                    {
+                      "mode": "WALK",
+                      "transitLeg": false,
+                      "distance": 370.57,
+                      "start": {
+                        "scheduledTime": "2026-11-12T18:21:16+03:00",
+                        "estimated": null
+                      },
+                      "end": {
+                        "scheduledTime": "2026-11-12T18:26:45+03:00",
+                        "estimated": null
+                      },
+                      "from": {
+                        "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+                        "lat": 60.037331,
+                        "lon": 30.449304,
+                        "stop": {
+                          "gtfsId": "2:27773",
+                          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+                        }
+                      },
+                      "to": {
+                        "name": "Destination",
+                        "lat": 60.036,
+                        "lon": 30.445,
+                        "stop": null
+                      },
+                      "route": null,
+                      "trip": null,
+                      "legGeometry": {
+                        "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+                        "length": 21
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "elapsed_seconds": 0.253
+    }
+  ],
+  "baseline_summaries": [
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:18:45+03:00",
+      "duration_seconds": 4725,
+      "number_of_transfers": 1,
+      "lines": [
+        [
+          "BUS",
+          "93",
+          "2:337",
+          "2:84486404",
+          "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "2026-11-12T17:14:47+03:00",
+          "2026-11-12T17:43:47+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T17:53:16+03:00",
+          "2026-11-12T18:13:16+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:41:21+03:00",
+      "duration_seconds": 6081,
+      "number_of_transfers": 0,
+      "lines": [
+        [
+          "BUS",
+          "293",
+          "2:8287",
+          "2:81595288",
+          "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+          "2026-11-12T17:18:19+03:00",
+          "2026-11-12T18:25:19+03:00"
+        ]
+      ]
+    }
+  ],
+  "selected_original": {
+    "start": "2026-11-12T17:00:00+03:00",
+    "end": "2026-11-12T18:18:45+03:00",
+    "duration": 4725,
+    "numberOfTransfers": 1,
+    "legs": [
+      {
+        "mode": "WALK",
+        "transitLeg": false,
+        "distance": 327.6,
+        "start": {
+          "scheduledTime": "2026-11-12T17:00:00+03:00",
+          "estimated": null
+        },
+        "end": {
+          "scheduledTime": "2026-11-12T17:04:59+03:00",
+          "estimated": null
+        },
+        "from": {
+          "name": "Origin",
+          "lat": 60.002,
+          "lon": 30.296,
+          "stop": null
+        },
+        "to": {
+          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "lat": 60.00262,
+          "lon": 30.29934,
+          "stop": {
+            "gtfsId": "2:2088",
+            "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+          }
+        },
+        "route": null,
+        "trip": null,
+        "legGeometry": {
+          "points": "ycfmJse|wDmAXmBf@Bc@X}DFgALo@XICUAe@AkAAm@IGCOPwC@?",
+          "length": 16
+        }
+      },
+      {
+        "mode": "BUS",
+        "transitLeg": true,
+        "distance": 6772.0,
+        "start": {
+          "scheduledTime": "2026-11-12T17:14:47+03:00",
+          "estimated": null
+        },
+        "end": {
+          "scheduledTime": "2026-11-12T17:43:47+03:00",
+          "estimated": null
+        },
+        "from": {
+          "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "lat": 60.00262,
+          "lon": 30.29934,
+          "stop": {
+            "gtfsId": "2:2088",
+            "name": "СТ. МЕТРО \"ПИОНЕРСКАЯ\""
+          }
+        },
+        "to": {
+          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "lat": 60.013722,
+          "lon": 30.398665,
+          "stop": {
+            "gtfsId": "2:39321",
+            "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+          }
+        },
+        "route": {
+          "gtfsId": "2:337",
+          "shortName": "93",
+          "longName": "А.С. \"ЛАХТИНСКИЙ РАЗЛИВ\" - ПР. КУЛЬТУРЫ",
+          "mode": "BUS"
+        },
+        "trip": {
+          "gtfsId": "2:84486404"
+        },
+        "legGeometry": {
+          "points": "kgfmJ{y|wDOADeAbB_WBa@`AgN^mGN{BFeA@aAAm@Q{ERGSFYeH_@_I[yG_Ec~@DaBJw@FiBEaBUqCGcBOwCKw@OWaB`@s@mCHMILg@kBc@{BK]eCqJJUKTOg@_@aAmAeE}CuK_I{ZHOINiNqg@_@kAWs@LOMLiOqg@JQKNcJ}ZgAmDJOKJmBqGuFgRwBkHmAaEk@sBtCc@?P?MvGgALq@QmHPCQDOaIGkCGs@Ki@kCiIOo@?o@~BkV|BqUH@GAlB{RnEud@LHMIh@wEdA}HpEqYGB@Ke@e@aAaAc@c@F_@",
+          "length": 93
+        }
+      },
+      {
+        "mode": "BUS",
+        "transitLeg": true,
+        "distance": 5953.0,
+        "start": {
+          "scheduledTime": "2026-11-12T17:53:16+03:00",
+          "estimated": null
+        },
+        "end": {
+          "scheduledTime": "2026-11-12T18:13:16+03:00",
+          "estimated": null
+        },
+        "from": {
+          "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "lat": 60.013722,
+          "lon": 30.398665,
+          "stop": {
+            "gtfsId": "2:39321",
+            "name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\""
+          }
+        },
+        "to": {
+          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "lat": 60.037331,
+          "lon": 30.449304,
+          "stop": {
+            "gtfsId": "2:27773",
+            "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+          }
+        },
+        "route": {
+          "gtfsId": "2:264",
+          "shortName": "177",
+          "longName": "Ж.-Д. СТАНЦИЯ РУЧЬИ - УЛ. ДАНИИЛА ХАРМСА",
+          "mode": "BUS"
+        },
+        "trip": {
+          "gtfsId": "2:81713851"
+        },
+        "legGeometry": {
+          "points": "wlhmJsfpxDG^a@a@mLoL{D{Dc@e@BOCNw@w@cQeQ_@a@KIDQEP}A_BQQeAcAMq@@_@AYAWCUEUIc@U_@]SUBSHMLQVOLMEUUQQkAiAIKwAyAgBeB{@}@cBmBiBuBe@c@[]e@e@cAaAF]E^aBcBaGcGmEoEwFyFs@o@F[GZeHgH}GyGMMuD}DsCyCc@_@NgA`@yCRNUMf@aEnDyYjCkT^yCJy@ZkDYcAS?w@A?u@?r@oACqAEkJQqBE_HIkCC}BSMEIIKMIOIUE[YcEk@iJu@wMYsDWgCa@qC]kB[qAaBgECIMw@?g@Le@NQ\\O|@c@fBg@b@E`@JZTl@~@bEdJf@r@XLXER]Lg@@k@IgAOg@i@oAwAeDk@qAI}@?aABs@PmDTwBZsAbAuB~CyF~@eBLSDP",
+          "length": 132
+        }
+      },
+      {
+        "mode": "WALK",
+        "transitLeg": false,
+        "distance": 370.57,
+        "start": {
+          "scheduledTime": "2026-11-12T18:13:16+03:00",
+          "estimated": null
+        },
+        "end": {
+          "scheduledTime": "2026-11-12T18:18:45+03:00",
+          "estimated": null
+        },
+        "from": {
+          "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "lat": 60.037331,
+          "lon": 30.449304,
+          "stop": {
+            "gtfsId": "2:27773",
+            "name": "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА"
+          }
+        },
+        "to": {
+          "name": "Destination",
+          "lat": 60.036,
+          "lon": 30.445,
+          "stop": null
+        },
+        "route": null,
+        "trip": null,
+        "legGeometry": {
+          "points": "i`mmJcczxDDJm@hAEFNb@KPKPKRGLd@zA`@lAP^Zn@hAjBl@x@p@n@?fB?X@PAh@r@?",
+          "length": 21
+        }
+      }
+    ]
+  },
+  "transfer_scenario": {
+    "first_surface_route": {
+      "gtfsId": "2:337",
+      "shortName": "93",
+      "longName": "А.С. \"ЛАХТИНСКИЙ РАЗЛИВ\" - ПР. КУЛЬТУРЫ",
+      "mode": "BUS"
+    },
+    "first_surface_trip": {
+      "gtfsId": "2:84486404"
+    },
+    "transfer_stop_id": "2:39321",
+    "transfer_stop_name": "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+    "prefix_original_ready": "2026-11-12T17:43:47+03:00",
+    "prefix_delayed_ready": "2026-11-12T17:51:47+03:00",
+    "assumed_min_transfer_seconds": 120,
+    "tail_earliest_departure": "2026-11-12T17:53:47+03:00",
+    "original_next_modelled_departure": "2026-11-12T17:53:16+03:00",
+    "original_next_boarding_still_feasible_under_fixed_times": false,
+    "prefix_boundary": "At the second boarding stop after any original transfer walk, before boarding the second transit leg. Prefix pedestrian/ride durations unchanged except +480 s on first surface leg; all later prefix timestamps shift accordingly.",
+    "original_maximum_transfers": 2,
+    "remaining_tail_maximum_transfers": 1,
+    "remaining_budget_reason": "First prefix boarding plus tail first boarding consumes one transfer; whole-trip maximum is two."
+  },
+  "tail_summaries": [
+    {
+      "start": "2026-11-12T18:01:16+03:00",
+      "end": "2026-11-12T18:26:45+03:00",
+      "duration_seconds": 1529,
+      "number_of_transfers": 0,
+      "lines": [
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T18:01:16+03:00",
+          "2026-11-12T18:21:16+03:00"
+        ]
+      ]
+    }
+  ],
+  "tail_composed_candidates": [
+    {
+      "original_user_departure": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:26:45+03:00",
+      "total_seconds_since_original_departure": 5205,
+      "tail_start": "2026-11-12T18:01:16+03:00",
+      "tail_duration_seconds": 1529
+    }
+  ],
+  "whole_summaries": [
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:18:45+03:00",
+      "duration_seconds": 4725,
+      "number_of_transfers": 1,
+      "lines": [
+        [
+          "BUS",
+          "93",
+          "2:337",
+          "2:84486404",
+          "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "2026-11-12T17:14:47+03:00",
+          "2026-11-12T17:43:47+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T17:53:16+03:00",
+          "2026-11-12T18:13:16+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:41:21+03:00",
+      "duration_seconds": 6081,
+      "number_of_transfers": 0,
+      "lines": [
+        [
+          "BUS",
+          "293",
+          "2:8287",
+          "2:81595288",
+          "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "УЛ. КОРНЕЯ ЧУКОВСКОГО",
+          "2026-11-12T17:18:19+03:00",
+          "2026-11-12T18:25:19+03:00"
+        ]
+      ]
+    }
+  ],
+  "whole_excluded_summaries": [
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:20:11+03:00",
+      "duration_seconds": 4811,
+      "number_of_transfers": 2,
+      "lines": [
+        [
+          "SUBWAY",
+          "2",
+          "1:metro:2",
+          "1:metro:2:1:weekday",
+          "Пионерская",
+          "Проспект Просвещения",
+          "2026-11-12T17:08:37+03:00",
+          "2026-11-12T17:16:52+03:00"
+        ],
+        [
+          "TRAM",
+          "100",
+          "2:1128",
+          "2:84035162",
+          "Ст. метро \"Проспект Просвещения\"",
+          "Ст. метро \"Гражданский проспект\"",
+          "2026-11-12T17:30:17+03:00",
+          "2026-11-12T17:52:17+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T18:04:42+03:00",
+          "2026-11-12T18:14:42+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:21:17+03:00",
+      "duration_seconds": 4877,
+      "number_of_transfers": 2,
+      "lines": [
+        [
+          "SUBWAY",
+          "2",
+          "1:metro:2",
+          "1:metro:2:1:weekday",
+          "Пионерская",
+          "Проспект Просвещения",
+          "2026-11-12T17:08:37+03:00",
+          "2026-11-12T17:16:52+03:00"
+        ],
+        [
+          "TRAM",
+          "100",
+          "2:1128",
+          "2:84035162",
+          "Ст. метро \"Проспект Просвещения\"",
+          "Платформа Новая Охта",
+          "2026-11-12T17:30:17+03:00",
+          "2026-11-12T17:56:17+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "ПЛАТФОРМА НОВАЯ ОХТА",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T18:07:48+03:00",
+          "2026-11-12T18:15:48+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:21:40+03:00",
+      "duration_seconds": 4900,
+      "number_of_transfers": 2,
+      "lines": [
+        [
+          "SUBWAY",
+          "2",
+          "1:metro:2",
+          "1:metro:2:1:weekday",
+          "Пионерская",
+          "Проспект Просвещения",
+          "2026-11-12T17:08:37+03:00",
+          "2026-11-12T17:16:52+03:00"
+        ],
+        [
+          "BUS",
+          "121",
+          "2:1801",
+          "2:81521367",
+          "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+          "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "2026-11-12T17:33:22+03:00",
+          "2026-11-12T17:53:22+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"ГРАЖДАНСКИЙ ПРОСПЕКТ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T18:06:11+03:00",
+          "2026-11-12T18:16:11+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:21:49+03:00",
+      "duration_seconds": 4909,
+      "number_of_transfers": 2,
+      "lines": [
+        [
+          "SUBWAY",
+          "2",
+          "1:metro:2",
+          "1:metro:2:1:weekday",
+          "Пионерская",
+          "Проспект Просвещения",
+          "2026-11-12T17:08:37+03:00",
+          "2026-11-12T17:16:52+03:00"
+        ],
+        [
+          "BUS",
+          "121",
+          "2:1801",
+          "2:81521367",
+          "СТ. МЕТРО \"ПРОСПЕКТ ПРОСВЕЩЕНИЯ\"",
+          "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО",
+          "2026-11-12T17:33:22+03:00",
+          "2026-11-12T17:51:22+03:00"
+        ],
+        [
+          "BUS",
+          "193",
+          "2:3812",
+          "2:81827415",
+          "ПР. ПРОСВЕЩЕНИЯ, УГ. УЛ. УШИНСКОГО",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T18:00:20+03:00",
+          "2026-11-12T18:16:20+03:00"
+        ]
+      ]
+    },
+    {
+      "start": "2026-11-12T17:00:00+03:00",
+      "end": "2026-11-12T18:21:54+03:00",
+      "duration_seconds": 4914,
+      "number_of_transfers": 1,
+      "lines": [
+        [
+          "BUS",
+          "293",
+          "2:8287",
+          "2:81595288",
+          "СТ. МЕТРО \"ПИОНЕРСКАЯ\"",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "2026-11-12T17:18:19+03:00",
+          "2026-11-12T17:44:19+03:00"
+        ],
+        [
+          "BUS",
+          "177",
+          "2:264",
+          "2:81713851",
+          "СТ. МЕТРО \"АКАДЕМИЧЕСКАЯ\"",
+          "МУРИНСКАЯ ДОРОГА, УГОЛ ПР. МАРШАКА",
+          "2026-11-12T17:56:25+03:00",
+          "2026-11-12T18:16:25+03:00"
+        ]
+      ]
+    }
+  ],
+  "exclusion_warning": "Excluding the entire first line is a conservative sensitivity experiment, not equivalent to injecting an eight-minute delay on one specific road section; it can remove useful unaffected rides and is not an approved product policy.",
+  "otp_queries": 5,
+  "frequency_warning": "Surface GTFS frequencies records have exact_times=0. Modelled departure instants are not evidence of exact physical bus departures; the repeated trip_id may identify a frequency template."
+}

@@ -1,0 +1,450 @@
+{
+  "checked_at": "2026-11-13",
+  "types": {
+    "PlanPreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "PlanPreferencesInput",
+          "inputFields": [
+            {
+              "name": "accessibility",
+              "description": "Accessibility preferences that affect both the street and transit routing.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "AccessibilityPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "street",
+              "description": "Street routing preferences used for ingress, egress and transfers. These do not directly affect\nthe transit legs but can change how preferable walking or cycling, for example, is compared to\ntransit.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "PlanStreetPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "transit",
+              "description": "Transit routing preferences used for transit legs.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TransitPreferencesInput",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "TransitPreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "TransitPreferencesInput",
+          "inputFields": [
+            {
+              "name": "alight",
+              "description": "Preferences related to alighting from a transit vehicle.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "AlightPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "board",
+              "description": "Preferences related to boarding a transit vehicle. Note, board costs for each street mode\ncan be found under the street mode preferences.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "BoardPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filters",
+              "description": "A list of filters for which trips should be included or excluded. A trip will be considered in the\nresult if it is included by at least one filter and isn't excluded by another one at the same time.\n  \nAn empty list of filters or no value means that all trips should be included.\n  \n**AND/OR Logic**\n  \nSeveral filters can be defined and form an OR-condition.\n  \nThe following example means \"include all trips with `F:route1` _or_ `F:agency1`\":\n  \n```\nfilters: [\n  {\n    include: {\n      routes: [\"F:route1\"]\n    }\n  },\n  { \n    include: {\n      agencies: [\"F:agency1\"]\n    }\n  }\n}]\n```\n  \nThe following example means \"include all trips of `F:agency1` _and_ exclude `F:route1`\":\n  \n```\nfilters: [\n  {\n    include: {\n      agencies: [\"F:agency1\"]\n    },\n    exclude: {\n      routes: [\"F:route1\"]\n    }\n  }\n]\n```\n  \nBe aware of the following pitfalls:\n  - It is easy to construct AND-conditions that can lead to zero results.\n  - OR-conditions that have an element which consists of only an exclude are likely to be\n    unwanted and may lead to unexpected results.\n  \n**Note**: This parameter also interacts with the modes set in `modes.transit` by forming\nan AND-condition.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "TransitFilterInput"
+                  }
+                }
+              }
+            },
+            {
+              "name": "relaxTransitGroupPriority",
+              "description": "Relax generalized-cost when comparing itineraries with a different set of\ntransit-group-priorities. The groups are set server side for routes and\ncan not be configured in the API.\n  \nThis relaxes the comparison inside the routing engine for each stop-arrival. If two\npaths have a different set of transit-group-priorities, then the generalized-cost\ncomparison is relaxed. The final set of paths are filtered through the normal\nitinerary-filters.\n  \nA relax-cost is used to increase the limit when comparing one cost to another cost\nusing a linear function applied to the generalized cost.\nThis is used to include more results into the result. A `coefficient=2.0` means a path (itinerary)\nwith twice as high cost as another one, is accepted. A `constant=300` means a \"fixed\"\nconstant is added to the limit.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "LinearCostFunctionInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "timetable",
+              "description": "Preferences related to cancellations and real-time.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimetablePreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "transfer",
+              "description": "Preferences related to transfers between transit vehicles (typically between stops).",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TransferPreferencesInput",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "TimetablePreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "TimetablePreferencesInput",
+          "inputFields": [
+            {
+              "name": "excludeRealTimeUpdates",
+              "description": "When false, real-time updates are considered during the routing.\nIn practice, when this option is set as true, some of the suggestions might not be\nrealistic as the transfers could be invalid due to delays,\ntrips can be canceled or stops can be skipped.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            {
+              "name": "includePlannedCancellations",
+              "description": "When true, departures that have been canceled ahead of time will be\nincluded during the routing. This means that an itinerary can include\na canceled departure while some other alternative that contains no cancellations\ncould be filtered out as the alternative containing a cancellation would normally\nbe better.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            {
+              "name": "includeRealTimeCancellations",
+              "description": "When true, departures that have been canceled through a real-time feed will be\nincluded during the routing. This means that an itinerary can include\na canceled departure while some other alternative that contains no cancellations\ncould be filtered out as the alternative containing a cancellation would normally\nbe better. This option can't be set to true while `includeRealTimeUpdates` is false.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "PlanModesInput": {
+      "data": {
+        "__type": {
+          "name": "PlanModesInput",
+          "inputFields": [
+            {
+              "name": "direct",
+              "description": "Street mode that is used when searching for itineraries that don't use any transit.\nIf more than one mode is selected, at least one of them must be used but not necessarily all.\nThere are modes that automatically also use walking such as the rental modes. To force rental\nto be used, this should only include the rental mode and not `WALK` in addition.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "PlanDirectMode"
+                  }
+                }
+              }
+            },
+            {
+              "name": "directOnly",
+              "description": "Should only the direct search without any transit be done.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            {
+              "name": "transit",
+              "description": "Modes for different phases of an itinerary when transit is included. Also\nincludes street mode selections related to connecting to the transit network\nand transfers. By default, all transit modes are usable.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "PlanTransitModesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "transitOnly",
+              "description": "Should only the transit search be done and never suggest itineraries that don't\ncontain any transit legs.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "WalkPreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "WalkPreferencesInput",
+          "inputFields": [
+            {
+              "name": "boardCost",
+              "description": "The cost of boarding a vehicle while walking.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Cost",
+                "ofType": null
+              }
+            },
+            {
+              "name": "reluctance",
+              "description": "A multiplier for how bad walking is compared to being in transit for equal lengths of time.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Reluctance",
+                "ofType": null
+              }
+            },
+            {
+              "name": "safetyFactor",
+              "description": "Factor for how much the walk safety is considered in routing. Value should be between 0 and 1.\nIf the value is set to be 0, safety is ignored.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Ratio",
+                "ofType": null
+              }
+            },
+            {
+              "name": "speed",
+              "description": "Maximum walk speed on flat ground. Note, this speed is higher than the average speed\nwill be in itineraries as this is the maximum speed but there are\nfactors that slow down walking such as crossings, intersections and elevation changes.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Speed",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "PlanDirectMode": {
+      "data": {
+        "__type": {
+          "name": "PlanDirectMode",
+          "enumValues": [
+            {
+              "name": "BICYCLE"
+            },
+            {
+              "name": "BICYCLE_PARKING"
+            },
+            {
+              "name": "BICYCLE_RENTAL"
+            },
+            {
+              "name": "CAR"
+            },
+            {
+              "name": "CAR_PARKING"
+            },
+            {
+              "name": "CAR_RENTAL"
+            },
+            {
+              "name": "FLEX"
+            },
+            {
+              "name": "SCOOTER_RENTAL"
+            },
+            {
+              "name": "TAXI"
+            },
+            {
+              "name": "WALK"
+            }
+          ],
+          "inputFields": null
+        }
+      }
+    },
+    "PlanTransitModesInput": {
+      "data": {
+        "__type": {
+          "name": "PlanTransitModesInput",
+          "enumValues": null,
+          "inputFields": [
+            {
+              "name": "access",
+              "description": "Street mode that is used when searching for access to the transit network from origin.\nIf more than one mode is selected, at least one of them must be used but not necessarily all.\nThere are modes that automatically also use walking such as the rental modes. To force rental\nto be used, this should only include the rental mode and not `WALK` in addition.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "PlanAccessMode"
+                  }
+                }
+              }
+            },
+            {
+              "name": "egress",
+              "description": "Street mode that is used when searching for egress to destination from the transit network.\nIf more than one mode is selected, at least one of them must be used but not necessarily all.\nThere are modes that automatically also use walking such as the rental modes. To force rental\nto be used, this should only include the rental mode and not `WALK` in addition.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "PlanEgressMode"
+                  }
+                }
+              }
+            },
+            {
+              "name": "transfer",
+              "description": "Street mode that is used when searching for transfers. Selection of only one allowed for now.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "ENUM",
+                    "name": "PlanTransferMode"
+                  }
+                }
+              }
+            },
+            {
+              "name": "transit",
+              "description": "Transit modes and reluctances associated with them. Each defined mode can be used in\nan itinerary but doesn't have to be. If direct search is not disabled, there can be an\nitinerary without any transit legs. By default, all transit modes are usable. For a transit trip\nto match PlanTransitModesInput, it must match one of the PlanTransitModePreferenceInputs given\nin the field.",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "PlanTransitModePreferenceInput"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "PlanStreetPreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "PlanStreetPreferencesInput",
+          "enumValues": null,
+          "inputFields": [
+            {
+              "name": "bicycle",
+              "description": "Cycling related preferences.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "BicyclePreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "car",
+              "description": "Car related preferences.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "CarPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "scooter",
+              "description": "Scooter (kick or electrical) related preferences.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "ScooterPreferencesInput",
+                "ofType": null
+              }
+            },
+            {
+              "name": "walk",
+              "description": "Walk related preferences. These are not used when walking a bicycle or a scooter as they\nhave their own preferences.",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "WalkPreferencesInput",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "TransferPreferencesInput": {
+      "data": {
+        "__type": {
+          "name": "TransferPreferencesInput",
+          "enumValues": null,
+          "inputFields": [
+            {
+              "name": "cost",
+              "description": "A static cost that is added for each transfer on top of other costs.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Cost",
+                "ofType": null
+              }
+            },
+            {
+              "name": "maximumAdditionalTransfers",
+              "description": "How many additional transfers there can be at maximum compared to the itinerary with the\nleast number of transfers.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            {
+              "name": "maximumTransfers",
+              "description": "How many transfers there can be at maximum in an itinerary.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            {
+              "name": "slack",
+              "description": "A global minimum transfer time that specifies the minimum amount of time that must pass\nbetween exiting one transit vehicle and boarding another. This time is in addition to\ntime it might take to walk between transit stops. Setting this value as `PT0S`, for\nexample, can lead to passenger missing a connection when the vehicle leaves ahead of time\nor the passenger arrives to the stop later than expected.",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Duration",
+                "ofType": null
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

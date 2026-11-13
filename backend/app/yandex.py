@@ -41,16 +41,16 @@ class YandexClient:
     def __init__(self, client: httpx.Client | None = None):
         self.client = client
 
-    def _get(self, url: str, key_name: str, params: dict) -> dict:
+    def _get(self, url: str, key_name: str, params: dict, *, timeout_seconds: float = 8) -> dict:
         key = os.getenv(key_name, "").strip()
         if not key:
             raise ProviderError(503, f"{self.error_prefix}_unavailable", "Yandex provider key is not configured")
         try:
             kwargs = {"params": {**params, "apikey": key}}
             if self.client is not None:
-                response = self.client.get(url, follow_redirects=False, timeout=8, **kwargs)
+                response = self.client.get(url, follow_redirects=False, timeout=timeout_seconds, **kwargs)
             else:
-                with httpx.Client(timeout=8, follow_redirects=False, trust_env=False) as client:
+                with httpx.Client(timeout=timeout_seconds, follow_redirects=False, trust_env=False) as client:
                     response = client.get(url, **kwargs)
             if response.status_code in (408, 504):
                 raise ProviderError(504, f"{self.error_prefix}_timeout", "Yandex provider timed out")

@@ -1,12 +1,13 @@
 """OpenTripPlanner (OTP 2.x) GraphQL adapter.
 
-One HTTP request per route search, no retries and no redirects. The adapter
+Dedicated walking and transit searches, no retries and no redirects. The adapter
 maps OTP itineraries to the public ``Route``/``Leg`` contract and keeps OTP
 identifiers (route, trip, stop) for later use.
 """
 import hashlib
 import math
 import os
+import time
 from datetime import datetime, timezone
 
 import httpx
@@ -16,6 +17,7 @@ from .schemas import (FareItem, FarePreferences, Leg, LineString, Passenger, Pla
                       RouteProvenance, RouteRequest, RoutesResponse, RoutesResponseSources,
                       TransitLine)
 from .yandex import ProviderError
+from .route_selection import is_walking_route
 
 DEFAULT_URL = "http://localhost:8080"
 DEFAULT_TIMEOUT = 20.0
@@ -141,12 +143,12 @@ def _parse_time(moment: str) -> datetime:
     return parsed
 
 
-def _time(value: dict | None, fallback: str | None = None) -> datetime:
+def _time(value: dict | None, fallback: str | None = None, *, scheduled_only: bool = False) -> datetime:
     """Prefer the real-time estimate, then the scheduled time."""
     if isinstance(value, dict):
         estimated = value.get("estimated") or {}
         moment = estimated.get("time") if isinstance(estimated, dict) else None
-        if isinstance(moment, str) and moment:
+        if not scheduled_only and isinstance(moment, str) and moment:
             return _parse_time(moment)
         fallback = value.get("scheduledTime", fallback)
     if isinstance(fallback, str) and fallback:
@@ -304,7 +306,8 @@ def _route_id(legs: list[Leg], start: datetime) -> str:
     return "otp:" + hashlib.sha1(payload.encode()).hexdigest()[:16]
 
 
-def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -> tuple[Route, bool]:
+def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger, *,
+               scheduled_only: bool = False) -> tuple[Route, bool]:
     raw_legs = node.get("legs")
     if not isinstance(raw_legs, list) or not raw_legs:
         raise ValueError("Itinerary without legs")
@@ -318,8 +321,8 @@ def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -
     for raw in raw_legs:
         origin = _place(raw.get("from") or {})
         destination = _place(raw.get("to") or {})
-        start = _time(raw.get("start"))
-        end = _time(raw.get("end"))
+        start = _time(raw.get("start"), scheduled_only=scheduled_only)
+        end = _time(raw.get("end"), scheduled_only=scheduled_only)
         if end < start:
             raise ValueError("Leg ends before it starts")
         if previous_end is not None and previous_place is not None:
@@ -350,6 +353,9 @@ def _itinerary(node: dict, fare: FarePreferences | None, passenger: Passenger) -
     duration = node.get("duration")
     duration_seconds = int(duration) if type(duration) in (int, float) and duration >= 0 \
         else int((end_at - start_at).total_seconds())
+    if scheduled_only:
+        start_at, end_at = legs[0].start_at, legs[-1].end_at
+        duration_seconds = int((end_at - start_at).total_seconds())
     transfers = node.get("numberOfTransfers")
     if type(transfers) is not int or transfers < 0:
         raise ValueError("Invalid transfer count")
@@ -378,13 +384,14 @@ class OtpPlanner:
         self.timeout = timeout or float(os.getenv("OTP_TIMEOUT_SECONDS", DEFAULT_TIMEOUT))
         self.client = client
 
-    def _post(self, payload: dict) -> dict:
+    def _post(self, payload: dict, timeout_seconds: float | None = None) -> dict:
+        timeout = min(self.timeout, timeout_seconds) if timeout_seconds is not None else self.timeout
         try:
             if self.client is not None:
                 response = self.client.post(f"{self.url}/otp/gtfs/v1", json=payload,
-                                            follow_redirects=False, timeout=self.timeout)
+                                            follow_redirects=False, timeout=timeout)
             else:
-                with httpx.Client(timeout=self.timeout, follow_redirects=False,
+                with httpx.Client(timeout=timeout, follow_redirects=False,
                                   trust_env=False) as client:
                     response = client.post(f"{self.url}/otp/gtfs/v1", json=payload)
         except httpx.TimeoutException:
@@ -410,7 +417,42 @@ class OtpPlanner:
         return body
 
     def plan(self, request: RouteRequest, *, gtfs_version: str | None = None,
-             graph_version: str | None = None) -> RoutesResponse:
+             graph_version: str | None = None, timeout_seconds: float | None = None,
+             origin_stop_id: str | None = None, exclude_realtime_updates: bool = False,
+             ensure_walking: bool = True) -> RoutesResponse:
+        options = dict(gtfs_version=gtfs_version, graph_version=graph_version,
+                       origin_stop_id=origin_stop_id,
+                       exclude_realtime_updates=exclude_realtime_updates)
+        transit = (set(request.modes or REQUEST_MODE) - set(request.exclude_modes or [])) & set(REQUEST_MODE)
+        budget = min(self.timeout, timeout_seconds) if timeout_seconds is not None else self.timeout
+        started = time.monotonic()
+        primary_budget = budget * 0.8 if ensure_walking and transit else budget
+        response = self._plan_single(request, timeout_seconds=primary_budget, **options)
+        response.routes = response.routes[:request.max_results]
+        if response.routes or not ensure_walking or not transit:
+            return response
+        remaining = budget - (time.monotonic() - started)
+        if remaining <= 0:
+            response.warnings.append("Walking fallback skipped: route search time budget exhausted")
+            return response
+        walk_request = request.model_copy(update={"modes": ["walk"], "exclude_modes": None, "max_results": 1})
+        try:
+            walking = self._plan_single(walk_request, timeout_seconds=remaining,
+                                        **{**options, "origin_stop_id": None})
+        except ProviderError as exc:
+            response.warnings.append(f"Walking fallback failed: {exc.code}")
+            return response
+        response.routes = [route for route in walking.routes if is_walking_route(route)][:1]
+        response.warnings = list(dict.fromkeys(response.warnings + walking.warnings))
+        if response.routes:
+            response.warnings = [warning for warning in response.warnings
+                                 if not warning.startswith("Route planner found no route")]
+        return response
+
+    def _plan_single(self, request: RouteRequest, *, gtfs_version: str | None = None,
+             graph_version: str | None = None, timeout_seconds: float | None = None,
+             origin_stop_id: str | None = None,
+             exclude_realtime_updates: bool = False) -> RoutesResponse:
         prices = {rule.mode: rule.cost_rub for rule in request.fare.rules} \
             if request.fare is not None else {}
         enabled_modes = set(request.modes or REQUEST_MODE)
@@ -435,12 +477,20 @@ class OtpPlanner:
             )},
         }
 
+        if exclude_realtime_updates:
+            # Road correction requires the GTFS schedule, without the GPS-delay
+            # feed already accounting for congestion along the same journey.
+            preferences["transit"]["timetable"] = {"excludeRealTimeUpdates": True}
+
         # No allowed transit modes is an intentional walking-only request, not
         # a malformed public-transport search.
         modes = ({"direct": ["WALK"], "directOnly": True}
-                 if not enabled_modes else
+                 if not transit_modes else
                  {"transit": {"access": ["WALK"], "egress": ["WALK"],
                               "transfer": ["WALK"], "transit": transit_modes}})
+
+        if transit_modes:
+            modes["direct"] = ["WALK"]
 
         payload = {
             "query": PLAN_QUERY,
@@ -459,7 +509,9 @@ class OtpPlanner:
                 "modes": modes,
             },
         }
-        body = self._post(payload)
+        if origin_stop_id:
+            payload["variables"]["origin"] = {"location": {"stopLocation": {"stopLocationId": origin_stop_id}}}
+        body = self._post(payload, timeout_seconds) if timeout_seconds is not None else self._post(payload)
         try:
             connection = body["data"]["planConnection"]
             errors = connection.get("routingErrors") or []
@@ -474,7 +526,8 @@ class OtpPlanner:
                 node = (edge or {}).get("node")
                 if not isinstance(node, dict):
                     raise ValueError("Invalid itinerary node")
-                route, transit = _itinerary(node, request.fare, request.passenger)
+                route, transit = _itinerary(node, request.fare, request.passenger,
+                                            scheduled_only=exclude_realtime_updates)
                 routes.append(route)
                 has_transit = has_transit or transit
             # OTP ranks by generalized cost; the public API promises the
@@ -493,13 +546,16 @@ class OtpPlanner:
             if unpriced:
                 warnings.append(f"No fare rule for mode(s) {', '.join(unpriced)}; "
                                 "counted as 0 RUB")
-        if request.traffic_mode == "on":
+        if request.traffic_mode == "on" and transit_modes:
             warnings.append(TRAFFIC_WARNING)
         for item in errors:
             code = (item or {}).get("code")
             description = (item or {}).get("description")
             if code:
                 warnings.append(f"OTP {code}: {description or 'routing error'}")
+        if not routes:
+            warnings.append("Route planner found no route within its search limits; "
+                            "the destination may be unreachable on the available street/transit graph")
         if routes and not has_transit:
             warnings.append("Route planner returned only walking options; no transit legs")
 

@@ -1,0 +1,30 @@
+{
+  "execution": "offline fixture replay, not an additional live search",
+  "seam": "Frozen per-trip additions and coverage replace geometry matching; raw OTP/Yandex parsing, timing, tail replacement and deduplication use production code",
+  "network_calls": 0,
+  "paid_calls": 0,
+  "otp_recordings_consumed": 2,
+  "returned_routes": 2,
+  "excluded_candidates": 1,
+  "pipeline_status": "partial",
+  "routes": [
+    {
+      "id": "otp:61057f6d1c37f5af",
+      "name": "Автобус 40",
+      "duration_seconds": 3750,
+      "added_delay_seconds": 1,
+      "quality": "sufficient",
+      "equivalent_candidate_ids": []
+    },
+    {
+      "id": "otp:ce4a07abf87f3c57",
+      "name": "Автобус 202",
+      "duration_seconds": 3408,
+      "added_delay_seconds": 7,
+      "quality": "incomplete",
+      "equivalent_candidate_ids": [
+        "otp:23c2af5a17257316"
+      ]
+    }
+  ]
+}

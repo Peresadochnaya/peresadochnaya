@@ -4,9 +4,13 @@ info:
   description: Контракт front/back. dummy=true (по умолчанию) возвращает согласованное
     демо без внешних запросов; dummy=false включает реальные источники. Смысл флага
     сохранён. Ответ mode=dummy обозначает демонстрационные данные. mode=real означает
-    расчёт планировщика; пробки и realtime описаны отдельно в sources. Реальные OTP
-    и GTFS-RT пока не подключены. Демо использует общий GTFS сети линии 193 с явно
-    синтетическим расписанием раз в 10 минут.
+    расчёт планировщика; пробки и realtime описаны отдельно в sources. Реальный OTP
+    подключается через PLANNER_MODE=otp. GTFS-RT и дорожные поправки пока не подключены.
+    Необязательные debug-поля описывают будущую диагностику и сейчас равны null; после
+    реализации полная диагностика возвращается по умолчанию без отдельного debug-флага.
+    Согласованный TTL дорожных оценок — 1800 секунд (30 минут) в обычном и демо-сценарии;
+    это не означает отсутствие пробок или подтверждение пересадок. Демо использует
+    общий GTFS сети линии 193 с явно синтетическим расписанием раз в 10 минут.
   version: 0.2.0
 paths:
   /api/v1/stops:
@@ -1004,14 +1008,30 @@ paths:
         начала округляется вверх до секунды. Идентификаторы линии, рейса и остановок
         совпадают со справочными ручками; времена автобуса совпадают с демо-отправлениями.
         dummy=false при PLANNER_MODE=otp вызывает OTP; без настройки возвращает 503
-        planner_unavailable. Реальный MVP — только providers=[otp]; modes и exclude_modes
-        передаются в OTP. max_transfers, walk_speed кроме normal и less_walking=true
-        пока возвращают 422 unsupported_planner_options. Дорожные поправки и realtime
-        не подключены; фактические источники отмечены в provenance и sources. Оценочный
-        GTFS метро отдельно собирается data.metro.refresh из официальной сети, интервалов
-        и справочных времён pMetro; точное расписание поездов неизвестно. Ожидание
-        метро может описываться metro_wait_estimate с duration_source=estimated. В
-        метро-демо эти данные пока не используются.'
+        planner_unavailable. Реальный MVP — только providers=[otp]; modes и exclude_modes,
+        max_transfers, walk_speed и less_walking передаются в OTP. modes=null сохраняет
+        все виды транспорта; modes=[walk] запрашивает только пеший маршрут без автомобильных
+        запросов даже при traffic_mode=on. Отдельный пеший вариант участвует наравне
+        с транспортом; при пустом результате выполняется отдельный пеший поиск. Пустой
+        результат OTP сохраняется с предупреждениями: недостижимость и лимиты поиска
+        не заменяются прямой линией. traffic_mode=on включает дорожную оценку в общем
+        бюджете 15 секунд: до одного автомобильного A/B расчёта 2ГИС с альтернативами
+        и до одного Яндекс-запроса с максимум 50 точками, без платных повторов. Кэш
+        свеж 1800 секунд. Положительные поправки применяются к сопоставленным межостановочным
+        частям; метро, железная дорога и подтверждённые выделенные пути не корректируются.
+        После задержки интервального транспорта хвост перепланируется от остановки
+        высадки; недостижимые невосстановленные посадки исключаются. Достаточное покрытие
+        >=80% получает приоритет перед неполным; max_results общий, включая пешие
+        маршруты. Если после восстановления хвоста варианты получили полностью одинаковые
+        итоговые участки, возвращается один с диагностикой объединённых исходных вариантов;
+        разные рейсы, времена и геометрии сохраняются. Полный debug всегда содержит
+        диагностику, включая исключённые исходные варианты. Обычный поиск OTP использует
+        GTFS-RT; дорожная коррекция берёт исходное расписание без realtime-поправок,
+        чтобы не учитывать задержку повторно. Фактические источники отмечены в provenance
+        и sources. Оценочный GTFS метро отдельно собирается data.metro.refresh из
+        официальной сети, интервалов и справочных времён pMetro; точное расписание
+        поездов неизвестно. Ожидание метро может описываться metro_wait_estimate с
+        duration_source=estimated. В метро-демо эти данные пока не используются.'
 components:
   schemas:
     DataStatus:
@@ -1090,6 +1110,50 @@ components:
       required:
       - error
       title: ErrorResponse
+    ExcludedCandidateDebug:
+      properties:
+        duplicate_of_route_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Duplicate Of Route Id
+        original_rank:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Original Rank
+        reason_code:
+          type: string
+          enum:
+          - boarding_unreachable
+          - tail_replanning_failed
+          - invalid_timeline
+          - duplicate_after_replanning
+          - unknown
+          title: Reason Code
+        reason:
+          type: string
+          title: Reason
+        original_route:
+          $ref: '#/components/schemas/Route'
+          description: Полный исходный вариант OTP до поправок, включая геометрию
+            и legs; не является рекомендацией к поездке
+        tail_replanning_status:
+          anyOf:
+          - type: string
+            enum:
+            - pending
+            - failed
+          - type: 'null'
+          title: Tail Replanning Status
+      additionalProperties: false
+      type: object
+      required:
+      - reason_code
+      - reason
+      - original_route
+      title: ExcludedCandidateDebug
     FareItem:
       properties:
         mode:
@@ -1925,6 +1989,12 @@ components:
           title: Distance Meters
           description: Расстояние участка, для ожидания 0. Сумма по участкам равна
             distance_meters маршрута.
+        debug:
+          anyOf:
+          - $ref: '#/components/schemas/LegDebug'
+          - type: 'null'
+          description: Диагностика дорожной коррекции при real traffic_mode=on. null
+            означает, что этап не выполнялся.
         metro_wait_estimate:
           anyOf:
           - $ref: '#/components/schemas/MetroWaitEstimate'
@@ -1946,6 +2016,55 @@ components:
       - geometry
       - distance_meters
       title: Leg
+    LegDebug:
+      properties:
+        service:
+          anyOf:
+          - $ref: '#/components/schemas/TransitServiceDebug'
+          - type: 'null'
+          description: Исходная временная модель поездки, независимо от наличия дорожных
+            поправок и GTFS-RT
+        traffic_status:
+          type: string
+          enum:
+          - not_evaluated
+          - not_applicable
+          - unchanged
+          - corrected
+          - partial
+          - unavailable
+          title: Traffic Status
+        original_start_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Original Start At
+        original_end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Original End At
+        coverage:
+          anyOf:
+          - $ref: '#/components/schemas/TrafficCoverage'
+          - type: 'null'
+        segments:
+          items:
+            $ref: '#/components/schemas/TrafficSegmentDebug'
+          type: array
+          title: Segments
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - traffic_status
+      title: LegDebug
     LineString:
       properties:
         type:
@@ -2122,6 +2241,132 @@ components:
       - lat
       - lon
       title: Point
+    ProviderCallDebug:
+      properties:
+        waypoint_coordinates:
+          items:
+            prefixItems:
+            - type: number
+            - type: number
+            type: array
+            maxItems: 2
+            minItems: 2
+          type: array
+          title: Waypoint Coordinates
+        target_edge_ids:
+          items:
+            type: string
+          type: array
+          title: Target Edge Ids
+        unrepresented_target_edge_ids:
+          items:
+            type: string
+          type: array
+          title: Unrepresented Target Edge Ids
+        connectors:
+          items:
+            $ref: '#/components/schemas/LineString'
+          type: array
+          title: Connectors
+        planned_chain_chord_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Planned Chain Chord Meters
+        actual_chain_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Actual Chain Distance Meters
+        actual_chain_duration_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Actual Chain Duration Seconds
+        useful_covered_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Useful Covered Distance Meters
+        provider:
+          type: string
+          enum:
+          - otp
+          - yandex
+          - 2gis
+          title: Provider
+        purpose:
+          type: string
+          enum:
+          - initial_candidates
+          - car_alternatives
+          - traffic_collection
+          - transfer_replanning
+          title: Purpose
+        status:
+          type: string
+          enum:
+          - skipped
+          - cache_hit
+          - coalesced
+          - succeeded
+          - failed
+          - quota_blocked
+          title: Status
+        skip_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Skip Reason
+        http_status:
+          anyOf:
+          - type: integer
+            maximum: 599.0
+            minimum: 100.0
+          - type: 'null'
+          title: Http Status
+        elapsed_milliseconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Elapsed Milliseconds
+        billable_units:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Billable Units
+          description: Известное число тарифицируемых расчётов, не обязательно число
+            HTTP-вызовов; null — неизвестно
+        waypoints_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Waypoints Count
+        alternatives_received:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Alternatives Received
+        error_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Code
+      additionalProperties: false
+      type: object
+      required:
+      - provider
+      - purpose
+      - status
+      title: ProviderCallDebug
     RoadRoute:
       properties:
         distance_meters:
@@ -2282,6 +2527,12 @@ components:
           - $ref: '#/components/schemas/RouteFare'
           - type: 'null'
           description: Calculated only when the request provides fare rules
+        debug:
+          anyOf:
+          - $ref: '#/components/schemas/RouteDebug'
+          - type: 'null'
+          description: Диагностика качества, ранжирования и пересадок; null означает,
+            что этап не выполнялся.
       additionalProperties: false
       type: object
       required:
@@ -2296,6 +2547,112 @@ components:
       - legs
       - provenance
       title: Route
+    RouteDebug:
+      properties:
+        equivalent_candidate_ids:
+          items:
+            type: string
+          type: array
+          title: Equivalent Candidate Ids
+          description: Original OTP IDs converging to exactly the same final journey
+            after tail replanning
+        evaluation_group:
+          anyOf:
+          - type: string
+            enum:
+            - sufficient
+            - incomplete
+            - not_applicable
+          - type: 'null'
+          title: Evaluation Group
+          description: Группа качества оценки; непроверенный старый хвост всегда incomplete,
+            даже при покрытии дорог >=80%
+        tail_replanning_status:
+          anyOf:
+          - type: string
+            enum:
+            - not_needed
+            - complete
+            - pending
+            - unverified_fallback
+            - failed
+          - type: 'null'
+          title: Tail Replanning Status
+          description: Состояние обязательного перепланирования частотного хвоста
+            после задержки; unverified_fallback означает возврат старого достижимого
+            хвоста с предупреждением по дедлайну
+        original_otp_route_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Original Otp Route Id
+        original_rank:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Original Rank
+          description: Позиция в исходной выдаче OTP, с единицы
+        final_rank:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Final Rank
+          description: Позиция после согласованного перерасчёта, с единицы
+        original_duration_seconds:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Original Duration Seconds
+        corrected_duration_seconds:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Corrected Duration Seconds
+        added_delay_seconds:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Added Delay Seconds
+          description: Sum of positive road additions on retained vehicle legs; tail
+            replanning may still reduce total journey duration
+        coverage:
+          anyOf:
+          - $ref: '#/components/schemas/TrafficCoverage'
+          - type: 'null'
+        transfer_status:
+          type: string
+          enum:
+          - not_checked
+          - feasible
+          - missed
+          - unknown
+          - not_applicable
+          title: Transfer Status
+        transfers:
+          items:
+            $ref: '#/components/schemas/TransferDebug'
+          type: array
+          title: Transfers
+        ranking_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ranking Reason
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - transfer_status
+      title: RouteDebug
     RouteFare:
       properties:
         currency:
@@ -2402,6 +2759,7 @@ components:
           maximum: 10.0
           minimum: 1.0
           title: Max Results
+          description: Maximum number of routes, including walking
           default: 5
         providers:
           items:
@@ -2421,18 +2779,20 @@ components:
           - items:
               type: string
               enum:
+              - walk
               - bus
               - tram
               - trolleybus
               - metro
               - rail
             type: array
-            maxItems: 5
+            maxItems: 6
             minItems: 1
           - type: 'null'
           title: Modes
-          description: Allowed public transport modes; null means all. Walking access
-            remains possible.
+          description: Allowed transit modes; null means all transit. [walk] requests
+            walking only. Walking competes equally with transit; an empty search triggers
+            a dedicated walking search.
         exclude_modes:
           anyOf:
           - items:
@@ -2478,6 +2838,122 @@ components:
       required:
       - points
       title: RouteRequest
+    RoutesDebug:
+      properties:
+        observations:
+          items:
+            $ref: '#/components/schemas/TrafficObservationDebug'
+          type: array
+          title: Observations
+        observation_geometries:
+          additionalProperties:
+            $ref: '#/components/schemas/LineString'
+          type: object
+          title: Observation Geometries
+        pipeline_status:
+          type: string
+          enum:
+          - not_run
+          - partial
+          - complete
+          - failed
+          title: Pipeline Status
+        trace_id:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+          title: Trace Id
+          description: Идентификатор диагностического события без пользовательских
+            координат и ключей API
+        algorithm_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Algorithm Version
+        cache_ttl_seconds:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Cache Ttl Seconds
+          description: Согласованная свежесть 1800 секунд (30 минут) для обычного
+            и демо-сценария; null — этап кэша не выполнялся
+        provider_calls:
+          items:
+            $ref: '#/components/schemas/ProviderCallDebug'
+          type: array
+          title: Provider Calls
+        candidate_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Candidate Count
+        returned_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Returned Count
+        excluded_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Excluded Count
+        excluded_candidates:
+          items:
+            $ref: '#/components/schemas/ExcludedCandidateDebug'
+          type: array
+          title: Excluded Candidates
+          description: Исходные варианты, исключённые из обычной выдачи, сохраняются
+            целиком для диагностики
+        time_budget_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Time Budget Seconds
+          description: Общий согласованный дедлайн 15 секунд; null — этап бюджетирования
+            не выполнялся
+        deadline_reached:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Deadline Reached
+        otp_replanning_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Otp Replanning Count
+        baseline_gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Gtfs Version
+          description: Версия расписания для временной базы поправок; не подменяется
+            последней скачанной версией
+        graph_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Graph Version
+        coverage:
+          anyOf:
+          - $ref: '#/components/schemas/TrafficCoverage'
+          - type: 'null'
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+      additionalProperties: false
+      type: object
+      required:
+      - pipeline_status
+      title: RoutesDebug
     RoutesResponse:
       properties:
         mode:
@@ -2523,6 +2999,13 @@ components:
             \  tight_transfer:leg=N, may_miss_transfer:leg=N,\n  gtfs_rt_stale, gtfs_rt_unavailable,\n\
             \  departure_in_past, departure_far_future_traffic_off,\n  walk_too_long,\
             \ no_ground_transport\n"
+        debug:
+          anyOf:
+          - $ref: '#/components/schemas/RoutesDebug'
+          - type: 'null'
+          description: Полная диагностика дорожной коррекции, возвращается всегда
+            при real traffic_mode=on без debug-флага. Для dummy и traffic_mode=off
+            этап не выполняется.
       additionalProperties: false
       type: object
       required:
@@ -2677,6 +3160,506 @@ components:
       - label_ru
       - description_ru
       title: TicketProfileInfo
+    TrafficCoverage:
+      properties:
+        eligible_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Eligible Distance Meters
+          description: Длина наземных участков, к которым применима дорожная поправка;
+            null — применимость не оценена
+        matched_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Matched Distance Meters
+          description: Длина уверенно сопоставленного покрытия, без повторного счёта
+            альтернатив провайдера
+        usable_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Usable Distance Meters
+          description: Часть применимой длины с пригодной дорожной оценкой и временной
+            базой; одного геометрического совпадения недостаточно
+        usable_coverage_ratio:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Usable Coverage Ratio
+          description: usable_distance_meters / eligible_distance_meters; высокая
+            доля не подтверждает пересадки или непроверенный хвост
+        uncovered_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Uncovered Distance Meters
+        coverage_ratio:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Coverage Ratio
+          description: matched_distance_meters / eligible_distance_meters; null при
+            неизвестной или нулевой базе
+      additionalProperties: false
+      type: object
+      title: TrafficCoverage
+    TrafficObservationDebug:
+      properties:
+        observation_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Observation Id
+        provider:
+          type: string
+          enum:
+          - yandex
+          - 2gis
+          title: Provider
+        traffic_type:
+          type: string
+          enum:
+          - realtime
+          - forecast
+          - disabled
+          - unknown
+          title: Traffic Type
+        observed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Observed At
+          description: Время получения исходной оценки, не время последнего чтения
+            кэша
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        age_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Age Seconds
+        seconds_until_segment_entry:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Seconds Until Segment Entry
+          description: Оценка времени до въезда на участок относительно calculated_at
+            ответа, в секундах; не возраст кэша
+        observed_age_at_entry_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Observed Age At Entry Seconds
+          description: Ожидаемый возраст текущего наблюдения в момент въезда на участок;
+            свежий кэш не гарантирует актуальность для далёкого въезда
+        cache_status:
+          type: string
+          enum:
+          - hit
+          - miss
+          - stale
+          - bypassed
+          - unknown
+          title: Cache Status
+        freshness:
+          type: string
+          enum:
+          - fresh
+          - stale
+          - unknown
+          title: Freshness
+        driving_duration_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Driving Duration Seconds
+          description: Автомобильное время только на геометрии этой оценки; не длительность
+            автобуса
+        distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Distance Meters
+        provider_alternative_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Alternative Id
+        provider_leg_index:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Provider Leg Index
+        provider_step_index:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Provider Step Index
+          description: Индекс шага Яндекса или манёвра 2ГИС; duration относится ко
+            всему шагу/манёвру
+        selected_for_correction:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Selected For Correction
+          description: true только если оценка выбрана для поправки; получение данных
+            не означает их применение
+        selection_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Selection Reason
+          description: Объяснение выбора/отклонения без URL, ключей и сырых запросов
+      additionalProperties: false
+      type: object
+      required:
+      - provider
+      - traffic_type
+      - cache_status
+      - freshness
+      title: TrafficObservationDebug
+    TrafficSegmentDebug:
+      properties:
+        lane_spans:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Lane Spans
+          description: Directed metric lane/track spans with source, observation date
+            and version
+        observation_ids:
+          items:
+            type: string
+          type: array
+          title: Observation Ids
+          description: References to the shared road observation registry
+        fragments:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Fragments
+        rejected_observations:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Rejected Observations
+        segment_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Segment Id
+          description: Стабильный ID направленного участка; формат ещё согласуется
+        from_stop_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: From Stop Id
+        to_stop_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: To Stop Id
+        path_variant_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Path Variant Id
+          description: Различает разные пути между той же парой остановок
+        geometry_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Geometry Version
+        lateral_distance_meters:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Lateral Distance Meters
+          description: Максимальное боковое отклонение сопоставляемых геометрий на
+            проверенном участке, в метрах; null — не вычислено
+        heading_difference_degrees:
+          anyOf:
+          - type: number
+            maximum: 180.0
+            minimum: 0.0
+          - type: 'null'
+          title: Heading Difference Degrees
+          description: Максимальная абсолютная разница локальных направлений на проверенном
+            участке, 0..180 градусов; не условный confidence score
+        match_status:
+          type: string
+          enum:
+          - not_checked
+          - matched
+          - partial
+          - ambiguous
+          - rejected
+          - unavailable
+          title: Match Status
+        rejection_reasons:
+          items:
+            type: string
+            enum:
+            - opposite_direction
+            - parallel_road
+            - insufficient_overlap
+            - ambiguous_geometry
+            - dedicated_lane
+            - separate_track
+            - stale_observation
+            - missing_baseline
+            - missing_geometry
+            - unsupported_mode
+            - provider_unavailable
+            - unknown
+          type: array
+          title: Rejection Reasons
+        lane_status:
+          type: string
+          enum:
+          - not_checked
+          - shared_road
+          - dedicated_lane
+          - separate_track
+          - unknown
+          - not_applicable
+          title: Lane Status
+        lane_source_url:
+          anyOf:
+          - type: string
+            minLength: 1
+            format: uri
+          - type: 'null'
+          title: Lane Source Url
+        lane_source_observed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Lane Source Observed At
+        coverage:
+          anyOf:
+          - $ref: '#/components/schemas/TrafficCoverage'
+          - type: 'null'
+        observations:
+          items:
+            $ref: '#/components/schemas/TrafficObservationDebug'
+          type: array
+          title: Observations
+        baseline_kind:
+          anyOf:
+          - type: string
+            enum:
+            - gtfs_schedule
+            - otp_estimate
+            - distance_proportional
+            - unknown
+          - type: 'null'
+          title: Baseline Kind
+        baseline_gtfs_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Gtfs Version
+        baseline_available:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Baseline Available
+          description: Есть ли пригодная временная база именно для этого направленного
+            участка; null — не проверена
+        baseline_duration_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Baseline Duration Seconds
+        corrected_duration_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Corrected Duration Seconds
+        added_delay_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Added Delay Seconds
+          description: Только добавленная поправка, не доказанная чистая задержка
+            из-за пробок
+        correction_factor:
+          anyOf:
+          - type: number
+            minimum: 1.0
+          - type: 'null'
+          title: Correction Factor
+          description: Отношение скорректированного времени к явно указанной базе;
+            не универсальный коэффициент улицы
+        applied_provider:
+          anyOf:
+          - type: string
+            enum:
+            - yandex
+            - 2gis
+          - type: 'null'
+          title: Applied Provider
+          description: Источник фактически применённой поправки; null — ни один не
+            применён/не определён
+        correction_status:
+          type: string
+          enum:
+          - not_evaluated
+          - applied
+          - not_needed
+          - skipped
+          - unavailable
+          title: Correction Status
+        notes:
+          items:
+            type: string
+          type: array
+          title: Notes
+      additionalProperties: false
+      type: object
+      required:
+      - match_status
+      - lane_status
+      - correction_status
+      title: TrafficSegmentDebug
+    TransferDebug:
+      properties:
+        from_leg_index:
+          type: integer
+          minimum: 0.0
+          title: From Leg Index
+          description: Индекс участка до пересадки, с нуля
+        to_leg_index:
+          type: integer
+          minimum: 0.0
+          title: To Leg Index
+          description: Индекс следующей поездки, с нуля
+        stop_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stop Id
+        status:
+          type: string
+          enum:
+          - not_checked
+          - feasible
+          - missed
+          - unknown
+          title: Status
+        next_service:
+          anyOf:
+          - $ref: '#/components/schemas/TransitServiceDebug'
+          - type: 'null'
+          description: 'Временная модель следующего транспорта: частотную пересадку
+            нельзя выдавать за проверку точного рейса'
+        scheduled_departure_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Scheduled Departure At
+          description: Подтверждённое расписанием отправление; для exact_times=0 конкретный
+            timestamp не выдумывается
+        corrected_arrival_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Corrected Arrival At
+        modeled_boarding_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Modeled Boarding At
+          description: Время посадки старого модельного хвоста OTP; для exact_times=0
+            это не точное отправление машины
+        modeled_boarding_reachable:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Modeled Boarding Reachable
+          description: Достижима ли прежняя модельная посадка после задержки; не подтверждает
+            актуальность всего хвоста
+        tail_replanning_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Tail Replanning Required
+        minimum_transfer_seconds:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Minimum Transfer Seconds
+        remaining_slack_seconds:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Remaining Slack Seconds
+          description: Запас после минимального перехода; отрицательное значение означает
+            нехватку времени
+        resolution:
+          type: string
+          enum:
+          - not_attempted
+          - kept
+          - kept_unverified
+          - next_trip
+          - otp_replanned
+          - excluded
+          - unresolved
+          title: Resolution
+        replacement_trip_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Replacement Trip Id
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - from_leg_index
+      - to_leg_index
+      - status
+      - resolution
+      title: TransferDebug
     TransitLine:
       properties:
         short_name:
@@ -2696,6 +3679,53 @@ components:
       - short_name
       - route_id
       title: TransitLine
+    TransitServiceDebug:
+      properties:
+        service_kind:
+          anyOf:
+          - type: string
+            enum:
+            - scheduled
+            - frequency
+            - unknown
+          - type: 'null'
+          title: Service Kind
+          description: 'Представление отправления в исходном GTFS: точное расписание
+            либо frequencies.txt; не признак GTFS-RT'
+        headway_seconds:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Headway Seconds
+          description: Интервал исходного частотного обслуживания; null — неизвестен
+            или неприменим
+        frequency_exact_times:
+          anyOf:
+          - type: integer
+            enum:
+            - 0
+            - 1
+          - type: 'null'
+          title: Frequency Exact Times
+          description: 'Исходный frequencies.txt exact_times: 0 — точные отправления
+            неизвестны, 1 — интервалы задают точное расписание'
+        wait_model:
+          anyOf:
+          - type: string
+            enum:
+            - scheduled_departure
+            - half_headway
+            - full_headway
+            - otp_model
+            - unknown
+          - type: 'null'
+          title: Wait Model
+          description: Использованная модель ожидания; модельное время не означает
+            отправление конкретной машины
+      additionalProperties: false
+      type: object
+      title: TransitServiceDebug
     ValidationError:
       properties:
         loc:

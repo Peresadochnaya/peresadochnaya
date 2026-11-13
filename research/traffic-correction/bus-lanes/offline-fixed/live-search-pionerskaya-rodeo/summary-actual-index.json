@@ -1,0 +1,153 @@
+{
+  "case": "live-search-pionerskaya-rodeo",
+  "status": "succeeded",
+  "network_calls": 0,
+  "paid_calls": 0,
+  "elapsed_seconds": 0.46801516199775506,
+  "otp_recordings_consumed": 2,
+  "otp_recordings_available": 2,
+  "profile_version": "osm-and-official-bus-lanes-v2",
+  "profile_sha256": "d1f6009112060e76e02cd51727e5bf88e0049cd637482ab5cec6faa594d40580",
+  "profile_summary": {
+    "osm_directed_ways": 433,
+    "official_directed_fragments": 6,
+    "gtfs_patterns": 1084,
+    "directed_edges": 674,
+    "dedicated_m": 524701.1471627988,
+    "geometry_variants": 1699,
+    "coverage_unit": "sum of directed GTFS geometry variant metres, not physical city lane length"
+  },
+  "gtfs_source_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "observations_received_at": "2026-11-12T18:41:06.255426+00:00",
+  "pipeline_status": "partial",
+  "returned_routes": 3,
+  "excluded_count": 0,
+  "routes": [
+    {
+      "id": "otp:ce4a07abf87f3c57",
+      "name": "Автобус 202",
+      "duration_seconds": 3424,
+      "original_duration_seconds": 3401,
+      "added_delay_seconds": 23,
+      "quality": "sufficient",
+      "coverage_ratio": 0.9701836238633382,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 189,
+          "original_duration_seconds": 189
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 813,
+          "original_duration_seconds": 813
+        },
+        {
+          "mode": "bus",
+          "line": "202",
+          "duration_seconds": 803,
+          "original_duration_seconds": 780
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 1619,
+          "original_duration_seconds": 1619
+        }
+      ]
+    },
+    {
+      "id": "otp:61057f6d1c37f5af",
+      "name": "Автобус 40",
+      "duration_seconds": 3750,
+      "original_duration_seconds": 3749,
+      "added_delay_seconds": 1,
+      "quality": "sufficient",
+      "coverage_ratio": 0.9820824121763281,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 196,
+          "original_duration_seconds": 196
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 723,
+          "original_duration_seconds": 723
+        },
+        {
+          "mode": "bus",
+          "line": "40",
+          "duration_seconds": 1441,
+          "original_duration_seconds": 1440
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 1390,
+          "original_duration_seconds": 1390
+        }
+      ]
+    },
+    {
+      "id": "otp:23c2af5a17257316",
+      "name": "Автобус 202 → Автобус 21",
+      "duration_seconds": 3546,
+      "original_duration_seconds": 3543,
+      "added_delay_seconds": 26,
+      "quality": "incomplete",
+      "coverage_ratio": 0.9705033050678575,
+      "equivalent_candidate_ids": [],
+      "legs": [
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 189,
+          "original_duration_seconds": 189
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 813,
+          "original_duration_seconds": 813
+        },
+        {
+          "mode": "bus",
+          "line": "202",
+          "duration_seconds": 803,
+          "original_duration_seconds": 780
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 185,
+          "original_duration_seconds": 185
+        },
+        {
+          "mode": "wait",
+          "line": null,
+          "duration_seconds": 965,
+          "original_duration_seconds": 965
+        },
+        {
+          "mode": "bus",
+          "line": "21",
+          "duration_seconds": 303,
+          "original_duration_seconds": 300
+        },
+        {
+          "mode": "walk",
+          "line": null,
+          "duration_seconds": 288,
+          "original_duration_seconds": 288
+        }
+      ]
+    }
+  ]
+}

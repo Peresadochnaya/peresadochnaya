@@ -102,7 +102,7 @@ def test_recorded_itinerary_maps_to_public_contract(tmp_path):
                 expected.append(position)
     assert route["geometry"]["coordinates"] == expected
 
-    variables = requests[0]["variables"]
+    variables = requests[-1]["variables"]
     assert variables["first"] == 5
     assert variables["dateTime"]["earliestDeparture"] == "2026-11-11T12:00:00+03:00"
     assert [item["mode"] for item in variables["modes"]["transit"]["transit"]] == [
@@ -142,7 +142,7 @@ def test_search_filters_are_forwarded_to_otp(tmp_path):
                "walk_speed": "fast", "less_walking": True}
     response = client(data_root(tmp_path), handler).post("/api/v1/routes?dummy=false", json=request)
     assert response.status_code == 200
-    variables = requests[0]["variables"]
+    variables = requests[-1]["variables"]
     assert [item["mode"] for item in variables["modes"]["transit"]["transit"]] == ["BUS", "SUBWAY"]
     assert variables["preferences"] == {
         "street": {"walk": {"speed": 1.7, "reluctance": 6.0}},
@@ -306,7 +306,7 @@ def test_fare_rules_become_reluctance_and_are_billed(tmp_path):
     assert response.status_code == 200
     data = response.json()
 
-    transit = requests[0]["variables"]["modes"]["transit"]["transit"]
+    transit = requests[-1]["variables"]["modes"]["transit"]["transit"]
     by_mode = {item["mode"]: item.get("cost", {}).get("reluctance") for item in transit}
     assert by_mode["SUBWAY"] == 1.0                      # free metro is neutral
     assert by_mode["BUS"] == pytest.approx(1.433, abs=1e-3)  # 65 RUB at 600 RUB/h

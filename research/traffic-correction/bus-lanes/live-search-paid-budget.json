@@ -1,0 +1,19 @@
+{
+  "attempt_limit": 3,
+  "reservations": [
+    {
+      "ledger": "/home/ildar/code/personal/devdays-hack-2026/peresadochnaya/research/traffic-correction/bus-lanes/live-search/paid-call-ledger.json",
+      "provenance": "existing_paid_attempt"
+    },
+    {
+      "ledger": "/home/ildar/code/personal/devdays-hack-2026/peresadochnaya/research/traffic-correction/bus-lanes/live-search-pionerskaya-rodeo/paid-call-ledger.json",
+      "case_name": "pionerskaya-rodeo",
+      "reserved_at": "2026-11-12T21:41:03.886540+03:00"
+    },
+    {
+      "ledger": "/home/ildar/code/personal/devdays-hack-2026/peresadochnaya/research/traffic-correction/bus-lanes/live-search-moskovskaya-pulkovo/paid-call-ledger.json",
+      "case_name": "moskovskaya-pulkovo",
+      "reserved_at": "2026-11-12T21:41:43.605288+03:00"
+    }
+  ]
+}

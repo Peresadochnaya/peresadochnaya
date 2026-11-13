@@ -1,0 +1,32 @@
+{
+  "execute": true,
+  "otp_url": "http://127.0.0.1:18765",
+  "graph_version": "a8ec4b10f85dd4ce",
+  "gtfs_source_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "lane_version": "osm-explicit-bus-lanes-v1",
+  "paid_call_limit": 1,
+  "transfer_slack_seconds": 120,
+  "transfer_slack_provenance": "Root verified active OTP router config transferSlack=PT2M before this run",
+  "paid_provider": "yandex",
+  "2gis": "disabled",
+  "case_name": "pionerskaya-rodeo",
+  "origin_label": "Пионерская",
+  "destination_label": "Родео Драйв",
+  "origin": {
+    "lat": 60.0029,
+    "lon": 30.2963
+  },
+  "destination": {
+    "lat": 60.033718,
+    "lon": 30.367549
+  },
+  "global_paid_attempt_limit": 3,
+  "modes": [
+    "bus"
+  ],
+  "max_results": 3,
+  "traffic_mode": "on",
+  "departure_at": "current Europe/Moscow after graph warmup",
+  "ledger": "research/traffic-correction/bus-lanes/live-search-pionerskaya-rodeo/paid-call-ledger.json",
+  "output": "research/traffic-correction/bus-lanes/live-search-pionerskaya-rodeo"
+}

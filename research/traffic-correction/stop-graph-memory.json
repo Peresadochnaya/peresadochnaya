@@ -1,0 +1,86 @@
+{
+  "surface_gtfs_sha256": "3b176d72280719f5e6f5fd8532a33e4e65e475acef9ad2419b61302822209295",
+  "measurement_process": "Separate Python3 process on k3s host, outside API/OTP containers, read-only source ZIP access. No production index built.",
+  "address_space_limit_bytes": 536870912,
+  "cpu_time_limit_seconds": 120,
+  "elapsed_seconds": 16.337,
+  "python_version": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "counts": {
+    "nodes_all_stops_in_feed": 8811,
+    "directed_consecutive_stop_pairs": 11230,
+    "nodes_with_outgoing_edges": 8758,
+    "distinct_edge_route_associations": 27504,
+    "stop_time_rows_streamed_not_retained": 3553379,
+    "full_gtfs_shapes": 28610,
+    "shape_points": 896979,
+    "nonincreasing_shape_sequences": 0
+  },
+  "representation": {
+    "node": "dict stop_id -> (lon float,lat float,name str)",
+    "edge": "dict (from_stop_id,to_stop_id) -> set route_id",
+    "adjacency": "dict from_stop_id -> set next stop_id",
+    "geometry": "Shared full GTFS shapes, dict shape_id -> array<double>[lon,lat,shape_dist_traveled,...]. No per-edge geometry copies. This is a storage measurement, not a claim that different full shape IDs are physical edge variants.",
+    "schedules": "Not retained. External disk index is a separate task/dependency."
+  },
+  "allocated_object_bytes": {
+    "topology_nodes_edges_adjacency": 9648549,
+    "temporary_trip_route_lookup": 15967856,
+    "shared_compact_full_shape_arrays": 27773673,
+    "combined_topology_and_shared_shapes": 37422230
+  },
+  "compact_shape_payload_bytes": 21527496,
+  "phases": [
+    {
+      "name": "baseline_with_open_zip",
+      "resident_bytes": 14131200,
+      "peak_resident_bytes": 14647296
+    },
+    {
+      "name": "temporary_trip_route_lookup",
+      "resident_bytes": 32378880,
+      "peak_resident_bytes": 32194560
+    },
+    {
+      "name": "topology_with_temporary_trip_lookup",
+      "resident_bytes": 42749952,
+      "peak_resident_bytes": 42549248
+    },
+    {
+      "name": "topology_after_discarding_trip_lookup",
+      "resident_bytes": 47833088,
+      "peak_resident_bytes": 66322432
+    },
+    {
+      "name": "topology_and_shared_compact_shapes",
+      "resident_bytes": 60461056,
+      "peak_resident_bytes": 66322432
+    }
+  ],
+  "overall_peak_resident_bytes": 71028736,
+  "limits": [
+    "No full stop_times/timetable in RAM.",
+    "No full road cache, spatial index, route matching scratch arrays or concurrent request working sets measured.",
+    "Logical object byte counts and process RSS are different measures; freed Python objects may leave resident allocator memory.",
+    "Geometry representation is an explicit compact array assumption; Python dict per point would be much larger.",
+    "All GTFS stops/shapes counted; auxiliary graph is not the complete OTP routing graph.",
+    "Peak RSS includes measurement overhead from recursive deep-size accounting; it is a conservative process peak, not isolated graph-payload size."
+  ],
+  "recorded_at": "2026-11-12T17:18:32.083752+00:00",
+  "cluster_snapshot": {
+    "api_resident_mib": 307,
+    "otp_resident_mib": 2924,
+    "host_total_mib": 11927,
+    "host_available_mib": 6245,
+    "snapshot_scope": "kubectl top pods and free -m before measurement; point-in-time values"
+  },
+  "paid_provider_calls": 0,
+  "interpretation": {
+    "topology_mib": 9.2,
+    "shared_compact_shapes_mib": 26.49,
+    "combined_payload_mib": 35.69,
+    "resident_process_mib": 57.66,
+    "peak_process_mib": 67.74,
+    "answer": "The measured auxiliary stop graph fits comfortably in node RAM; fitting it in the current API pod is plausible, but total 512MiB safety also depends on unmeasured request scratch space, spatial index and bounded traffic cache.",
+    "disk_index": "Explicit external dependency. No production disk index was created."
+  }
+}

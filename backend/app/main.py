@@ -1,4 +1,7 @@
 import os
+import re
+import threading
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -12,6 +15,9 @@ from urllib.parse import urlencode
 from .api_docs import API_DESCRIPTION, OPERATION_DESCRIPTIONS
 from .data_status import load_status, read_object
 from .otp import OtpPlanner
+from .traffic_engine import TrafficEngine
+from .traffic_planner import ObservationCollector
+from .traffic_graph import graph_for_active
 from . import demo_addresses
 from .demo_routes import compose as dummy_route
 from .dgis import DgisAddresses, DgisRouter
@@ -44,17 +50,50 @@ def error(status: int, code: str, message: str):
 
 
 
+def _active_transfer_slack(root):
+    """Read the graph's actual router defaults, never infer an extra margin."""
+    try:
+        config=read_object(root / 'otp' / 'current' / 'router-config.json')
+        if not config or 'routingDefaults' not in config:
+            return None
+        defaults=config['routingDefaults']
+        total=0.
+        for name in ('transferSlack','boardSlack','alightSlack'):
+            value=defaults.get(name,0)
+            if isinstance(value,(int,float)):
+                total+=max(0,value)
+            elif isinstance(value,str):
+                match=re.fullmatch(r'PT(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?',value)
+                if match:
+                    total+=sum(float(n or 0)*unit for n,unit in zip(match.groups(),(3600,60,1)))
+        return total
+    except (OSError,ValueError,TypeError):
+        return None
+
+
 def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                address_provider: YandexAddresses | None = None,
                road_provider: YandexRouter | None = None,
                dgis_address_provider: DgisAddresses | None = None,
                dgis_road_provider: DgisRouter | None = None,
-               transit_planner: OtpPlanner | None = None) -> FastAPI:
+               transit_planner: OtpPlanner | None = None,
+               traffic_graph_loader=None) -> FastAPI:
     root = data_root or Path(os.getenv("DATA_ROOT", "/data"))
     mode = planner_mode or os.getenv("PLANNER_MODE", "unavailable")
     if mode not in ("dummy", "unavailable", "otp"):
         raise ValueError("PLANNER_MODE must be dummy, unavailable or otp")
-    app = FastAPI(title="Пересадочная API", version="0.2.0", description=API_DESCRIPTION)
+    @asynccontextmanager
+    async def lifespan(application):
+        # The compact working topology is warmed once outside user searches.
+        try:
+            graph = graph_for_active(root)
+            if graph is not None:
+                graph.warm_topology()
+        except Exception:
+            application.state.traffic_baseline_warning = 'topology_warmup_unavailable'
+        yield
+
+    app = FastAPI(title="Пересадочная API", version="0.2.0", description=API_DESCRIPTION,lifespan=lifespan)
     app.include_router(create_gtfs_router(root))
     app.include_router(create_vehicles_router(root))
     app.include_router(create_realtime_router())
@@ -63,6 +102,24 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
     dgis_addresses = dgis_address_provider or DgisAddresses()
     dgis_roads = dgis_road_provider or DgisRouter()
     planner = transit_planner or OtpPlanner()
+    topology_warm_slot=threading.BoundedSemaphore(1)
+    def load_traffic_graph(**kwargs):
+        graph=graph_for_active(root,**kwargs)
+        if graph is not None and not graph.topology_ready and topology_warm_slot.acquire(blocking=False):
+            def warm():
+                try:
+                    graph.warm_topology()
+                except Exception:
+                    pass
+                finally:
+                    topology_warm_slot.release()
+            threading.Thread(target=warm,name='traffic-topology-warm',daemon=True).start()
+        return graph
+
+    traffic_engine = TrafficEngine(planner, roads, dgis_roads,
+        graph_loader=traffic_graph_loader or load_traffic_graph,
+        collector=ObservationCollector(roads, dgis_roads),
+        transfer_slack_loader=lambda: _active_transfer_slack(root))
 
     @app.exception_handler(ProviderError)
     async def provider_error_handler(request, exc):
@@ -175,7 +232,7 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
         source_sha = graph_meta.get("gtfs_source_sha256")
         valid_sha = isinstance(source_sha, str) and len(source_sha) == 64 and all(c in "0123456789abcdef" for c in source_sha)
         planned_gtfs = source_sha if valid_sha else data.gtfs_version
-        response = planner.plan(request, gtfs_version=planned_gtfs,
+        response = (traffic_engine if request.traffic_mode == "on" else planner).plan(request, gtfs_version=planned_gtfs,
                                 graph_version=data.graph_version)
         if planned_gtfs != data.gtfs_version:
             response.warnings.append("graph_uses_previous_gtfs: the latest downloaded feed has not been loaded into the running graph")

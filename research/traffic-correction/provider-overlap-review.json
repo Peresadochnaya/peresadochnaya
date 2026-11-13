@@ -1,0 +1,28 @@
+{
+  "method": "Exploratory sample every <=25m; local projection at60N; same direction <=30deg and distance<=20m. Thresholds NOT agreed production algorithm. Proximity may confuse parallel roads; not proof of same lanes. No duration allocation to subgeometry.",
+  "yandex_AB_m": 6735.73614599679,
+  "yandex_AB_seconds": 731.8101443562423,
+  "comparisons": [
+    {
+      "2gis_id": "7032786289161505747",
+      "2gis_distance_m": 7561,
+      "2gis_seconds": 1325,
+      "fraction_yandex_AB_near_aligned_2gis": 0.7216,
+      "fraction_2gis_near_aligned_yandex_AB": 0.6417
+    },
+    {
+      "2gis_id": "3345879615036008045",
+      "2gis_distance_m": 9303,
+      "2gis_seconds": 1619,
+      "fraction_yandex_AB_near_aligned_2gis": 0.3145,
+      "fraction_2gis_near_aligned_yandex_AB": 0.225
+    },
+    {
+      "2gis_id": "12689871341127027551",
+      "2gis_distance_m": 10895,
+      "2gis_seconds": 1682,
+      "fraction_yandex_AB_near_aligned_2gis": 0.3083,
+      "fraction_2gis_near_aligned_yandex_AB": 0.189
+    }
+  ]
+}
