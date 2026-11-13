@@ -69,6 +69,22 @@ describe('App routing filters over HTTP', () => {
     await setupPoints();
     expect(await submittedModes()).toEqual(['metro', 'bus', 'tram', 'trolleybus', 'rail']);
   });
+  it('sends the uncovered payment chosen for an unlimited pass', async () => {
+    await setupPoints();
+    fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: 'unlimited_surface' } });
+    fireEvent.change(screen.getByLabelText('Оплата вне безлимита:'), {
+      target: { value: 'podorozhnik_wallet' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url.includes('/routes'))).toBe(true));
+
+    const calls = fetchMock.mock.calls.filter(([url]) => url.includes('/routes'));
+    const body = JSON.parse(calls[calls.length - 1][1].body);
+    expect(body.passenger).toEqual({
+      ticket_profile: 'unlimited_surface',
+      uncovered_payment: 'podorozhnik_wallet',
+    });
+  });
 });
 describe('App vehicles on the map', () => {
   const routeFixture = {

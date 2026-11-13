@@ -95,6 +95,8 @@ export interface Route {
   fare?: RouteFare | null;
 }
 
+export type UncoveredPayment = 'podorozhnik_wallet' | 'bank_card';
+
 export interface RouteRequest {
   points: [Point, Point];
   departure_at?: string;
@@ -109,7 +111,7 @@ export interface RouteRequest {
   less_walking?: boolean;
   passenger?: {
     ticket_profile: TicketProfile;
-    uncovered_payment?: 'podorozhnik_wallet' | 'bank_card';
+    uncovered_payment?: UncoveredPayment;
   };
 }
 

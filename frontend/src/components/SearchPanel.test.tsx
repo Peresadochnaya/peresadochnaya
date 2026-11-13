@@ -158,6 +158,56 @@ describe('SearchPanel time and transfers', () => {
   });
 });
 
+describe('SearchPanel uncovered payment', () => {
+  const mainTicketSelect = () => screen.getAllByRole('combobox')[0];
+
+  it('shows the uncovered payment selector only for surface and metro unlimited passes', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    expect(screen.queryByLabelText('Оплата вне безлимита:')).toBeNull();
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'unlimited_surface' } });
+    expect(screen.getByLabelText('Оплата вне безлимита:')).toBeTruthy();
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'unlimited_metro' } });
+    expect(screen.getByLabelText('Оплата вне безлимита:')).toBeTruthy();
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'unlimited_all' } });
+    expect(screen.queryByLabelText('Оплата вне безлимита:')).toBeNull();
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'bank_card' } });
+    expect(screen.queryByLabelText('Оплата вне безлимита:')).toBeNull();
+  });
+
+  it('sends the selected uncovered payment with the search', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'unlimited_surface' } });
+    fireEvent.change(screen.getByLabelText('Оплата вне безлимита:'), {
+      target: { value: 'podorozhnik_wallet' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ticketProfile: 'unlimited_surface',
+        uncoveredPayment: 'podorozhnik_wallet',
+      })
+    );
+  });
+
+  it('defaults the uncovered payment to bank card', () => {
+    render(<SearchPanel {...baseProps} />);
+
+    fireEvent.change(mainTicketSelect(), { target: { value: 'unlimited_metro' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Найти маршруты' }));
+
+    expect(baseProps.onSearch).toHaveBeenCalledWith(
+      expect.objectContaining({ uncoveredPayment: 'bank_card' })
+    );
+  });
+});
+
 describe('SearchPanel vehicles controls', () => {
   it('toggles transport display from the dummy section', () => {
     render(<SearchPanel {...baseProps} />);

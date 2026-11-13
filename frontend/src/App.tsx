@@ -3,7 +3,7 @@ import { YandexMap } from './components/YandexMap';
 import { SearchPanel } from './components/SearchPanel';
 import { RouteResults } from './components/RouteResults';
 import { StopDrawer } from './components/StopDrawer';
-import { Point, Route, GtfsStop, TransportMode, TicketProfile, DummyConfig, RouteRequest, VehiclePosition } from './types/api';
+import { Point, Route, GtfsStop, TransportMode, TicketProfile, UncoveredPayment, DummyConfig, RouteRequest, VehiclePosition } from './types/api';
 import { api } from './api/client';
 import { getVehiclesBBox, vehicleMatchesRoute } from './utils/vehicleFilters';
 
@@ -88,6 +88,7 @@ export const App: React.FC = () => {
     modes: TransportMode[];
     lessWalking: boolean;
     ticketProfile: TicketProfile;
+    uncoveredPayment: UncoveredPayment;
     departureAt: string | null;
     arrivalAt: string | null;
     maxTransfers: number | null;
@@ -105,7 +106,7 @@ export const App: React.FC = () => {
         less_walking: filters.lessWalking,
         passenger: {
           ticket_profile: filters.ticketProfile,
-          uncovered_payment: 'bank_card'
+          uncovered_payment: filters.uncoveredPayment
         },
         providers: ['otp'],
         max_results: 5

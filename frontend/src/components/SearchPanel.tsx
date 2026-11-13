@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { Suggestion, TransportMode, TicketProfile, TicketProfileInfo, Point, DummyConfig } from '../types/api';
+import { Suggestion, TransportMode, TicketProfile, TicketProfileInfo, UncoveredPayment, Point, DummyConfig } from '../types/api';
 
 interface SearchPanelProps {
   labelA: string;
@@ -14,6 +14,7 @@ interface SearchPanelProps {
     modes: TransportMode[];
     lessWalking: boolean;
     ticketProfile: TicketProfile;
+    uncoveredPayment: UncoveredPayment;
     departureAt: string | null;
     arrivalAt: string | null;
     maxTransfers: number | null;
@@ -69,6 +70,8 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   ]);
   const [lessWalking, setLessWalking] = useState(false);
   const [ticketProfile, setTicketProfile] = useState<TicketProfile>('bank_card');
+  // Оплата поездок, не покрытых безлимитным проездным.
+  const [uncoveredPayment, setUncoveredPayment] = useState<UncoveredPayment>('bank_card');
   const [profiles, setProfiles] = useState<TicketProfileInfo[]>([]);
   const [arrivalTime, setArrivalTime] = useState('');
   const [departureTime, setDepartureTime] = useState('');
@@ -170,6 +173,7 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
       modes: selectedModes,
       lessWalking,
       ticketProfile,
+      uncoveredPayment,
       departureAt: departureTime ? buildTimeIso(departureTime) : null,
       arrivalAt: arrivalTime ? buildTimeIso(arrivalTime) : null,
       maxTransfers: maxTransfersOption === UNLIMITED_TRANSFERS ? null : maxTransfersOption,
@@ -198,6 +202,11 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
   };
 
   const isAllDummy = Object.values(dummyConfig).every(Boolean);
+
+  // Дополнительный выбор нужен только для безлимитов, которые покрывают
+  // не весь город: поездки вне зоны оплачиваются отдельно.
+  const needsUncoveredPayment =
+    ticketProfile === 'unlimited_surface' || ticketProfile === 'unlimited_metro';
 
   return (
     <div className="bg-white p-3 sm:p-4 rounded-xl shadow-lg border border-slate-100 flex flex-col gap-3">
@@ -455,10 +464,12 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
 
       {/* Проездной и «Меньше пешком» */}
       {!isCompact && (
+      <>
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="min-w-0">
-          <label className="font-semibold text-slate-600 block mb-1">Проездной:</label>
+          <label htmlFor="ticket-profile" className="font-semibold text-slate-600 block mb-1">Проездной:</label>
           <select
+            id="ticket-profile"
             value={ticketProfile}
             onChange={(e) => setTicketProfile(e.target.value as TicketProfile)}
             className="w-full min-w-0 border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
@@ -489,6 +500,23 @@ export const SearchPanel: React.FC<SearchPanelProps> = ({
           </label>
         </div>
       </div>
+      {needsUncoveredPayment && (
+        <div className="text-xs">
+          <label htmlFor="uncovered-payment" className="font-semibold text-slate-600 block mb-1">
+            Оплата вне безлимита:
+          </label>
+          <select
+            id="uncovered-payment"
+            value={uncoveredPayment}
+            onChange={(e) => setUncoveredPayment(e.target.value as UncoveredPayment)}
+            className="w-full min-w-0 border border-slate-200 rounded-md p-1.5 text-slate-700 outline-none"
+          >
+            <option value="podorozhnik_wallet">Подорожник</option>
+            <option value="bank_card">Банковская карта</option>
+          </select>
+        </div>
+      )}
+      </>
       )}
 
       {/* Время прибытия и пересадки */}
