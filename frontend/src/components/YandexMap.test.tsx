@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { YandexMap } from './YandexMap';
-import { LegMode, Point, Route } from '../types/api';
+import { LegMode, Point, Route, VehiclePosition } from '../types/api';
 
 type MapClickHandler = (event: { get: (key: string) => number[] }) => void;
 type PolylineClickHandler = (event: { stopPropagation: () => void }) => void;
@@ -9,12 +9,18 @@ type PolylineCall = {
   coordinates: [number, number][];
   options: { strokeColor?: string; strokeOpacity?: number };
 };
+type PlacemarkCall = {
+  properties?: unknown;
+  options?: { iconLayout?: string; iconImageHref?: string };
+};
 
 let clickHandlers: MapClickHandler[] = [];
 let polylineCalls: PolylineCall[] = [];
 let polylineClickHandlers: { color?: string; handler: PolylineClickHandler }[] = [];
+let placemarkCalls: PlacemarkCall[] = [];
+let readyCallbacks: (() => void)[] = [];
 
-const createFakeYmaps = ({ zoom = 12 }: { zoom?: number } = {}) => {
+const createFakeYmaps = ({ zoom = 12, deferReady = false }: { zoom?: number; deferReady?: boolean } = {}) => {
   const map = {
     geoObjects: { add: vi.fn(), remove: vi.fn() },
     controls: { add: vi.fn() },
@@ -30,13 +36,25 @@ const createFakeYmaps = ({ zoom = 12 }: { zoom?: number } = {}) => {
   };
 
   return {
-    ready: (callback: () => void) => callback(),
+    ready: (callback: () => void) => {
+      if (deferReady) readyCallbacks.push(callback);
+      else callback();
+    },
     Map: vi.fn(() => map),
     GeoObjectCollection: vi.fn(() => ({ add: vi.fn(), removeAll: vi.fn() })),
-    Placemark: vi.fn(() => ({
-      events: { add: vi.fn() },
-      geometry: { getCoordinates: () => [0, 0], setCoordinates: vi.fn() },
-    })),
+    Placemark: vi.fn(
+      (
+        _coordinates: [number, number],
+        properties: unknown,
+        options: PlacemarkCall['options']
+      ) => {
+        placemarkCalls.push({ properties, options });
+        return {
+          events: { add: vi.fn() },
+          geometry: { getCoordinates: () => [0, 0], setCoordinates: vi.fn() },
+        };
+      }
+    ),
     Polyline: vi.fn(
       (
         coordinates: [number, number][],
@@ -72,6 +90,7 @@ const baseProps = {
   dummyMode: true,
   dummyStops: true,
   loadStops: vi.fn(async (_bbox: string) => []),
+  vehicles: [] as VehiclePosition[],
 };
 
 const createMetroRoute = (line: number): Route => ({
@@ -111,6 +130,8 @@ beforeEach(() => {
   clickHandlers = [];
   polylineCalls = [];
   polylineClickHandlers = [];
+  placemarkCalls = [];
+  readyCallbacks = [];
   (globalThis as unknown as { ymaps: unknown }).ymaps = createFakeYmaps();
   baseProps.onPointChange.mockClear();
   baseProps.onSelectRoute.mockClear();
@@ -245,6 +266,85 @@ describe('YandexMap overlapping routes', () => {
 
     // Геометрия не смещается
     expect(latest[0].coordinates).toEqual(latest[1].coordinates);
+  });
+});
+
+describe('YandexMap vehicles', () => {
+  const vehicle = (patch: Partial<VehiclePosition>): VehiclePosition => ({
+    vehicle_id: 'v1',
+    route_id: 'metro:2',
+    trip_id: 'trip-1',
+    lat: 59.93,
+    lon: 30.31,
+    mode: 'metro',
+    timestamp: '2026-11-13T10:00:00+03:00',
+    ...patch,
+  });
+
+  const vehicleIcons = () =>
+    placemarkCalls
+      .filter((call) => call.options?.iconLayout === 'default#image')
+      .map((call) => decodeURIComponent(call.options!.iconImageHref!.split(',')[1]));
+
+  it('draws vehicles with the shared image icon layout', () => {
+    render(
+      <YandexMap
+        {...baseProps}
+        pointA={null}
+        pointB={null}
+        vehicles={[vehicle({ vehicle_id: 'bus-1', mode: 'bus' })]}
+      />
+    );
+
+    const icons = vehicleIcons();
+    expect(icons).toHaveLength(1);
+    expect(icons[0]).toContain('<circle');
+    expect(icons[0]).toContain('M9 7.5h10');
+    expect(icons[0]).toContain('#16A34A');
+  });
+
+  it('draws vehicles that arrived before the map finished initializing', () => {
+    (globalThis as unknown as { ymaps: unknown }).ymaps = createFakeYmaps({ deferReady: true });
+
+    render(
+      <YandexMap
+        {...baseProps}
+        pointA={null}
+        pointB={null}
+        vehicles={[vehicle({ vehicle_id: 'bus-1', mode: 'bus' })]}
+      />
+    );
+
+    expect(vehicleIcons()).toHaveLength(0);
+
+    act(() => {
+      readyCallbacks.forEach((callback) => callback());
+    });
+
+    expect(vehicleIcons()).toHaveLength(1);
+  });
+
+  it('uses the same icon shape with different colors per transport type', () => {
+    render(
+      <YandexMap
+        {...baseProps}
+        pointA={null}
+        pointB={null}
+        vehicles={[
+          vehicle({ vehicle_id: 'bus-1', mode: 'bus' }),
+          vehicle({ vehicle_id: 'trolley-1', mode: 'trolleybus' }),
+        ]}
+      />
+    );
+
+    const icons = vehicleIcons();
+    expect(icons).toHaveLength(2);
+    expect(icons[0]).toContain('#16A34A');
+    expect(icons[1]).toContain('#2563EB');
+
+    // Форма одинаковая — отличается только цвет.
+    const shape = (svg: string) => svg.replace(/#[0-9A-Fa-f]{6}/g, '#');
+    expect(shape(icons[0])).toBe(shape(icons[1]));
   });
 });
 

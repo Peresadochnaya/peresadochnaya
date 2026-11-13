@@ -381,6 +381,58 @@ def test_route_fare_skips_walking_and_waiting_legs():
     assert fare.amount_rub == 85.0
 
 
+def test_route_fare_counts_metro_line_change_as_one_ride():
+    point = Place(lat=59.93, lon=30.33, name="A")
+    line = LineString(coordinates=[(30.33, 59.93), (30.34, 59.94)])
+
+    def ride(mode, start, end, route_id=None):
+        return Leg(mode=mode, origin=point, destination=point, start_at=start, end_at=end,
+                   duration_seconds=300, original_duration_seconds=300,
+                   duration_source="schedule", distance_meters=0.0 if mode == "wait" else 1000.0,
+                   line=TransitLine(short_name=route_id, route_id=route_id) if route_id else None,
+                   geometry=line)
+
+    # A line change inside the paid area: walk → wait → metro 1 → wait → metro 2 → walk.
+    legs = [
+        ride("walk", "2026-11-13T06:59:27+03:00", "2026-11-13T07:07:32+03:00"),
+        ride("wait", "2026-11-13T07:07:32+03:00", "2026-11-13T07:12:25+03:00"),
+        ride("metro", "2026-11-13T07:12:25+03:00", "2026-11-13T07:18:25+03:00", "1:metro:1"),
+        ride("wait", "2026-11-13T07:18:25+03:00", "2026-11-13T07:32:08+03:00"),
+        ride("metro", "2026-11-13T07:32:08+03:00", "2026-11-13T07:36:38+03:00", "1:metro:2"),
+        ride("walk", "2026-11-13T07:36:38+03:00", "2026-11-13T07:44:47+03:00"),
+    ]
+    from app.otp import route_fare
+    bank = route_fare(legs, None, Passenger(ticket_profile="bank_card"))
+    assert [item.model_dump() for item in bank.items] == [
+        {"mode": "metro", "rides": 1, "cost_rub": 95.0}]
+    assert bank.amount_rub == 95.0
+    podorozhnik = route_fare(legs, None, Passenger(ticket_profile="podorozhnik_wallet"))
+    assert [item.model_dump() for item in podorozhnik.items] == [
+        {"mode": "metro", "rides": 1, "cost_rub": 65.0}]
+    assert podorozhnik.amount_rub == 65.0
+
+
+def test_route_fare_keeps_separate_metro_rides_after_surface_leg():
+    point = Place(lat=59.93, lon=30.33, name="A")
+    line = LineString(coordinates=[(30.33, 59.93), (30.34, 59.94)])
+
+    def ride(mode, start, end, route_id):
+        return Leg(mode=mode, origin=point, destination=point, start_at=start, end_at=end,
+                   duration_seconds=300, original_duration_seconds=300,
+                   duration_source="schedule", distance_meters=1000.0,
+                   line=TransitLine(short_name=route_id, route_id=route_id), geometry=line)
+
+    legs = [
+        ride("metro", "2026-11-13T12:00:00+03:00", "2026-11-13T12:10:00+03:00", "1:metro:1"),
+        ride("bus", "2026-11-13T12:20:00+03:00", "2026-11-13T12:30:00+03:00", "2:bus:1"),
+        ride("metro", "2026-11-13T12:40:00+03:00", "2026-11-13T12:50:00+03:00", "1:metro:2"),
+    ]
+    from app.otp import route_fare
+    fare = route_fare(legs, None, Passenger(ticket_profile="bank_card"))
+    assert {item.mode: item.rides for item in fare.items} == {"metro": 2, "bus": 1}
+    assert fare.amount_rub == 278.0
+
+
 def test_podorozhnik_surface_transfer_chain_and_metro_reset():
     point = Place(lat=59.93, lon=30.33, name="A")
     line = LineString(coordinates=[(30.33, 59.93), (30.34, 59.94)])

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { Point, Route, GtfsStop, Leg, LegMode } from '../types/api';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Point, Route, GtfsStop, Leg, LegMode, VehicleMode, VehiclePosition } from '../types/api';
 
 declare const ymaps: any;
 
@@ -13,6 +13,7 @@ interface YandexMapProps {
   onSelectStop: (stop: GtfsStop) => void;
   loadStops: (bbox: string) => Promise<GtfsStop[]>;
   dummyStops: boolean;
+  vehicles: VehiclePosition[];
 }
 
 const MODE_COLORS: Record<LegMode, string> = {
@@ -57,6 +58,35 @@ const getLegColor = (leg: Leg): string => {
   return metroLine ? METRO_LINE_COLORS[metroLine] : MODE_COLORS[leg.mode] || '#2563EB';
 };
 
+const VEHICLE_COLORS: Record<VehicleMode, string> = {
+  bus: '#16A34A',
+  trolleybus: '#2563EB',
+  tram: '#DB2777',
+  metro: '#CA8A04',
+  rail: '#374151',
+  unknown: '#64748B'
+};
+
+const vehicleIconCache = new Map<string, string>();
+
+// Одна форма иконки для всего транспорта, цвет зависит от вида.
+const getVehicleIconHref = (mode: VehicleMode): string => {
+  const color = VEHICLE_COLORS[mode] ?? VEHICLE_COLORS.unknown;
+  const cached = vehicleIconCache.get(color);
+  if (cached) return cached;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="12" fill="${color}" stroke="#ffffff" stroke-width="2.5"/>
+    <path d="M9 7.5h10a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2h-1v2h-2v-2h-6v2H9v-2H8a2 2 0 0 1-2-2v-7a3 3 0 0 1 3-3Z" fill="#ffffff"/>
+    <circle cx="10" cy="14" r="1.3" fill="${color}"/>
+    <circle cx="18" cy="14" r="1.3" fill="${color}"/>
+  </svg>`;
+
+  const href = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  vehicleIconCache.set(color, href);
+  return href;
+};
+
 export const YandexMap: React.FC<YandexMapProps> = ({
   pointA,
   pointB,
@@ -66,7 +96,8 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   onSelectRoute,
   onSelectStop,
   loadStops,
-  dummyStops
+  dummyStops,
+  vehicles
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
@@ -74,6 +105,12 @@ export const YandexMap: React.FC<YandexMapProps> = ({
   const markerBRef = useRef<any>(null);
   const routesCollectionRef = useRef<any>(null);
   const stopsCollectionRef = useRef<any>(null);
+  const vehiclesCollectionRef = useRef<any>(null);
+
+  // Слои карты создаются асинхронно в ymaps.ready. Пока карта не готова,
+  // эффекты отрисовки должны ждать, иначе данные, пришедшие раньше карты,
+  // потеряются и появятся только после следующего обновления/перезагрузки.
+  const [isMapReady, setIsMapReady] = useState(false);
 
   // Ссылки на актуальные точки для событий клика
   const pointAState = useRef(pointA);
@@ -182,8 +219,10 @@ export const YandexMap: React.FC<YandexMapProps> = ({
 
       routesCollectionRef.current = new ymaps.GeoObjectCollection();
       stopsCollectionRef.current = new ymaps.GeoObjectCollection();
+      vehiclesCollectionRef.current = new ymaps.GeoObjectCollection();
       map.geoObjects.add(routesCollectionRef.current);
       map.geoObjects.add(stopsCollectionRef.current);
+      map.geoObjects.add(vehiclesCollectionRef.current);
 
       // Клик по карте для последовательной установки точек
       map.events.add('click', (e: any) => {
@@ -203,6 +242,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       });
 
       mapInstance.current = map;
+      setIsMapReady(true);
 
       // Загружаем остановки сразу, не дожидаясь первого сдвига карты
       fetchAndRenderStops();
@@ -215,6 +255,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       }
       routesCollectionRef.current = null;
       stopsCollectionRef.current = null;
+      vehiclesCollectionRef.current = null;
       markerARef.current = null;
       markerBRef.current = null;
     };
@@ -243,7 +284,7 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       mapInstance.current.geoObjects.remove(markerARef.current);
       markerARef.current = null;
     }
-  }, [pointA]);
+  }, [pointA, isMapReady]);
 
   // Синхронизация маркера точки Б (включая корректное удаление)
   useEffect(() => {
@@ -268,11 +309,11 @@ export const YandexMap: React.FC<YandexMapProps> = ({
       mapInstance.current.geoObjects.remove(markerBRef.current);
       markerBRef.current = null;
     }
-  }, [pointB]);
+  }, [pointB, isMapReady]);
 
   // Отрисовка маршрутов
   useEffect(() => {
-    if (!routesCollectionRef.current || !mapInstance.current) return;
+    if (!isMapReady || !routesCollectionRef.current || !mapInstance.current) return;
     routesCollectionRef.current.removeAll();
 
     if (!routes.length) return;
@@ -319,20 +360,46 @@ export const YandexMap: React.FC<YandexMapProps> = ({
 
       routesCollectionRef.current.add(legPolyline);
     });
-  }, [routes, selectedRouteIndex]);
+  }, [routes, selectedRouteIndex, isMapReady]);
+
+  // Отрисовка транспорта поверх маршрутов и остановок
+  useEffect(() => {
+    if (!isMapReady || !vehiclesCollectionRef.current) return;
+    vehiclesCollectionRef.current.removeAll();
+
+    vehicles.forEach((vehicle) => {
+      const placemark = new ymaps.Placemark(
+        [vehicle.lat, vehicle.lon],
+        {
+          hintContent: vehicle.label || vehicle.vehicle_id,
+          balloonContent: `${vehicle.mode}${vehicle.route_id ? `: ${vehicle.route_id}` : ''}`
+        },
+        {
+          iconLayout: 'default#image',
+          iconImageHref: getVehicleIconHref(vehicle.mode),
+          iconImageSize: [28, 28],
+          iconImageOffset: [-14, -14],
+          cursor: 'pointer',
+          zIndex: 1500
+        }
+      );
+
+      vehiclesCollectionRef.current.add(placemark);
+    });
+  }, [vehicles, isMapReady]);
 
   // Подгоняем карту под выбранный маршрут только при смене маршрута,
   // чтобы ручной зум пользователя не сбрасывался.
   useEffect(() => {
     const activeRoute = routes[selectedRouteIndex];
-    if (!mapInstance.current || !activeRoute?.geometry?.coordinates?.length) return;
+    if (!isMapReady || !mapInstance.current || !activeRoute?.geometry?.coordinates?.length) return;
 
     const coords = activeRoute.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
     mapInstance.current.setBounds(ymaps.util.bounds.fromPoints(coords), {
       checkZoomRange: true,
       zoomMargin: 40
     });
-  }, [routes, selectedRouteIndex]);
+  }, [routes, selectedRouteIndex, isMapReady]);
 
   return <div ref={mapContainerRef} className="w-full h-full relative" />;
 };
