@@ -449,7 +449,11 @@ class OtpPlanner:
                     "latitude": request.points[0].lat, "longitude": request.points[0].lon}}},
                 "destination": {"location": {"coordinate": {
                     "latitude": request.points[1].lat, "longitude": request.points[1].lon}}},
-                "dateTime": {"earliestDeparture": request.departure_at.isoformat()},
+                "dateTime": (
+                    {"latestArrival": request.arrival_at.isoformat()}
+                    if request.arrival_at is not None else
+                    {"earliestDeparture": request.departure_at.isoformat()}
+                ),
                 "first": request.max_results,
                 "preferences": preferences,
                 "modes": modes,

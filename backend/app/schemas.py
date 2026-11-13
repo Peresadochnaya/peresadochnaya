@@ -93,7 +93,10 @@ class RouteRequest(Model):
     points: list[Point] = Field(min_length=2, max_length=2,
                                 description="Ordered route points; currently exactly origin and destination")
     passenger: Passenger = Field(default_factory=Passenger)
-    departure_at: AwareDatetime
+    departure_at: AwareDatetime | None = Field(default=None,
+        description="Search routes departing at or after this time; exactly one of departure_at or arrival_at is required")
+    arrival_at: AwareDatetime | None = Field(default=None,
+        description="Search routes arriving by this time; exactly one of departure_at or arrival_at is required")
     traffic_mode: Literal["off", "on"] = "off"
     max_results: int = Field(default=5, ge=1, le=10)
     providers: list[Literal["otp", "yandex", "2gis"]] = Field(default_factory=lambda: ["otp"], min_length=1, max_length=3,
@@ -101,7 +104,7 @@ class RouteRequest(Model):
     modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, min_length=1, max_length=5,
         description="Allowed public transport modes; null means all. Walking access remains possible.")
     exclude_modes: list[Literal["bus", "tram", "trolleybus", "metro", "rail"]] | None = Field(default=None, max_length=5)
-    max_transfers: int | None = Field(default=None, ge=0, le=5)
+    max_transfers: int | None = Field(default=None, ge=0, le=7)
     walk_speed: Literal["slow", "normal", "fast"] = Field(default="normal", description="Walking speed preset for the future OTP adapter")
     less_walking: bool = Field(default=False, description="Prefer less walking; does not prohibit walking access or transfers")
     fare: FarePreferences | None = Field(default=None, description="Per-mode tariffs; omitted means no fare influence on routing")
@@ -112,6 +115,12 @@ class RouteRequest(Model):
         if values is not None and len(values) != len(set(values)):
             raise ValueError("Options must not contain duplicates")
         return values
+
+    @model_validator(mode="after")
+    def exactly_one_search_time(self):
+        if (self.departure_at is None) == (self.arrival_at is None):
+            raise ValueError("Exactly one of departure_at or arrival_at must be provided")
+        return self
 
 
 class Place(Point):

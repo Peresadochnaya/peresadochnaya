@@ -149,7 +149,7 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
             try:
                 demo = dummy_route(request)
             except OverflowError:
-                return error(422, "invalid_departure_time", "Departure time leaves no representable space for route arrival")
+                return error(422, "invalid_departure_time", "Requested search time leaves no representable space for the route")
             return RoutesResponse(mode="dummy", sources=RoutesResponseSources(
                 candidate_providers=[], traffic_providers=[], realtime="dummy"), passenger=request.passenger, routes=[demo], gtfs_version=None,
                                   graph_version=None, calculated_at=datetime.now(timezone.utc),
@@ -158,9 +158,10 @@ def create_app(data_root: Path | None = None, planner_mode: str | None = None,
                                   + (["Fare rules are ignored in demo mode"] if request.fare is not None else []))
         data = load_status(root)
         source_calendar_empty = bool(data.manifest and data.manifest.get("active_service_ids") == 0)
+        request_time = request.arrival_at if request.arrival_at is not None else request.departure_at
         if mode != "otp" and source_calendar_empty:
             service_date = str(data.manifest.get("service_date", "")).replace("-", "")
-            if request.departure_at.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y%m%d") == service_date:
+            if request_time.astimezone(ZoneInfo("Europe/Moscow")).strftime("%Y%m%d") == service_date:
                 return error(422, "invalid_service_date", "GTFS has no active services on the requested date")
         if mode != "otp":
             return error(503, "planner_unavailable", "A route planner is not configured")
