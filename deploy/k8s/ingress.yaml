@@ -10,9 +10,26 @@ metadata:
 spec:
   ingressClassName: traefik
   tls:
-    - hosts: [peresadochnaya.lol]
+    # The .lol certificate is managed by NPM on lab-msk0. Its upstream uses
+    # this origin name for TLS/SNI and forwards Host: peresadochnaya.lol.
+    - hosts: [peresadochnaya.rjnk.cc]
   rules:
     - host: peresadochnaya.lol
+      http:
+        paths:
+          - path: /api/v1/raw_feed
+            pathType: Exact
+            backend:
+              service:
+                name: realtime
+                port: {name: http}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: {name: http}
+    - host: peresadochnaya.rjnk.cc
       http:
         paths:
           - path: /api/v1/raw_feed
