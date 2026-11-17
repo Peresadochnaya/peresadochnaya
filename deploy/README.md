@@ -28,7 +28,16 @@ TTL завершённых Job — 1 час; Kubernetes удаляет Job вм�
 
 Проверить Traefik certificate resolver: манифест предполагает имя `letsencrypt`.
 Если в кластере другое имя, заменить аннотацию в `k8s/ingress.yaml`.
-Проверить DNS `peresadochnaya.lol` и наличие `local-path` StorageClass.
+Проверить DNS обоих доменов и наличие `local-path` StorageClass.
+`peresadochnaya.rjnk.cc` указывает на k3s, `peresadochnaya.lol` и `www` — на
+lab-msk0 с Nginx Proxy Manager. В ingress сохраняются оба имени: замена одного
+другим ломает либо прямой доступ, либо проксирование.
+
+NPM подключается к `https://peresadochnaya.rjnk.cc`, проверяет TLS с SNI
+`peresadochnaya.rjnk.cc` и передаёт `Host: peresadochnaya.lol`.
+Сертификат `.lol` выпускается и обновляется NPM, сертификат origin
+`peresadochnaya.rjnk.cc` — Traefik. В `spec.tls.hosts` ingress указан только
+origin: ACME-проверки `.lol` приходят на lab и не достигают Traefik.
 
 ```bash
 kubectl apply -f deploy/k8s/namespace.yaml
@@ -80,6 +89,11 @@ NetBird, а не `authorized_keys`: указанный в workflow пользо�
 не запрещает разрешённому peer выбирать других локальных пользователей.
 
 Environment variable `API_BASE_URL` по умолчанию `https://peresadochnaya.lol`.
+После rollout CI запускает `python deploy/smoke.py "$API_BASE_URL"`: проверяет
+готовность, фронтенд, статус данных, бинарный GTFS-RT и позиции транспорта.
+Оба публичных домена проверяются всегда; `API_BASE_URL` может добавить ещё один
+адрес. Недоступность любого из них завершает smoke с ошибкой. Внешние платные
+API при этих проверках не вызываются. Для ручной проверки: `python deploy/smoke.py`.
 GTFS updater получает `HTTPS_PROXY` из Secret `gtfs-proxy`, ключ `url`.
 Secret создаётся отдельно от Git; его отсутствие допускает прямое подключение.
 Прокси работает на роутере arctur `10.147.8.92:18080`, слушает только

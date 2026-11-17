@@ -36,6 +36,7 @@ jobs:
           (cd backend && python -m pytest tests)
           python -m pytest data/gtfs/tests data/metro/tests data/rail/tests
           python -m pytest otp/scripts/tests
+          python -m pytest deploy/tests
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -155,11 +156,7 @@ jobs:
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL || 'https://peresadochnaya.lol' }}
         run: |
-          curl --fail --show-error --silent --retry 6 --retry-all-errors --retry-delay 5 "$API_BASE_URL/health/ready"
-          curl --fail --show-error --silent "$API_BASE_URL/api/v1/data/status" | python -m json.tool
-          curl --fail --show-error --silent --retry 6 --retry-all-errors --retry-delay 5 "$API_BASE_URL/api/v1/raw_feed" -o /tmp/gtfs-rt-feed.bin
-          test -s /tmp/gtfs-rt-feed.bin
-          curl --fail --show-error --silent "$API_BASE_URL/api/v1/vehicles?dummy=false&bbox=29,59,31,61&limit=1" | python -m json.tool
+          python deploy/smoke.py "$API_BASE_URL"
       - name: Disconnect and remove ephemeral credentials
         if: always()
         run: |
